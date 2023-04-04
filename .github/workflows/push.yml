@@ -1,0 +1,71 @@
+name: Pipeline
+# consistency regarding formatting and idiomatic Rust
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  update_build_test:
+    name: Update, Build and Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+
+      # install action-rs toolchain 
+      # deprecated, but best tool for usage with clippy in PR context and only way to calculate test coverage
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: clippy, rustfmt
+
+      # load cargo cache to reduce compilation time
+      - name: Set up cargo cache
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Update dependencies
+        uses: actions-rs/cargo@v1
+        with: 
+          command: update
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+      
+      - name: Test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --verbose
+
+      # Lints
+      - name: Clippy
+        uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: -- -D warnings # escalate warnings s.t. pipeline fails
+      - name: Format
+        run:  cargo fmt --all -- --check
+      
+      # Cargo check for security issues
+      - name: Security audit
+        uses: actions-rs/audit-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
