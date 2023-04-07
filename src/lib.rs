@@ -1,14 +1,16 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+// Copyright © 2023 Niklas Siemer
+//
+// This file is part of qFALL-math.
+//
+// qFALL-math is free software: you can redistribute it and/or modify it under
+// the terms of the Mozilla Public License Version 2.0 as published by the
+// Mozilla Foundation. See <https://mozilla.org/en-US/MPL/2.0/>.
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+//! This crate provides basics such as mathematical primitives, fundamental
+//! lattice-based cryptographic constructions, and samplable distributions/
+//! possibilities to sample instances of lattice problems to prototype
+//! lattice-based cryptographic constructions and more.
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub mod construction;
+pub mod primitive;
+pub mod sample;
