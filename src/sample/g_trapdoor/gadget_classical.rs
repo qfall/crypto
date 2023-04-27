@@ -6,9 +6,8 @@
 // the terms of the Mozilla Public License Version 2.0 as published by the
 // Mozilla Foundation. See <https://mozilla.org/en-US/MPL/2.0/>.
 
-//! This module contains an implementation to generate a gadget trapdoor.
-
-use std::fmt::Display;
+//! This module contains an implementation to generate a gadget trapdoor in a
+//! classical setting.
 
 use super::gadget_parameters::GadgetParameters;
 use qfall_math::{
@@ -17,6 +16,7 @@ use qfall_math::{
     integer_mod_q::MatZq,
     traits::{Concatenate, Pow, SetEntry, Tensor},
 };
+use std::fmt::Display;
 
 /// Generates a trapdoor according to Algorithm 1 in [\[1\]](<../index.html#:~:text=[1]>).
 /// Namely:

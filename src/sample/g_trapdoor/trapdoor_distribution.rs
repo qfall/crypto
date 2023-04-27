@@ -54,11 +54,10 @@ impl TrapdoorDistribution for PlusMinusOneZero {
 
 #[cfg(test)]
 mod test_pm_one_zero {
-    use qfall_math::integer::Z;
-    use qfall_math::traits::GetEntry;
-
     use super::PlusMinusOneZero;
     use super::TrapdoorDistribution;
+    use qfall_math::integer::Z;
+    use qfall_math::traits::GetEntry;
 
     /// ensure that the distribution samples in its correct range
     #[test]
