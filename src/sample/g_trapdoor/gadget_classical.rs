@@ -29,6 +29,8 @@ use std::fmt::Display;
 /// - `params`: all gadget parameters which are required to generate the trapdoor
 /// - `tag`: the tag which is hidden within the matrix ´A`
 ///
+/// Returns a a parity-check matrix `a` derived from `a_bar` and its gadget-trapdoor `r` under a give tag `h`.
+///
 /// # Examples
 /// ```
 /// use qfall_crypto::sample::g_trapdoor::{gadget_parameters::GadgetParameters, gadget_classical::gen_trapdoor};
@@ -67,6 +69,8 @@ pub fn gen_trapdoor(
 /// - `k`: the size of the gadget vector
 /// - `base`: the base with which the entries in the gadget vector are defined
 ///
+/// Returns a gadget matrix of size `n*nk` with `base` as the base for the gadget vector.
+///
 /// # Examples
 /// ```
 /// use qfall_crypto::sample::g_trapdoor::gadget_classical::gen_gadget_mat;
@@ -90,6 +94,8 @@ pub fn gen_gadget_mat(
 /// Parameters:
 /// - `k`: the size of the gadget vector
 /// - `base`: the base with which the entries in the gadget vector are defined
+///
+/// Returns a gadget vector of length `k` with `base` as its base.
 ///
 /// # Examples
 /// ```

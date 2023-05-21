@@ -33,6 +33,8 @@ pub mod trapdoor_distribution;
 /// - `n`: the security parameter
 /// - `modulus`: the modulus for the trapdoor
 ///
+/// Returns a matrix `a` and its gadget-trapdoor `r` as in [\[1\]](<index.html#:~:text=[1]>): Algorithm 1 for some fixed set of parameters [`GadgetParameters::init_default`].
+///
 /// # Examples
 /// ```
 /// use qfall_crypto::sample::g_trapdoor::gen_trapdoor_default;
