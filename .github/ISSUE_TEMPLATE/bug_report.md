@@ -37,7 +37,7 @@ why the current behaviour does not match this criteria. -->
 
 **Desktop (please complete the following information):**
  - OS: <!-- [e.g. iOS] -->
- - Version of qFALL-math: <!-- [e.g. 1.0] -->
+ - Version of qFALL-crypto: <!-- [e.g. 1.0] -->
 
 **Additional context**
 <!-- Add any other context about the problem here. -->
