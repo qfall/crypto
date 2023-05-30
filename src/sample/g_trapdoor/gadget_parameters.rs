@@ -9,8 +9,16 @@
 //! This module contains the [`GadgetParameters`] object,
 //! which contains all parameters which are needed to generate a classical G-Trapdoor.
 
-use super::trapdoor_distribution::{PlusMinusOneZero, TrapdoorDistribution};
-use qfall_math::{integer::Z, integer_mod_q::Modulus, traits::Pow};
+use crate::sample::g_trapdoor::trapdoor_distribution::SampleZ;
+
+use super::trapdoor_distribution::{
+    PlusMinusOneZero, TrapdoorDistribution, TrapdoorDistributionRing,
+};
+use qfall_math::{
+    integer::Z,
+    integer_mod_q::{Modulus, ModulusPolynomialRingZq, PolyOverZq},
+    traits::{Pow, SetCoefficient},
+};
 
 /// Collects all parameters which are necessary to compute a g-trapdoor.
 /// You can either use [`GadgetParameters::init_default`] or set all values
@@ -40,6 +48,15 @@ pub struct GadgetParameters {
     pub base: Z,
     pub q: Modulus,
     pub distribution: Box<dyn TrapdoorDistribution>,
+}
+
+pub struct GadgetParametersRing {
+    pub n: Z,
+    pub k: Z,
+    pub base: Z,
+    pub q: Modulus,
+    pub modulus: ModulusPolynomialRingZq,
+    pub distribution: Box<dyn TrapdoorDistributionRing>,
 }
 
 impl GadgetParameters {
@@ -91,6 +108,30 @@ impl GadgetParameters {
             base,
             q: modulus.clone(),
             distribution: Box::new(PlusMinusOneZero),
+        }
+    }
+}
+
+impl GadgetParametersRing {
+    pub fn init_default(n: impl Into<Z>, modulus: &Modulus) -> Self {
+        // panic if n < 1 (security parameter must be positive) and not larger than
+        // [`i64`] because downstream matrices can be at most that size
+        let n = n.into();
+        assert!(n >= Z::ONE && n <= Z::from(i64::MAX));
+
+        let base = Z::from(2);
+        let log_q = Z::from(modulus).log_ceil(&base).unwrap();
+        let mut cycl_poly = PolyOverZq::from(modulus);
+        cycl_poly.set_coeff(0, 1).unwrap();
+        cycl_poly.set_coeff(&n, 1).unwrap();
+
+        Self {
+            n,
+            k: log_q,
+            base,
+            modulus: ModulusPolynomialRingZq::try_from(&cycl_poly).unwrap(),
+            q: modulus.clone(),
+            distribution: Box::new(SampleZ),
         }
     }
 }

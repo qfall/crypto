@@ -13,6 +13,11 @@
 //! In: Pointcheval, D., Johansson, T. (eds) Advances in Cryptology – EUROCRYPT 2012.
 //! EUROCRYPT 2012. Lecture Notes in Computer Science, vol 7237.
 //! Springer, Berlin, Heidelberg. <https://doi.org/10.1007/978-3-642-29011-4_41>
+//! - \[2\] El Bansarkhani, R., Buchmann, J. (2014). Improvement and Efficient
+//! Implementation of a Lattice-Based Signature Scheme. In: Lange, T., Lauter, K.,
+//! Lisoněk, P. (eds) Selected Areas in Cryptography -- SAC 2013. SAC 2013. Lecture Notes
+//! in Computer Science(), vol 8282. Springer, Berlin, Heidelberg.
+//! <https://doi.org/10.1007/978-3-662-43414-7_3>
 
 use self::{gadget_classical::gen_trapdoor, gadget_parameters::GadgetParameters};
 use qfall_math::{
@@ -22,6 +27,7 @@ use qfall_math::{
 
 pub mod gadget_classical;
 pub mod gadget_parameters;
+pub mod gadget_ring;
 pub mod trapdoor_distribution;
 
 /// Computes a trapdoor with default values.

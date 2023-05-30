@@ -9,7 +9,11 @@
 //! This module contains all implementation of TrapdoorDistributions from
 //! which the matrix `\bar A` is sampled in the trapdoor generation algorithm.
 
-use qfall_math::integer::MatZ;
+use qfall_math::{
+    integer::{MatPolyOverZ, MatZ, PolyOverZ, Z},
+    rational::Q,
+    traits::{SetCoefficient, SetEntry},
+};
 
 /// This trait should be implemented by all distributions which should be
 /// used to generate a trapdoor.
@@ -25,9 +29,15 @@ pub trait TrapdoorDistribution {
     fn sample(&self, m_bar: i64, w: i64) -> MatZ;
 }
 
+pub trait TrapdoorDistributionRing {
+    fn sample(&self, n: &Z, nr_rows: &Z, nr_cols: &Z, s: &Q) -> MatPolyOverZ;
+}
+
 /// A distribution which samples a matrix of type [`MatZ`] with entries in `\{-1,0,1\}`
 /// with probability `1/4` for `-1` and `1` an probability `1/2` for `0`
 pub struct PlusMinusOneZero;
+
+pub struct SampleZ;
 
 impl TrapdoorDistribution for PlusMinusOneZero {
     /// Sample a matrix from distribution with probability `1/2` for `0`
@@ -49,6 +59,27 @@ impl TrapdoorDistribution for PlusMinusOneZero {
         let mat_1 = MatZ::sample_uniform(m_bar, w, &0, &2).unwrap();
         let mat_2 = MatZ::sample_uniform(m_bar, w, &0, &2).unwrap();
         mat_1 - mat_2
+    }
+}
+
+impl TrapdoorDistributionRing for SampleZ {
+    fn sample(&self, n: &Z, nr_rows: &Z, nr_cols: &Z, s: &Q) -> MatPolyOverZ {
+        let n = i64::try_from(n).unwrap();
+        let nr_rows = i64::try_from(nr_rows).unwrap();
+        let nr_cols = i64::try_from(nr_cols).unwrap();
+        let mut out_mat = MatPolyOverZ::new(nr_rows, nr_cols).unwrap();
+        for i in 0..nr_rows {
+            for j in 0..nr_cols {
+                let mut sample = PolyOverZ::default();
+                for k in 0..n {
+                    let sample_z = Z::sample_discrete_gauss(&n, &Z::ZERO, s).unwrap();
+                    sample.set_coeff(k, &sample_z).unwrap();
+                }
+                out_mat.set_entry(i, j, &sample).unwrap();
+            }
+        }
+
+        out_mat
     }
 }
 
