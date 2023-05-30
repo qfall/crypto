@@ -11,4 +11,5 @@
 //! lattice problems like `LWE`, and trapdoors.
 
 pub mod distribution;
+pub mod g_trapdoor;
 pub mod lattice_problem;
