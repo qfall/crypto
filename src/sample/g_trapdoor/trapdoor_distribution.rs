@@ -26,7 +26,7 @@ use qfall_math::{
 ///
 /// Returns a matrix which is sampled according to the defined distribution
 pub trait TrapdoorDistribution {
-    fn sample(&self, m_bar: i64, w: i64) -> MatZ;
+    fn sample(&self, m_bar: &Z, w: &Z) -> MatZ;
 }
 
 pub trait TrapdoorDistributionRing {
@@ -53,9 +53,11 @@ impl TrapdoorDistribution for PlusMinusOneZero {
     /// use qfall_math::integer::Z;
     /// use qfall_math::integer_mod_q::Modulus;
     ///
-    /// let mat = PlusMinusOneZero.sample(42, 24);
+    /// let mat = PlusMinusOneZero.sample(&42.into(), &24.into());
     /// ```
-    fn sample(&self, m_bar: i64, w: i64) -> MatZ {
+    /// # Panics...
+    /// - ... `m_bar` or `w` does not fit into in `i64` or is smaller than `1`.
+    fn sample(&self, m_bar: &Z, w: &Z) -> MatZ {
         let mat_1 = MatZ::sample_uniform(m_bar, w, &0, &2).unwrap();
         let mat_2 = MatZ::sample_uniform(m_bar, w, &0, &2).unwrap();
         mat_1 - mat_2
@@ -93,7 +95,7 @@ mod test_pm_one_zero {
     /// ensure that the distribution samples in its correct range
     #[test]
     fn correct_range() {
-        let sample = PlusMinusOneZero.sample(10, 5);
+        let sample = PlusMinusOneZero.sample(&10.into(), &5.into());
 
         for i in 0..10 {
             for j in 0..5 {

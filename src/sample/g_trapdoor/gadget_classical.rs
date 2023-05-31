@@ -43,21 +43,22 @@ use std::fmt::Display;
 ///
 /// let (a,r) = gen_trapdoor(&params, &a_bar, &tag).unwrap();
 /// ```
+/// # Errors and Failures
+/// - Returns a [`MathError`] of type [`InvalidMatrix`](MathError::InvalidMatrix)
+/// or of type [`OutOfBounds`](MathError::OutOfBounds), if `params.k`
+/// or `params.n` is either `0`,
+/// it is negative or it does not fit into an [`i64`].
 pub fn gen_trapdoor(
     params: &GadgetParameters,
     a_bar: &MatZq,
     tag: &MatZq,
 ) -> Result<(MatZq, MatZ), MathError> {
-    let g = MatZq::from((
-        &gen_gadget_mat(&params.n, &params.k, &params.base)?,
-        &params.q,
-    ));
-    let r = params.distribution.sample(
-        (&params.m_bar).try_into()?,
-        (&(&params.n * &params.k)).try_into()?,
-    );
+    let g = gen_gadget_mat(&params.n, &params.k, &params.base)?;
+    let r = params
+        .distribution
+        .sample(&params.m_bar, &(&params.n * &params.k));
     // set A = [\bar A | HG - \bar A R]
-    let a = a_bar.concat_horizontal(&(tag * g - a_bar * MatZq::from((&r, &params.q))))?;
+    let a = a_bar.concat_horizontal(&(tag * g - a_bar * &r))?;
     Ok((a, r))
 }
 
@@ -78,14 +79,18 @@ pub fn gen_trapdoor(
 ///
 /// let g = gen_gadget_mat(&Z::from(3), &Z::from(4), &Z::from(2));
 /// ```
+/// # Errors and Failures
+/// - Returns a [`MathError`] of type [`InvalidMatrix`](MathError::InvalidMatrix)
+/// or of type [`OutOfBounds`](MathError::OutOfBounds), if `k` or `n` is either `0`,
+/// it is negative or it does not fit into an [`i64`].
 pub fn gen_gadget_mat(
     n: impl TryInto<i64> + Display + Clone,
     k: impl TryInto<i64> + Display,
     base: &Z,
 ) -> Result<MatZ, MathError> {
-    let gadget_vec = gen_gadget_vec(k, base);
+    let gadget_vec = gen_gadget_vec(k, base)?;
     let identity = MatZ::identity(n.clone(), n)?;
-    Ok(identity.tensor_product(&gadget_vec?.transpose()))
+    Ok(identity.tensor_product(&gadget_vec.transpose()))
 }
 
 /// Generates a gadget vector based on its definition in [\[1\]](<../index.html#:~:text=[1]>).
@@ -104,9 +109,14 @@ pub fn gen_gadget_mat(
 ///
 /// let g = gen_gadget_vec(4, &Z::from(2));
 /// ```
+///
+/// # Errors and Failures
+/// - Returns a [`MathError`] of type [`InvalidMatrix`](MathError::InvalidMatrix)
+/// or of type [`OutOfBounds`](MathError::OutOfBounds), if `k` is either `0`,
+/// it is negative or it does not fit into an [`i64`].
 pub fn gen_gadget_vec(k: impl TryInto<i64> + Display, base: &Z) -> Result<MatZ, MathError> {
     let mut out = MatZ::new(k, 1).unwrap();
-    let mut i = 0;
+    let mut i: i64 = 0;
     while out.set_entry(i, 0, &base.pow(i)?).is_ok() {
         i += 1;
     }
