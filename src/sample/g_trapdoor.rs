@@ -19,10 +19,15 @@
 //! in Computer Science(), vol 8282. Springer, Berlin, Heidelberg.
 //! <https://doi.org/10.1007/978-3-662-43414-7_3>
 
+use crate::sample::g_trapdoor::{
+    gadget_parameters::GadgetParametersRing, gadget_ring::gen_trapdoor_ring,
+};
+
 use self::{gadget_classical::gen_trapdoor, gadget_parameters::GadgetParameters};
 use qfall_math::{
-    integer::{MatZ, Z},
-    integer_mod_q::{MatZq, Modulus},
+    integer::{MatZ, PolyOverZ, Z},
+    integer_mod_q::{MatPolynomialRingZq, MatZq, Modulus},
+    rational::Q,
 };
 
 pub mod gadget_classical;
@@ -70,6 +75,51 @@ pub fn gen_trapdoor_default(n: impl Into<Z>, modulus: &Modulus) -> (MatZq, MatZ)
     gen_trapdoor(&params, &a_bar, &tag).unwrap()
 }
 
+/// Computes a trapdoor with default values.
+///
+/// - `params` is computed using [`GadgetParametersRing::init_default`].
+///
+/// Parameters:
+/// - `n`: the security parameter
+/// - `modulus`: the modulus for the trapdoor
+///
+/// Returns a matrix `a` and its gadget-trapdoor `(r,e)` as in [\[2\]](<index.html#:~:text=[2]>): Construction 1 for some fixed set of parameters [`GadgetParameters::init_default`].
+///
+/// # Examples
+/// ```
+/// use qfall_crypto::sample::g_trapdoor::gen_trapdoor_ring_default;
+/// use qfall_math::integer::Z;
+/// use qfall_math::integer_mod_q::Modulus;
+///
+/// let (a,r, e) = gen_trapdoor_ring_default(100, &Modulus::try_from(&Z::from(29)).unwrap(), 10);;
+/// ```
+///
+/// # Panics...
+/// - ... if the security parameter `n` is not in `\[1, i64::MAX\]`.
+pub fn gen_trapdoor_ring_default(
+    n: impl Into<Z>,
+    modulus: &Modulus,
+    s: impl Into<Q>,
+) -> (
+    MatPolynomialRingZq,
+    MatPolynomialRingZq,
+    MatPolynomialRingZq,
+) {
+    // panic if n < 1 (security parameter must be positive)
+    let n = n.into();
+    assert!(n >= Z::ONE);
+    let s = s.into();
+
+    let params = GadgetParametersRing::init_default(n, modulus);
+
+    // a_bar <-$ Zq[X]^n
+    let a_bar = PolyOverZ::sample_uniform(&params.n, &0, &params.q).unwrap();
+
+    // we can unwrap, as we compute the parameters on our own and
+    // they should always work
+    gen_trapdoor_ring(&params, &a_bar, &s).unwrap()
+}
+
 #[cfg(test)]
 mod test_gen_trapdoor_default {
     use super::gen_trapdoor_default;
@@ -78,5 +128,17 @@ mod test_gen_trapdoor_default {
     #[test]
     fn working() {
         let (_, _) = gen_trapdoor_default(100, &Modulus::try_from(&Z::from(32)).unwrap());
+    }
+}
+
+#[cfg(test)]
+mod test_gen_trapdoor_ring_default {
+    use super::gen_trapdoor_ring_default;
+    use qfall_math::{integer::Z, integer_mod_q::Modulus};
+
+    #[test]
+    fn working() {
+        let (_, _, _) =
+            gen_trapdoor_ring_default(100, &Modulus::try_from(&Z::from(29)).unwrap(), 10);
     }
 }

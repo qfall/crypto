@@ -65,6 +65,26 @@ impl TrapdoorDistribution for PlusMinusOneZero {
 }
 
 impl TrapdoorDistributionRing for SampleZ {
+    /// Sample a matrix of polynomials of length `n` with entries sampled
+    /// using SampleZ
+    ///
+    /// Parameters:
+    /// - `n`: degree of the polynomial
+    /// - `nr_rows`: number of rows of the matrix
+    /// - `nr_cols`: number of columns of the matrix
+    /// - `s`: the deviation used for SampleZ
+    ///
+    /// # Examples
+    /// ```
+    /// use qfall_crypto::sample::g_trapdoor::trapdoor_distribution::{PlusMinusOneZero, TrapdoorDistribution};
+    /// use qfall_math::integer::Z;
+    /// use qfall_math::integer_mod_q::Modulus;
+    ///
+    /// let mat = PlusMinusOneZero.sample(&42.into(), &24.into());
+    /// ```
+    /// # Panics...
+    /// - ... `n`, `nr_rows` or `nr_cols` does not fit into in `i64`
+    /// or is smaller than `1`.
     fn sample(&self, n: &Z, nr_rows: &Z, nr_cols: &Z, s: &Q) -> MatPolyOverZ {
         let n = i64::try_from(n).unwrap();
         let nr_rows = i64::try_from(nr_rows).unwrap();
