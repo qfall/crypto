@@ -64,7 +64,7 @@ pub fn hash_to_zq_sha256(string: &str, modulus: &Z) -> Zq {
     {
         hex = hex + &sha256(&(i.to_string() + " " + &string2));
     }
-    Zq::try_from_z_z(&Z::from_str_b(&hex, 16).unwrap(), &modulus).unwrap()
+    Zq::try_from_z_z(&Z::from_str_b(&hex, 16).unwrap(), modulus).unwrap()
 }
 
 /// Hashes a given String literal into a `MatZq` column vector.
@@ -90,7 +90,7 @@ pub fn hash_to_vec_zq_sha256(string: &str, modulus: &Z, dimension: u64) -> MatZq
         matrix = matrix
             + &Z::from(hash_to_zq_sha256(
                 &(i.to_string() + " " + &dimension.to_string() + " " + string),
-                &modulus,
+                modulus,
             ))
             .to_string()
             + "],[";
@@ -98,7 +98,7 @@ pub fn hash_to_vec_zq_sha256(string: &str, modulus: &Z, dimension: u64) -> MatZq
     matrix = matrix
         + &Z::from(hash_to_zq_sha256(
             &(dimension.to_string() + " " + string),
-            &modulus,
+            modulus,
         ))
         .to_string()
         + "]]";
