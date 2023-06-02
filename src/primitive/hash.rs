@@ -8,14 +8,13 @@
 
 //! This module contains hashes into different domains.
 
-use std::fmt::Display;
-
 use qfall_math::{
     integer::Z,
     integer_mod_q::{MatZq, Zq},
     traits::SetEntry,
 };
 use sha2::{Digest, Sha256};
+use std::fmt::Display;
 
 /// Computes the sha256 hash value of a given String literal.
 ///
