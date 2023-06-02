@@ -56,7 +56,7 @@ pub fn sha256(string: &str) -> String {
 /// ```
 pub fn hash_to_zq_sha256(string: &str, modulus: &Modulus) -> Zq {
     let modulus_new: Z = modulus.into();
-    let bitsize = (&modulus_new).bits();
+    let bitsize = modulus_new.bits();
     let mut hex = "".to_string();
     let string2 = modulus_new.to_string() + " " + string;
 
