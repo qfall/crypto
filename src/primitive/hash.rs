@@ -170,7 +170,7 @@ mod tests_sha {
 
         let mut large = false;
         for i in 0..5 {
-            if Z::from(hash_to_zq_sha256(
+            if Z::from_zq(hash_to_zq_sha256(
                 &(i.to_string() + str1),
                 &Modulus::try_from_z(&Z::from(271).pow(100).unwrap()).unwrap(),
             )) > Z::from(u64::MAX)
