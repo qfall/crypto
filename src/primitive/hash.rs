@@ -10,7 +10,7 @@
 
 use qfall_math::{
     integer::Z,
-    integer_mod_q::{MatZq, Zq},
+    integer_mod_q::{MatZq, Modulus, Zq},
     traits::SetEntry,
 };
 use sha2::{Digest, Sha256};
@@ -45,17 +45,20 @@ pub fn sha256(string: &str) -> String {
 /// # Examples
 /// ```
 /// use qfall_crypto::primitive::hash::hash_to_zq_sha256;
-/// use qfall_math::{integer::Z, integer_mod_q::Zq};
+/// use qfall_math::{integer::Z, integer_mod_q::{Modulus, Zq}};
+/// use std::str::FromStr;
 ///
 /// let string = "Hello World!";
-/// let hash: Zq = hash_to_zq_sha256("Hello World!", 7);
+/// let modulus = &Modulus::from_str("7").unwrap();
+///
+/// let hash: Zq = hash_to_zq_sha256("Hello World!", &modulus);
 /// assert_eq!(Zq::try_from((2,7)).unwrap(), hash)
 /// ```
-pub fn hash_to_zq_sha256(string: &str, modulus: impl Into<Z>) -> Zq {
+pub fn hash_to_zq_sha256(string: &str, modulus: &Modulus) -> Zq {
     let modulus_new: Z = modulus.into();
-    let bitsize = modulus_new.clone().bits();
+    let bitsize = (&modulus_new).bits();
     let mut hex = "".to_string();
-    let string2 = modulus_new.clone().to_string() + " " + string;
+    let string2 = modulus_new.to_string() + " " + string;
 
     for i in 0..(bitsize / 128 + 1)
     // hashing into e.g. Zq with 256 bit length of q from 256 bit will result in
@@ -66,7 +69,7 @@ pub fn hash_to_zq_sha256(string: &str, modulus: impl Into<Z>) -> Zq {
         hex = hex + &sha256(&(i.to_string() + " " + &string2));
     }
 
-    Zq::try_from((Z::from_str_b(&hex, 16).unwrap(), modulus_new.clone())).unwrap()
+    Zq::try_from((Z::from_str_b(&hex, 16).unwrap(), modulus)).unwrap()
 }
 
 /// Hashes a given String literal into a [`MatZq`] .
@@ -80,11 +83,13 @@ pub fn hash_to_zq_sha256(string: &str, modulus: impl Into<Z>) -> Zq {
 /// # Examples
 /// ```
 /// use qfall_crypto::primitive::hash::hash_to_mat_zq_sha256;
-/// use qfall_math::{integer::Z, integer_mod_q::MatZq};
+/// use qfall_math::{integer::Z, integer_mod_q::{Modulus, MatZq}};
 /// use std::str::FromStr;
 ///
 /// let string = "Hello World!";
-/// let hash: MatZq = hash_to_mat_zq_sha256(string, 2, 2, 7);
+/// let modulus = &Modulus::from_str("7").unwrap();
+///
+/// let hash: MatZq = hash_to_mat_zq_sha256(string, 2, 2, &modulus);
 /// assert_eq!(MatZq::from_str("[[6, 3],[5, 2]] mod 7").unwrap(), hash);
 /// ```
 ///
@@ -94,15 +99,14 @@ pub fn hash_to_mat_zq_sha256(
     string: &str,
     num_rows: impl TryInto<i64> + Display + Into<i64>,
     num_cols: impl TryInto<i64> + Display + Into<i64>,
-    modulus: impl Into<Z>,
+    modulus: &Modulus,
 ) -> MatZq {
     let num_rows_new: i64 = num_rows.into();
     let num_cols_new: i64 = num_cols.into();
-    let modulus_new: Z = modulus.into();
     if num_cols_new <= 0 || num_rows_new <= 0 {
         panic!("The number of rows and number of columns must be at least one.");
     }
-    let mut matrix = MatZq::new(num_rows_new, num_cols_new, modulus_new.clone()).unwrap();
+    let mut matrix = MatZq::new(num_rows_new, num_cols_new, modulus).unwrap();
     let new_string = format!(" {num_rows_new} {num_cols_new} {string}");
     for i in 0..num_rows_new {
         for j in 0..num_cols_new {
@@ -110,7 +114,7 @@ pub fn hash_to_mat_zq_sha256(
                 .set_entry(
                     i,
                     j,
-                    hash_to_zq_sha256(&format!("{i} {j}{new_string}"), modulus_new.clone()),
+                    hash_to_zq_sha256(&format!("{i} {j}{new_string}"), modulus),
                 )
                 .unwrap();
         }
@@ -122,7 +126,7 @@ pub fn hash_to_mat_zq_sha256(
 mod tests_sha {
     use crate::primitive::hash::{hash_to_mat_zq_sha256, hash_to_zq_sha256, sha256, Z};
     use qfall_math::{
-        integer_mod_q::{MatZq, Zq},
+        integer_mod_q::{MatZq, Modulus, Zq},
         traits::Pow,
     };
     use std::str::FromStr;
@@ -152,12 +156,11 @@ mod tests_sha {
         let str1 = "Hello World!";
         let str2 = "qfall";
 
-        let hash1 = hash_to_zq_sha256(str1, 256);
-        let hash2 = hash_to_zq_sha256(str2, 16);
+        let hash1 = hash_to_zq_sha256(str1, &Modulus::from_str("256").unwrap());
+        let hash2 = hash_to_zq_sha256(str2, &Modulus::from_str("16").unwrap());
 
         assert_eq!(Zq::try_from((150, 256)).unwrap(), hash1);
         assert_eq!(Zq::try_from((12, 16)).unwrap(), hash2);
-        println!("{}", hash_to_zq_sha256("Hello World!", 7));
     }
 
     // ensure hashing into [`Zq`] hits the whole domain not just the first 256 bit
@@ -169,7 +172,7 @@ mod tests_sha {
         for i in 0..5 {
             if Z::from(hash_to_zq_sha256(
                 &(i.to_string() + str1),
-                Z::from(271).pow(100).unwrap(),
+                &Modulus::try_from_z(&Z::from(271).pow(100).unwrap()).unwrap(),
             )) > Z::from(u64::MAX)
             {
                 large = true;
@@ -185,8 +188,8 @@ mod tests_sha {
         let str1 = "Hello World!";
         let str2 = "qfall";
 
-        let hash1 = hash_to_mat_zq_sha256(str1, 2, 2, 256);
-        let hash2 = hash_to_mat_zq_sha256(str2, 2, 2, 16);
+        let hash1 = hash_to_mat_zq_sha256(str1, 2, 2, &Modulus::from_str("256").unwrap());
+        let hash2 = hash_to_mat_zq_sha256(str2, 2, 2, &Modulus::from_str("16").unwrap());
 
         assert_eq!(
             MatZq::from_str("[[159, 26],[249, 141]] mod 256").unwrap(),
@@ -201,6 +204,6 @@ mod tests_sha {
     fn test_hash_to_mat_zq_sha256_negative_dimensions() {
         let str1 = "Hello World!";
 
-        let _ = hash_to_mat_zq_sha256(str1, 0, 0, 256);
+        let _ = hash_to_mat_zq_sha256(str1, 0, 0, &Modulus::from_str("256").unwrap());
     }
 }
