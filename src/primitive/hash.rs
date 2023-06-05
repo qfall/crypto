@@ -68,6 +68,7 @@ pub fn hash_to_zq_sha256(string: &str, modulus: &Modulus) -> Zq {
     // lower values to be up to two times as likely as higher values.
     // Doubling the bit size of the hashed number will
     // reduce this difference to 1/2^n which is negligible.
+    // https://crypto.stackexchange.com/questions/37305/how-can-i-instantiate-a-generalized-hash-function
     {
         hex = hex + &sha256(&format!("{i} {string2}"));
     }
