@@ -31,11 +31,14 @@ pub struct PlusMinusOneZero;
 
 impl TrapdoorDistribution for PlusMinusOneZero {
     /// Sample a matrix from distribution with probability `1/2` for `0`
-    /// and `1/4` each for `+/-1`
+    /// and `1/4` each for `+/-1`.
     ///
     /// Parameters:
     /// - `m_bar`: number of columns of the matrix
     /// - `w`: number of rows of the matrix
+    ///
+    /// Returns a matrix where each entry is sampled independently with probability
+    /// `1/2` for `0` and `1/4` each for `+/-1`.
     ///
     /// # Examples
     /// ```
