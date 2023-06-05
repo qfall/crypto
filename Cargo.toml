@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 qfall-math = { git = "https://github.com/qfall/math", branch = "dev" }
+sha2 = "0.10.6"
