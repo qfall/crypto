@@ -18,11 +18,23 @@ use qfall_math::{
 /// Efficiently samples a preimage for a syndrome `u` with a trapdoor gadget-trapdoor `R`
 /// according to Algorithm 3 in [\[1\]](<../index.html#:~:text=[1]>).
 ///
+/// *Note*: This Function does not provide security as the perturbation vector is not yet
+/// implemented correctly.
+/// At the moment this function only works for tags, that correspond to an identity
+/// matrix, this will be changed in the future. If its not the identity, the function
+/// will panic.
+///
+/// TODO: Main issue: the length of the final vector should depend on `s`.
+/// Formally `s` is only important in the presence of the perturbation vector.
+/// Otherwise the `s` does not have any influence on the length of the final vector.
+/// THe vector currently returned therefore does not have a length associated in any way
+/// with `s`.
+///
 /// Namely:
 /// - Samples perturbation: `p`
 /// - Computes the inverse of the tag
 /// - Computes the shifted syndrome `v = H^{-1}(u - (a*p))`
-/// - For each entry in `v` use bucket sampling to get a vector that maps correctly.
+/// - Sample a preimage of the syndrome with the trapdoor.
 /// - Concatenate all vectors to a new vector `z`
 /// - Return `p + [R^t | I]^t z`
 ///
@@ -55,6 +67,7 @@ use qfall_math::{
 /// let u = MatZq::sample_uniform(&gadget_parameters.n, 1, &q).unwrap();
 ///
 /// let sample = sample_d_efficient(
+///     4,
 ///     &a,
 ///     &r,
 ///     &u,
@@ -66,7 +79,9 @@ use qfall_math::{
 ///
 /// assert_eq!(u, a * MatZq::from((&sample, &q)));
 /// ```
+#[allow(clippy::too_many_arguments)]
 pub fn sample_d_efficient(
+    n: impl Into<Z>,
     a: &MatZq,
     trapdoor: &MatZ,
     u: &MatZq,
@@ -75,28 +90,45 @@ pub fn sample_d_efficient(
     s: &Q,
     base: &Z,
 ) -> MatZ {
+    let n = n.into();
+    // efficient sampleD samples with standard deviation `s \omega(\sqrt{\log n})`,
+    // hence we have to rescale the provided standard deviation accordingly
+    let _s = s / (n.log_ceil(&Z::from(2)).unwrap());
+
     // TODO: sample perturbation
     let p = compute_perturbation(trapdoor.get_num_rows() + trapdoor.get_num_columns());
 
-    // TODO: invert tag
+    // TODO: invert tag, change this once is_identity is implemented
+    if &MatZq::identity(tag.get_num_rows(), tag.get_num_columns(), tag.get_mod()).unwrap() != tag {
+        panic!("Tags that are not the identity matrix are not supported at the moment.")
+    }
     let tag_inv = tag;
 
     // compute new syndrome
     let v = tag_inv * (u - (a * MatZq::from((&p, &a.get_mod()))));
 
     let z: MatZ = if base.pow(k).unwrap() == a.get_mod().into() {
-        // use bucket sampling for syndrome if `q = base^k`
+        // use bucket sampling for syndrome if `q = base^k
+
+        // std_deviation = `base * \omega(\sqrt{\log n})`
+        let std_deviation = base * n.log(&Z::from(2)).unwrap();
         let mut z = bucket_sampling(
             &v.get_entry(0, 0).unwrap(),
             &a.get_num_rows().into(),
-            s,
+            &std_deviation,
             k,
             base,
         );
         for i in 1..v.get_num_rows() {
             let v_i = v.get_entry(i, 0).unwrap();
             z = z
-                .concat_vertical(&bucket_sampling(&v_i, &a.get_num_rows().into(), s, k, base))
+                .concat_vertical(&bucket_sampling(
+                    &v_i,
+                    &a.get_num_rows().into(),
+                    &std_deviation,
+                    k,
+                    base,
+                ))
                 .unwrap();
         }
         z
@@ -220,8 +252,11 @@ fn fill_buckets(
     base_modulus: &Modulus,
     buckets: &mut [Vec<Z>],
 ) {
+    // this function takes in the standard deviation, but calls `Z::sample_discrete_gauss`
+    // hence we have to rescale the `s`
+    let gaussian_param = s * (Q::from(2) * Q::PI).sqrt();
     while buckets[matched_remainder].is_empty() {
-        let sample = Z::sample_discrete_gauss(n, &Z::ZERO, s).unwrap();
+        let sample = Z::sample_discrete_gauss(n, &Z::ZERO, &gaussian_param).unwrap();
         let remainder = Zq::from_z_modulus(&sample, base_modulus);
         let remainder_usize = i64::try_from(&remainder.get_value()).unwrap() as usize;
         buckets[remainder_usize].push(sample);
@@ -259,7 +294,7 @@ mod test_sample_d_efficient {
     #[test]
     fn working_with_tag_identity_q_power_two() {
         let base = Z::from(2);
-        let s = Q::from(1);
+        let s = Q::from(10);
         let q = Modulus::try_from_z(&Z::from(16777216)).unwrap();
         let gadget_parameters = GadgetParameters::init_default(3, &q);
 
@@ -270,6 +305,7 @@ mod test_sample_d_efficient {
         let u = MatZq::sample_uniform(&gadget_parameters.n, 1, &q).unwrap();
 
         let sample = sample_d_efficient(
+            3,
             &a,
             &r,
             &u,
@@ -279,7 +315,7 @@ mod test_sample_d_efficient {
             &base,
         );
 
-        assert_eq!(u, a * MatZq::from((&sample, &q)));
+        assert_eq!(u, &a * MatZq::from((&sample, &q)));
     }
 
     /// ensure that the sampled vector is actually a preimage of `f_a`, i.e.
@@ -299,6 +335,7 @@ mod test_sample_d_efficient {
         let u = MatZq::sample_uniform(&gadget_parameters.n, 1, &q).unwrap();
 
         let sample = sample_d_efficient(
+            3,
             &a,
             &r,
             &u,
@@ -334,6 +371,7 @@ mod test_sample_d_efficient {
         let u = MatZq::sample_uniform(&gadget_parameters.n, 1, &q).unwrap();
 
         let sample = sample_d_efficient(
+            3,
             &a,
             &r,
             &u,
@@ -369,6 +407,7 @@ mod test_sample_d_efficient {
         let u = MatZq::sample_uniform(&gadget_parameters.n, 1, &q).unwrap();
 
         let sample = sample_d_efficient(
+            3,
             &a,
             &r,
             &u,
@@ -395,7 +434,7 @@ mod test_bucket_sampling {
         let base = Z::from(4);
         let n = Z::from(5);
         let k = 20;
-        let s = Q::from(2);
+        let s = Q::from(1);
 
         for u_ in [0, 1, 2, 10, 1141, 1241531, 15419513] {
             let u = Z::from(u_);
