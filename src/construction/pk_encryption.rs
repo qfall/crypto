@@ -11,11 +11,16 @@
 //! cryptographic schemes implementing the `PKEncryption` trait.
 
 mod dual_regev;
+pub use dual_regev::DualRegev;
 
-// This trait is just an example implementation. Please think it further through
-// and adjust it before the first implementation of a pk encryption scheme
-pub trait PKEncryption<PublicParameters, SecurityParameter, PublicKey, SecretKey, Message, Cipher> {
-    fn gen(&self, security_parameters: SecurityParameter) -> (PublicKey, SecretKey);
-    fn enc(&self, pk: PublicKey, message: Message) -> Cipher;
-    fn dec(&self, sk: SecretKey, cipher: Cipher) -> Message;
+use qfall_math::integer::Z;
+
+pub trait PKEncryption {
+    type PublicKey;
+    type SecretKey;
+    type Cipher;
+
+    fn gen(&self) -> (Self::PublicKey, Self::SecretKey);
+    fn enc(&self, pk: &Self::PublicKey, message: impl Into<Z>) -> Self::Cipher;
+    fn dec(&self, sk: &Self::SecretKey, cipher: &Self::Cipher) -> Z;
 }
