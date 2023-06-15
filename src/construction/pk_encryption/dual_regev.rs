@@ -239,7 +239,8 @@ impl DualRegev {
         // m >= 2(n + 1) lg (q)
         if Q::from(m) < 2 * (n + 1) * q.log(&10).unwrap() {
             return Err(MathError::InvalidIntegerInput(String::from(
-                "Security is not guaranteed as m < 2(n + 1) lg (q), but m >= 2(n + 1) lg (q) is required."
+                "Security is not guaranteed as m < 2(n + 1) lg (q),
+                but m >= 2(n + 1) lg (q) is required.",
             )));
         }
         // r >= ω( sqrt( log m ) )
@@ -259,11 +260,20 @@ impl DualRegev {
         // α <= 1/(r * sqrt(m) * ω(sqrt(log n))
         if alpha > &(1 / (r * m.sqrt() * n.log(&2).unwrap().sqrt())) {
             return Err(MathError::InvalidIntegerInput(String::from(
-                "Completeness is not guaranteed as α > 1/(r*sqrt(m)*ω(sqrt(log n)), but α <= 1/(r*sqrt(m)*ω(sqrt(log n)) is required."
+                "Completeness is not guaranteed as α > 1/(r*sqrt(m)*ω(sqrt(log n)),
+                but α <= 1/(r*sqrt(m)*ω(sqrt(log n)) is required.",
             )));
         }
 
         Ok(())
+    }
+
+    /// This function instantiates a 128-bit secure [`DualRegev`] scheme.
+    ///
+    /// The public parameters used for this scheme were generated via `DualRegev::new_from_n(53)`
+    /// and its bit-security determined via the [lattice estimator](https://github.com/malb/lattice-estimator).
+    pub fn secure128() -> Self {
+        Self::new(53, 558, 146273, 9.525, 78.48).unwrap()
     }
 }
 
@@ -409,7 +419,7 @@ mod test_pp_generation {
     use super::DualRegev;
     use super::Z;
 
-    /// Checks whether `new` works properly for correct and secure parameter choices
+    /// Checks whether `new` works properly for correct and secure parameter choices.
     #[test]
     fn new_suitable() {
         assert!(DualRegev::new(2, 16, 401, 4, 8).is_ok());
@@ -417,7 +427,7 @@ mod test_pp_generation {
         assert!(DualRegev::new(20, 210, 99823, 8, 43).is_ok());
     }
 
-    /// Checks whether `new` returns an error for insecure or not complete public parameters
+    /// Checks whether `new` returns an error for insecure or not complete public parameters.
     #[test]
     fn new_unsuitable() {
         assert!(DualRegev::new(2, 16, 401, 4, 20).is_err());
@@ -428,7 +438,7 @@ mod test_pp_generation {
         assert!(DualRegev::new(1, 16, 401, 4, 20).is_err());
     }
 
-    /// Checks whether `new_from_n` works properly for different choices of n
+    /// Checks whether `new_from_n` works properly for different choices of n.
     #[test]
     fn suitable_security_params() {
         let n_choices = [
@@ -440,7 +450,7 @@ mod test_pp_generation {
         }
     }
 
-    /// Checks whether the [`Default`] parameter choice is suitable
+    /// Checks whether the [`Default`] parameter choice is suitable.
     #[test]
     fn default_suitable() {
         let dr = DualRegev::default();
@@ -449,7 +459,7 @@ mod test_pp_generation {
     }
 
     /// Checks whether the generated public parameters from `new_from_n` are
-    /// valid choices according to security and correctness of the scheme
+    /// valid choices according to security and correctness of the scheme.
     #[test]
     fn choice_valid() {
         let n_choices = [2, 3, 5, 8, 10, 14, 25, 50, 125, 300, 600, 1200, 4000, 6000];
@@ -462,7 +472,7 @@ mod test_pp_generation {
         }
     }
 
-    /// Ensures that `new_from_n` is available for types implementing [`Into<Z>`]
+    /// Ensures that `new_from_n` is available for types implementing [`Into<Z>`].
     #[test]
     fn availability() {
         let _ = DualRegev::new_from_n(2u8);
@@ -477,12 +487,21 @@ mod test_pp_generation {
         let _ = DualRegev::new_from_n(&Z::from(2));
     }
 
-    /// Checks whether `new_from_n` returns an error for invalid input n
+    /// Checks whether `new_from_n` returns an error for invalid input n.
     #[test]
     fn invalid_n() {
         assert!(DualRegev::new_from_n(1).is_err());
         assert!(DualRegev::new_from_n(0).is_err());
         assert!(DualRegev::new_from_n(-1).is_err());
+    }
+
+    /// Checks whether `secure128` outputs a new instance with correct and secure parameters.
+    #[test]
+    fn secure128_validity() {
+        let dr = DualRegev::secure128();
+
+        let res = DualRegev::check_params(&dr.n, &dr.m, &Z::from(dr.q), &dr.r, &dr.alpha);
+        assert!(res.is_ok());
     }
 }
 
@@ -493,7 +512,7 @@ mod test_dual_regev {
     use qfall_math::integer::Z;
 
     /// Checks whether the full-cycle of gen, enc, dec works properly
-    /// for message 0 and small n
+    /// for message 0 and small n.
     #[test]
     fn cycle_zero_small_n() {
         let msg = Z::ZERO;
@@ -506,7 +525,7 @@ mod test_dual_regev {
     }
 
     /// Checks whether the full-cycle of gen, enc, dec works properly
-    /// for message 1 and small n
+    /// for message 1 and small n.
     #[test]
     fn cycle_one_small_n() {
         let msg = Z::ONE;
@@ -519,7 +538,7 @@ mod test_dual_regev {
     }
 
     /// Checks whether the full-cycle of gen, enc, dec works properly
-    /// for message 0 and larger n
+    /// for message 0 and larger n.
     #[test]
     fn cycle_zero_large_n() {
         let msg = Z::ZERO;
@@ -532,7 +551,7 @@ mod test_dual_regev {
     }
 
     /// Checks whether the full-cycle of gen, enc, dec works properly
-    /// for message 1 and larger n
+    /// for message 1 and larger n.
     #[test]
     fn cycle_one_large_n() {
         let msg = Z::ONE;
