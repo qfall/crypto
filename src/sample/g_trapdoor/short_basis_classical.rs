@@ -22,7 +22,7 @@ use qfall_math::{
 /// *Note*: At the moment this function does not support tags other than the identity.
 /// The function will panic right now, if anything else was provided.
 ///
-/// The matrix is generated as `[ I | R, 0 | I ] * [ I | 0, W | I ]`
+/// The matrix is generated as `[ I | R, 0 | I ] * [ I | 0, W | S ]`
 /// where `W` is a solution of `GW = -H^{-1}A [ I | 0 ] mod q`
 ///
 /// Parameters:
@@ -30,6 +30,8 @@ use qfall_math::{
 /// - `tag`: the corresponding tag
 /// - `a`: the parity check matrix
 /// - `r`: the trapdoor for `a`
+///
+/// Returns a short basis for the lattice `\Lambda^\perp(a)` using the trapdoor `r`
 ///
 /// # Examples
 /// ```
@@ -56,20 +58,20 @@ pub fn gen_short_basis_for_trapdoor(
     a: &MatZq,
     r: &MatZ,
 ) -> MatZ {
-    let sa_l = gen_sa_1(r);
+    let sa_l = gen_sa_l(r);
     let sa_r = gen_sa_r(params, tag, a);
     sa_l * sa_r
 }
 
 /// Computes [ I | R, 0 | I ]
-fn gen_sa_1(r: &MatZ) -> MatZ {
+fn gen_sa_l(r: &MatZ) -> MatZ {
     let left = MatZ::identity(r.get_num_rows() + r.get_num_columns(), r.get_num_rows()).unwrap();
     let identity_right_lower = MatZ::identity(r.get_num_columns(), r.get_num_columns()).unwrap();
     let right = r.concat_vertical(&identity_right_lower).unwrap();
     left.concat_horizontal(&right).unwrap()
 }
 
-/// Computes `[ I | R, 0 | I ]`
+/// Computes `[ I | 0, W | S ]`
 fn gen_sa_r(params: &GadgetParameters, tag: &MatZq, a: &MatZq) -> MatZ {
     let s = compute_s(params);
     let w = compute_w(params, tag, a);
@@ -84,7 +86,7 @@ fn gen_sa_r(params: &GadgetParameters, tag: &MatZq, a: &MatZq) -> MatZ {
     identity_upper.concat_vertical(&ws).unwrap()
 }
 
-/// `[ I | 0, W | I ]`
+/// Compute S for `[ I | 0, W | S ]`
 fn compute_s(params: &GadgetParameters) -> MatZ {
     let id_k = MatZ::identity(&params.k, &params.k).unwrap();
     let mut sk = &params.base * id_k;
@@ -158,7 +160,7 @@ mod test_gen_short_basis_for_trapdoor {
 
 #[cfg(test)]
 mod test_gen_sa {
-    use super::gen_sa_1;
+    use super::gen_sa_l;
     use crate::sample::g_trapdoor::{
         gadget_parameters::GadgetParameters, short_basis_classical::gen_sa_r,
     };
@@ -168,7 +170,7 @@ mod test_gen_sa {
     };
     use std::str::FromStr;
 
-    /// returns a fixed trapdoor and a matrix a for a fixed parameter set
+    /// Returns a fixed trapdoor and a matrix a for a fixed parameter set
     fn get_fixed_trapdoor_for_tag_identity() -> (GadgetParameters, MatZq, MatZ) {
         let params = GadgetParameters::init_default(2, &Modulus::try_from(&Z::from(8)).unwrap());
 
@@ -193,11 +195,11 @@ mod test_gen_sa {
         (params, a, r)
     }
 
-    /// ensure that the left part of the multiplication to get sa is correctly computed
+    /// Ensure that the left part of the multiplication to get sa is correctly computed
     #[test]
     fn working_sa_l() {
         let (_, _, r) = get_fixed_trapdoor_for_tag_identity();
-        let sa_1 = gen_sa_1(&r);
+        let sa_1 = gen_sa_l(&r);
 
         let sa_1_cmp = MatZ::from_str(
             "[\
@@ -219,7 +221,7 @@ mod test_gen_sa {
         assert_eq!(sa_1_cmp, sa_1);
     }
 
-    /// ensure that the right part of the multiplication to get sa is correctly computed
+    /// Ensure that the right part of the multiplication to get sa is correctly computed
     /// with tag as identity
     #[test]
     fn working_sa_r_identity() {
@@ -261,7 +263,7 @@ mod test_compute_s {
     };
     use std::str::FromStr;
 
-    /// ensure that the matrix s is computed correctly for a power-of-two modulus
+    /// Ensure that the matrix s is computed correctly for a power-of-two modulus
     #[test]
     fn base_2_power_two() {
         let params = GadgetParameters::init_default(2, &Modulus::try_from(&Z::from(16)).unwrap());
@@ -282,7 +284,7 @@ mod test_compute_s {
         assert_eq!(s_cmp, s)
     }
 
-    /// ensure that the matrix s is computed correctly for a power-of-two modulus
+    /// Ensure that the matrix s is computed correctly for a power-of-two modulus
     #[test]
     fn base_2_arbitrary() {
         let modulus = Z::from_str_b("1100110", 2).unwrap();
@@ -306,7 +308,7 @@ mod test_compute_s {
         assert_eq!(s_cmp, s)
     }
 
-    /// ensure that the matrix s is computed correctly for a power-of-two modulus
+    /// Ensure that the matrix s is computed correctly for a power-of-two modulus
     #[test]
     fn base_5_power_5() {
         let mut params =
@@ -326,7 +328,7 @@ mod test_compute_s {
         assert_eq!(s_cmp, s)
     }
 
-    /// ensure that the matrix s is computed correctly for a power-of-two modulus
+    /// Ensure that the matrix s is computed correctly for a power-of-two modulus
     #[test]
     fn base_5_arbitrary() {
         let modulus = Z::from_str_b("4123", 5).unwrap();
@@ -361,7 +363,7 @@ mod test_compute_w {
     };
     use std::str::FromStr;
 
-    /// ensure that `GW = A[I|0] mod q`
+    /// Ensure that `GW = A[I|0] mod q`
     #[test]
     fn working_example_tag_identity() {
         let params = GadgetParameters::init_default(2, &Modulus::try_from(&Z::from(8)).unwrap());

@@ -113,12 +113,14 @@ pub fn gen_gadget_vec(k: impl TryInto<i64> + Display, base: &Z) -> Result<MatZ, 
     Ok(out)
 }
 
-/// Computes a arbitrary solution for `g^t x = value mod q`.
+/// Computes an arbitrary solution for `g^t x = value mod q`.
 ///
 /// Parameters:
 /// - `value`: the matrix for which a solution has to be computed
 /// - `k`: the length of a gadget vector
 /// - `base`: the base with which the gadget vector is defined
+///
+/// Returns an arbitrary solution for `g^tx = value mod q`
 ///
 /// # Examples
 /// ```
@@ -162,7 +164,7 @@ pub fn find_solution_gadget_vec(value: &Zq, k: &Z, base: &Z) -> MatZ {
     out
 }
 
-/// Computes a arbitrary solution for `GX = value mod q`.
+/// Computes an arbitrary solution for `GX = value mod q`.
 ///
 /// Computes a entrywise solution using the structure of the gadget matrix to its
 /// advantage and utilizing `find_solution_gadget_vec`.
@@ -172,6 +174,8 @@ pub fn find_solution_gadget_vec(value: &Zq, k: &Z, base: &Z) -> MatZ {
 /// - `value`: the matrix for which a solution has to be computed
 /// - `k`: the length of a gadget vector
 /// - `base`: the base with which the gadget vector is defined
+///
+/// Returns an arbitrary solution for `GX = value mod q`.
 ///
 /// # Examples
 /// ```
@@ -225,7 +229,7 @@ mod test_gen_gadget_vec {
     use qfall_math::integer::{MatZ, Z};
     use std::str::FromStr;
 
-    /// assure that the gadget vector with base `2` and length `5` works correctly
+    /// Assure that the gadget vector with base `2` and length `5` works correctly
     #[test]
     fn correctness_base_2() {
         let gadget_vec = gen_gadget_vec(5, &Z::from(2)).unwrap();
@@ -234,7 +238,7 @@ mod test_gen_gadget_vec {
         assert_eq!(vec, gadget_vec);
     }
 
-    /// assure that the gadget vector with base `5` and length `4` works correctly
+    /// Assure that the gadget vector with base `5` and length `4` works correctly
     #[test]
     fn correctness_base_5() {
         let gadget_vec = gen_gadget_vec(4, &Z::from(5)).unwrap();
@@ -250,7 +254,7 @@ mod test_gen_gadget_mat {
     use qfall_math::integer::{MatZ, Z};
     use std::str::FromStr;
 
-    /// assure that the gadget matrix with gadget vector `[1, 2, 4]^t`(base 3) and
+    /// Assure that the gadget matrix with gadget vector `[1, 2, 4]^t`(base 3) and
     /// `I_3` works correctly
     #[test]
     fn correctness_base_2_3x3() {
@@ -264,7 +268,7 @@ mod test_gen_gadget_mat {
         assert_eq!(mat, gadget_mat);
     }
 
-    /// assure that the gadget matrix with gadget vector `[1, 3, 9, 27, 81]^t`(base 3) and
+    /// Assure that the gadget matrix with gadget vector `[1, 3, 9, 27, 81]^t`(base 3) and
     /// `I_2` works correctly
     #[test]
     fn correctness_base_3_2x5() {
@@ -290,7 +294,7 @@ mod test_gen_trapdoor {
         traits::{Concatenate, GetNumColumns, GetNumRows, SetEntry},
     };
 
-    /// assure that the trapdoor `r` returned from [`gen_trapdoor`] is actually a
+    /// Assure that the trapdoor `r` returned from [`gen_trapdoor`] is actually a
     /// trapdoor for `a`
     #[test]
     fn is_trapdoor_without_tag() {
@@ -318,7 +322,7 @@ mod test_gen_trapdoor {
         );
     }
 
-    /// assure that the trapdoor `r` returned from [`gen_trapdoor`] is actually a
+    /// Assure that the trapdoor `r` returned from [`gen_trapdoor`] is actually a
     /// trapdoor for `a`
     #[test]
     fn is_trapdoor_with_tag() {
@@ -378,7 +382,7 @@ mod test_find_solution_gadget {
     };
     use std::str::FromStr;
 
-    /// ensure that the found solution is actually correct
+    /// Ensure that the found solution is actually correct
     #[test]
     fn returns_correct_solution_vec() {
         let k = Z::from(5);
@@ -397,7 +401,7 @@ mod test_find_solution_gadget {
         }
     }
 
-    /// ensure that the found solution is actually correct
+    /// Ensure that the found solution is actually correct
     #[test]
     fn returns_correct_solution_mat() {
         let k = Z::from(5);
