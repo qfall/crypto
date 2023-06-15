@@ -13,8 +13,8 @@ use super::gadget_parameters::GadgetParameters;
 use qfall_math::{
     error::MathError,
     integer::{MatZ, Z},
-    integer_mod_q::MatZq,
-    traits::{Concatenate, Pow, SetEntry, Tensor},
+    integer_mod_q::{MatZq, Zq},
+    traits::{Concatenate, GetEntry, GetNumColumns, GetNumRows, Pow, SetEntry, Tensor},
 };
 use std::fmt::Display;
 
@@ -113,13 +113,123 @@ pub fn gen_gadget_vec(k: impl TryInto<i64> + Display, base: &Z) -> Result<MatZ, 
     Ok(out)
 }
 
+/// Computes an arbitrary solution for `g^t x = value mod q`.
+///
+/// Parameters:
+/// - `value`: the matrix for which a solution has to be computed
+/// - `k`: the length of a gadget vector
+/// - `base`: the base with which the gadget vector is defined
+///
+/// Returns an arbitrary solution for `g^tx = value mod q`
+///
+/// # Examples
+/// ```
+/// use qfall_math::integer::Z;
+/// use qfall_math::integer_mod_q::Zq;
+/// use qfall_math::integer::MatZ;
+/// use qfall_crypto::sample::g_trapdoor::gadget_classical::find_solution_gadget_vec;
+/// use qfall_crypto::sample::g_trapdoor::gadget_classical::gen_gadget_vec;
+/// use qfall_math::traits::GetEntry;
+/// use std::str::FromStr;
+///
+/// let k = Z::from(5);
+/// let base = Z::from(3);
+/// let value = Zq::try_from((&Z::from(29), &Z::from(125))).unwrap();
+///
+/// let sol = find_solution_gadget_vec(&value, &k, &base);
+///
+/// assert_eq!(
+///     value.get_value(),
+///     (gen_gadget_vec(&k, &base).unwrap().transpose() * sol)
+///         .get_entry(0, 0)
+///         .unwrap()
+/// )
+/// ```
+///
+/// # Panics if ...
+/// - ... the modulus of the value is greater than `base^k`
+pub fn find_solution_gadget_vec(value: &Zq, k: &Z, base: &Z) -> MatZ {
+    if base.pow(k).unwrap() < Z::from(&value.get_mod()) {
+        panic!("The modulus is too large, the value is potentially not representable.");
+    }
+
+    let mut value = value.get_value();
+    let mut out = MatZ::new(k, 1).unwrap();
+    for i in 0..out.get_num_rows() {
+        let val_i = Zq::try_from((&value, base)).unwrap().get_value();
+        out.set_entry(i, 0, &val_i).unwrap();
+        value = value - val_i;
+        value = value.div_exact(base).unwrap();
+    }
+    out
+}
+
+/// Computes an arbitrary solution for `GX = value mod q`.
+///
+/// Computes a entrywise solution using the structure of the gadget matrix to its
+/// advantage and utilizing `find_solution_gadget_vec`.
+///
+///
+/// Parameters:
+/// - `value`: the matrix for which a solution has to be computed
+/// - `k`: the length of a gadget vector
+/// - `base`: the base with which the gadget vector is defined
+///
+/// Returns an arbitrary solution for `GX = value mod q`.
+///
+/// # Examples
+/// ```
+/// use qfall_math::integer::Z;
+/// use qfall_math::integer::MatZ;
+/// use qfall_math::integer_mod_q::MatZq;
+/// use qfall_crypto::sample::g_trapdoor::gadget_classical::find_solution_gadget_mat;
+/// use qfall_crypto::sample::g_trapdoor::gadget_classical::gen_gadget_mat;
+/// use std::str::FromStr;
+///
+/// let k = Z::from(5);
+/// let base = Z::from(3);
+/// let value = MatZq::from_str("[[1, 42],[2, 30],[3, 12]] mod 125").unwrap();
+///
+/// let sol = find_solution_gadget_mat(&value, &k, &base);
+///
+/// assert_eq!(
+///     MatZ::from(&value),
+///     gen_gadget_mat(3, &k, &base).unwrap() * sol
+/// )
+/// ```
+///
+/// # Panics if ...
+/// - ... the modulus of the value is greater than `base^k`
+pub fn find_solution_gadget_mat(value: &MatZq, k: &Z, base: &Z) -> MatZ {
+    let mut vec_col: Vec<MatZ> = Vec::new();
+    for i in 0..value.get_num_columns() as usize {
+        let mut _out: MatZ = find_solution_gadget_vec(&value.get_entry(0, i).unwrap(), k, base);
+        for j in 1..value.get_num_rows() as usize {
+            _out = _out
+                .concat_vertical(&find_solution_gadget_vec(
+                    &value.get_entry(j, i).unwrap(),
+                    k,
+                    base,
+                ))
+                .unwrap();
+        }
+        vec_col.push(_out);
+    }
+
+    let mut out = vec_col.first().unwrap().clone();
+    for out_append in &mut vec_col[1..] {
+        out = out.concat_horizontal(out_append).unwrap()
+    }
+    out
+}
+
 #[cfg(test)]
 mod test_gen_gadget_vec {
     use crate::sample::g_trapdoor::gadget_classical::gen_gadget_vec;
     use qfall_math::integer::{MatZ, Z};
     use std::str::FromStr;
 
-    /// assure that the gadget vector with base `2` and length `5` works correctly
+    /// Assure that the gadget vector with base `2` and length `5` works correctly
     #[test]
     fn correctness_base_2() {
         let gadget_vec = gen_gadget_vec(5, &Z::from(2)).unwrap();
@@ -128,7 +238,7 @@ mod test_gen_gadget_vec {
         assert_eq!(vec, gadget_vec);
     }
 
-    /// assure that the gadget vector with base `5` and length `4` works correctly
+    /// Assure that the gadget vector with base `5` and length `4` works correctly
     #[test]
     fn correctness_base_5() {
         let gadget_vec = gen_gadget_vec(4, &Z::from(5)).unwrap();
@@ -144,7 +254,7 @@ mod test_gen_gadget_mat {
     use qfall_math::integer::{MatZ, Z};
     use std::str::FromStr;
 
-    /// assure that the gadget matrix with gadget vector `[1, 2, 4]^t`(base 3) and
+    /// Assure that the gadget matrix with gadget vector `[1, 2, 4]^t`(base 3) and
     /// `I_3` works correctly
     #[test]
     fn correctness_base_2_3x3() {
@@ -158,7 +268,7 @@ mod test_gen_gadget_mat {
         assert_eq!(mat, gadget_mat);
     }
 
-    /// assure that the gadget matrix with gadget vector `[1, 3, 9, 27, 81]^t`(base 3) and
+    /// Assure that the gadget matrix with gadget vector `[1, 3, 9, 27, 81]^t`(base 3) and
     /// `I_2` works correctly
     #[test]
     fn correctness_base_3_2x5() {
@@ -184,7 +294,7 @@ mod test_gen_trapdoor {
         traits::{Concatenate, GetNumColumns, GetNumRows, SetEntry},
     };
 
-    /// assure that the trapdoor `r` returned from [`gen_trapdoor`] is actually a
+    /// Assure that the trapdoor `r` returned from [`gen_trapdoor`] is actually a
     /// trapdoor for `a`
     #[test]
     fn is_trapdoor_without_tag() {
@@ -212,7 +322,7 @@ mod test_gen_trapdoor {
         );
     }
 
-    /// assure that the trapdoor `r` returned from [`gen_trapdoor`] is actually a
+    /// Assure that the trapdoor `r` returned from [`gen_trapdoor`] is actually a
     /// trapdoor for `a`
     #[test]
     fn is_trapdoor_with_tag() {
@@ -256,5 +366,56 @@ mod test_gen_trapdoor {
             }
         }
         out
+    }
+}
+
+#[cfg(test)]
+mod test_find_solution_gadget {
+    use super::find_solution_gadget_vec;
+    use crate::sample::g_trapdoor::gadget_classical::{
+        find_solution_gadget_mat, gen_gadget_mat, gen_gadget_vec,
+    };
+    use qfall_math::{
+        integer::{MatZ, Z},
+        integer_mod_q::{MatZq, Zq},
+        traits::GetEntry,
+    };
+    use std::str::FromStr;
+
+    /// Ensure that the found solution is actually correct
+    #[test]
+    fn returns_correct_solution_vec() {
+        let k = Z::from(5);
+        let base = Z::from(3);
+        for i in 0..124 {
+            let value = Zq::try_from((&Z::from(i), &Z::from(125))).unwrap();
+
+            let sol = find_solution_gadget_vec(&value, &k, &base);
+
+            assert_eq!(
+                value.get_value(),
+                (gen_gadget_vec(&k, &base).unwrap().transpose() * sol)
+                    .get_entry(0, 0)
+                    .unwrap()
+            )
+        }
+    }
+
+    /// Ensure that the found solution is actually correct
+    #[test]
+    fn returns_correct_solution_mat() {
+        let k = Z::from(5);
+        let base = Z::from(3);
+        let value = MatZq::from_str("[[1, 42],[2, 40],[3, 90]] mod 125").unwrap();
+
+        let sol = find_solution_gadget_mat(&value, &k, &base);
+
+        println!("{sol}");
+        println!("{}", gen_gadget_mat(3, &k, &base).unwrap());
+
+        assert_eq!(
+            MatZ::from(&value),
+            gen_gadget_mat(3, &k, &base).unwrap() * sol
+        )
     }
 }
