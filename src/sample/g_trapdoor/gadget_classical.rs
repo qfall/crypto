@@ -308,9 +308,10 @@ mod test_gen_trapdoor {
 
         // generate the trapdoor for a from r as trapdoor = [[r],[I]]
         let trapdoor = r
-            .concat_vertical(
-                &MatZ::identity(a.get_num_columns() - r.get_num_rows(), r.get_num_columns()),
-            )
+            .concat_vertical(&MatZ::identity(
+                a.get_num_columns() - r.get_num_rows(),
+                r.get_num_columns(),
+            ))
             .unwrap();
 
         // ensure G = A*trapdoor (definition of a trapdoor)
@@ -336,9 +337,10 @@ mod test_gen_trapdoor {
 
         // generate the trapdoor for a from r as trapdoor = [[r],[I]]
         let trapdoor = r
-            .concat_vertical(
-                &MatZ::identity(a.get_num_columns() - r.get_num_rows(), r.get_num_columns()),
-            )
+            .concat_vertical(&MatZ::identity(
+                a.get_num_columns() - r.get_num_rows(),
+                r.get_num_columns(),
+            ))
             .unwrap();
 
         // ensure tag*G = A*trapdoor (definition of a trapdoor)
@@ -358,7 +360,8 @@ mod test_gen_trapdoor {
         for row in 0..size {
             for column in 0..size {
                 if row < column {
-                    out.set_entry(row, column, Z::sample_uniform(&0, &max_value).unwrap()).unwrap();
+                    out.set_entry(row, column, Z::sample_uniform(&0, &max_value).unwrap())
+                        .unwrap();
                 }
             }
         }

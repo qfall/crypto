@@ -18,9 +18,9 @@
 use super::PKEncryption;
 use qfall_math::{
     error::MathError,
-    integer::{MatZ, Z},
+    integer::Z,
     integer_mod_q::{MatZq, Modulus, Zq},
-    rational::{MatQ, Q},
+    rational::Q,
     traits::{Distance, Pow},
 };
 use serde::{Deserialize, Serialize};
@@ -360,11 +360,7 @@ impl PKEncryption for DualRegev {
         let message = message.get_value();
 
         // e <- SampleD over lattice Z^m, center 0 with gaussian parameter r
-        let basis = MatZ::identity(&self.m, &self.m);
-        let center = MatQ::new(&self.m, 1);
-        // TODO: Replace by MatZq::sample_d once available
-        let vec_e = MatZ::sample_d(&basis, &self.n, &center, &self.r).unwrap();
-        let vec_e = MatZq::from((&vec_e, &self.q));
+        let vec_e = MatZq::sample_d_common(&self.m, &self.q, &self.n, &self.r).unwrap();
 
         // u = A * e
         let vec_u = &pk.0 * &vec_e;
