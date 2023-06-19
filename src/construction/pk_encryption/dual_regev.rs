@@ -161,13 +161,9 @@ impl DualRegev {
         };
 
         // generate prime q in [n^power / 2, n^power]
-        // TODO: Replace by q = Z::sample_prime_uniform once implemented
         let upper_bound: Z = n.pow(power).unwrap();
         let lower_bound = upper_bound.div_ceil(&Z::from(2));
-        let mut q = Z::sample_uniform(&lower_bound, &upper_bound).unwrap();
-        while !q.is_prime() {
-            q = Z::sample_uniform(&lower_bound, &upper_bound).unwrap();
-        }
+        let q = Z::sample_prime_uniform(&lower_bound, &upper_bound).unwrap();
 
         // choose m = 2 (n+1) lg q
         let m = (Z::from(2) * (n + Z::ONE) * q.log(&10).unwrap()).round();
@@ -322,10 +318,10 @@ impl PKEncryption for DualRegev {
     /// ```
     fn gen(&self) -> (Self::PublicKey, Self::SecretKey) {
         // s <- Z_q^n
-        let vec_s = MatZq::sample_uniform(&self.n, 1, &self.q).unwrap();
+        let vec_s = MatZq::sample_uniform(&self.n, 1, &self.q);
 
         // A <- Z_q^{n x m}
-        let mat_a = MatZq::sample_uniform(&self.n, &self.m, &self.q).unwrap();
+        let mat_a = MatZq::sample_uniform(&self.n, &self.m, &self.q);
         // x <- χ^m
         let vec_x =
             MatZq::sample_discrete_gauss(&self.m, 1, &self.q, &self.n, 0, &self.alpha).unwrap();
@@ -364,8 +360,8 @@ impl PKEncryption for DualRegev {
         let message = message.get_value();
 
         // e <- SampleD over lattice Z^m, center 0 with gaussian parameter r
-        let basis = MatZ::identity(&self.m, &self.m).unwrap();
-        let center = MatQ::new(&self.m, 1).unwrap();
+        let basis = MatZ::identity(&self.m, &self.m);
+        let center = MatQ::new(&self.m, 1);
         // TODO: Replace by MatZq::sample_d once available
         let vec_e = MatZ::sample_d(&basis, &self.n, &center, &self.r).unwrap();
         let vec_e = MatZq::from((&vec_e, &self.q));

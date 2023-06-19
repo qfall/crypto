@@ -112,7 +112,7 @@ pub fn hash_to_mat_zq_sha256(
     if num_cols_new <= 0 || num_rows_new <= 0 {
         panic!("The number of rows and number of columns must be at least one.");
     }
-    let mut matrix = MatZq::new(num_rows_new, num_cols_new, modulus).unwrap();
+    let mut matrix = MatZq::new(num_rows_new, num_cols_new, modulus);
     let new_string = format!("{num_rows_new} {num_cols_new} {string}");
     for i in 0..num_rows_new {
         for j in 0..num_cols_new {
