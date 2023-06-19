@@ -37,9 +37,9 @@ use std::fmt::Display;
 /// use qfall_math::integer::Z;
 /// use qfall_math::integer_mod_q::{Modulus, MatZq};
 ///
-/// let params = GadgetParameters::init_default(42, &Modulus::try_from(&Z::from(42)).unwrap());
-/// let a_bar = MatZq::sample_uniform(42, &params.m_bar, &params.q).unwrap();
-/// let tag = MatZq::identity(42, 42, &params.q).unwrap();
+/// let params = GadgetParameters::init_default(42, &Modulus::from(42));
+/// let a_bar = MatZq::sample_uniform(42, &params.m_bar, &params.q);
+/// let tag = MatZq::identity(42, 42, &params.q);
 ///
 /// let (a,r) = gen_trapdoor(&params, &a_bar, &tag).unwrap();
 /// ```
@@ -154,7 +154,7 @@ pub fn find_solution_gadget_vec(value: &Zq, k: &Z, base: &Z) -> MatZ {
     }
 
     let mut value = value.get_value();
-    let mut out = MatZ::new(k, 1).unwrap();
+    let mut out = MatZ::new(k, 1);
     for i in 0..out.get_num_rows() {
         let val_i = Zq::try_from((&value, base)).unwrap().get_value();
         out.set_entry(i, 0, &val_i).unwrap();
@@ -298,7 +298,7 @@ mod test_gen_trapdoor {
     /// trapdoor for `a`
     #[test]
     fn is_trapdoor_without_tag() {
-        let modulus = Modulus::try_from(&Z::from(32)).unwrap();
+        let modulus = Modulus::from(32);
         let params = GadgetParameters::init_default(42, &modulus);
         let a_bar = MatZq::sample_uniform(42, &params.m_bar, &params.q);
         let tag = MatZq::identity(42, 42, &params.q);
@@ -326,7 +326,7 @@ mod test_gen_trapdoor {
     /// trapdoor for `a`
     #[test]
     fn is_trapdoor_with_tag() {
-        let modulus = Modulus::try_from(&Z::from(32)).unwrap();
+        let modulus = Modulus::from(32);
         let params = GadgetParameters::init_default(42, &modulus);
         let a_bar = MatZq::sample_uniform(42, &params.m_bar, &params.q);
         // calculate an invertible tag in Z_q^{n \times n}

@@ -31,7 +31,7 @@ use qfall_math::{integer::Z, integer_mod_q::Modulus, traits::Pow};
 /// use qfall_math::integer::Z;
 /// use qfall_math::integer_mod_q::Modulus;
 ///
-/// let params = GadgetParameters::init_default(42, &Modulus::try_from(&Z::from(42)).unwrap());
+/// let params = GadgetParameters::init_default(42, &Modulus::from(42));
 /// ```
 pub struct GadgetParameters {
     pub n: Z,
@@ -68,7 +68,7 @@ impl GadgetParameters {
     /// use qfall_math::integer::Z;
     /// use qfall_math::integer_mod_q::Modulus;
     ///
-    /// let params = GadgetParameters::init_default(42, &Modulus::try_from(&Z::from(42)).unwrap());
+    /// let params = GadgetParameters::init_default(42, &Modulus::from(42));
     /// ```
     ///
     /// # Panics...

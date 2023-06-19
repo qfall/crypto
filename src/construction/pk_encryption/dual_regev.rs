@@ -78,7 +78,7 @@ impl DualRegev {
 
         Self::check_params(&n, &m, &q, &r, &alpha)?;
 
-        let q = Modulus::try_from(&q).unwrap();
+        let q = Modulus::from(&q);
 
         Ok(Self { n, m, q, r, alpha })
     }
@@ -120,7 +120,7 @@ impl DualRegev {
             (m, q, r, alpha) = Self::gen_new_public_parameters(&n);
         }
 
-        let q = Modulus::try_from_z(&q).unwrap();
+        let q = Modulus::from(&q);
 
         Ok(Self { n, m, q, r, alpha })
     }
@@ -287,7 +287,7 @@ impl Default for DualRegev {
     fn default() -> Self {
         let n = Z::from(2);
         let m = Z::from(16);
-        let q = Modulus::try_from(&Z::from(401)).unwrap();
+        let q = Modulus::from(401);
         let r = Q::from(4);
         let alpha = Q::from(8);
 

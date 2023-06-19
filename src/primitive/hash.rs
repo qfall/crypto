@@ -52,7 +52,7 @@ pub fn sha256(string: &str) -> String {
 /// use qfall_math::{integer::Z, integer_mod_q::{Modulus, Zq}};
 ///
 /// let string = "Hello World!";
-/// let modulus = &Modulus::try_from(&Z::from(7)).unwrap();
+/// let modulus = Modulus::from(7);
 ///
 /// let hash: Zq = hash_to_zq_sha256("Hello World!", &modulus);
 /// assert_eq!(Zq::try_from((2,7)).unwrap(), hash)
@@ -93,7 +93,7 @@ pub fn hash_to_zq_sha256(string: &str, modulus: &Modulus) -> Zq {
 /// use std::str::FromStr;
 ///
 /// let string = "Hello World!";
-/// let modulus = &Modulus::try_from(&Z::from(7)).unwrap();
+/// let modulus = Modulus::from(7);
 ///
 /// let hash: MatZq = hash_to_mat_zq_sha256(string, 2, 2, &modulus);
 /// assert_eq!(MatZq::from_str("[[6, 3],[5, 2]] mod 7").unwrap(), hash);
@@ -162,8 +162,8 @@ mod tests_sha {
         let str1 = "Hello World!";
         let str2 = "qfall";
 
-        let hash1 = hash_to_zq_sha256(str1, &Modulus::try_from(&Z::from(256)).unwrap());
-        let hash2 = hash_to_zq_sha256(str2, &Modulus::try_from(&Z::from(16)).unwrap());
+        let hash1 = hash_to_zq_sha256(str1, &Modulus::from(256));
+        let hash2 = hash_to_zq_sha256(str2, &Modulus::from(16));
 
         assert_eq!(Zq::try_from((150, 256)).unwrap(), hash1);
         assert_eq!(Zq::try_from((12, 16)).unwrap(), hash2);
@@ -178,7 +178,7 @@ mod tests_sha {
         for i in 0..5 {
             if hash_to_zq_sha256(
                 &(i.to_string() + str1),
-                &Modulus::try_from_z(&Z::from(271).pow(100).unwrap()).unwrap(),
+                &Modulus::from(&Z::from(271).pow(100).unwrap()),
             )
             .distance(Z::ZERO)
                 > Z::from(u64::MAX)
@@ -196,8 +196,8 @@ mod tests_sha {
         let str1 = "Hello World!";
         let str2 = "qfall";
 
-        let hash1 = hash_to_mat_zq_sha256(str1, 2, 2, &Modulus::try_from(&Z::from(256)).unwrap());
-        let hash2 = hash_to_mat_zq_sha256(str2, 2, 2, &Modulus::try_from(&Z::from(16)).unwrap());
+        let hash1 = hash_to_mat_zq_sha256(str1, 2, 2, &Modulus::from(256));
+        let hash2 = hash_to_mat_zq_sha256(str2, 2, 2, &Modulus::from(16));
 
         assert_eq!(
             MatZq::from_str("[[159, 26],[249, 141]] mod 256").unwrap(),
@@ -212,6 +212,6 @@ mod tests_sha {
     fn test_hash_to_mat_zq_sha256_negative_dimensions() {
         let str1 = "Hello World!";
 
-        let _ = hash_to_mat_zq_sha256(str1, 0, 0, &Modulus::try_from(&Z::from(16)).unwrap());
+        let _ = hash_to_mat_zq_sha256(str1, 0, 0, &Modulus::from(16));
     }
 }

@@ -44,11 +44,11 @@ use qfall_math::{
 ///     traits::{GetNumColumns, GetNumRows},
 /// };
 ///
-/// let modulus = Modulus::try_from(&Z::from(127)).unwrap();
+/// let modulus = Modulus::from(127);
 /// let params = GadgetParameters::init_default(10, &modulus);
 /// let (a, r) = gen_trapdoor_default(&params.n, &modulus);
 ///
-/// let tag = MatZq::identity(&params.n, &params.n, &modulus).unwrap();
+/// let tag = MatZq::identity(&params.n, &params.n, &modulus);
 ///
 /// let short_basis = gen_short_basis_for_trapdoor(&params, &tag, &a, &r);
 /// ```
@@ -65,8 +65,8 @@ pub fn gen_short_basis_for_trapdoor(
 
 /// Computes [ I | R, 0 | I ]
 fn gen_sa_l(r: &MatZ) -> MatZ {
-    let left = MatZ::identity(r.get_num_rows() + r.get_num_columns(), r.get_num_rows()).unwrap();
-    let identity_right_lower = MatZ::identity(r.get_num_columns(), r.get_num_columns()).unwrap();
+    let left = MatZ::identity(r.get_num_rows() + r.get_num_columns(), r.get_num_rows());
+    let identity_right_lower = MatZ::identity(r.get_num_columns(), r.get_num_columns());
     let right = r.concat_vertical(&identity_right_lower).unwrap();
     left.concat_horizontal(&right).unwrap()
 }
@@ -79,8 +79,7 @@ fn gen_sa_r(params: &GadgetParameters, tag: &MatZq, a: &MatZq) -> MatZ {
     let identity_upper = MatZ::identity(
         w.get_num_columns(),
         w.get_num_columns() + s.get_num_columns(),
-    )
-    .unwrap();
+    );
 
     let ws = w.concat_horizontal(&s).unwrap();
     identity_upper.concat_vertical(&ws).unwrap()
@@ -88,7 +87,7 @@ fn gen_sa_r(params: &GadgetParameters, tag: &MatZq, a: &MatZq) -> MatZ {
 
 /// Compute S for `[ I | 0, W | S ]`
 fn compute_s(params: &GadgetParameters) -> MatZ {
-    let id_k = MatZ::identity(&params.k, &params.k).unwrap();
+    let id_k = MatZ::identity(&params.k, &params.k);
     let mut sk = &params.base * id_k;
     for i in 0..(sk.get_num_rows() - 1) {
         sk.set_entry(i + 1, i, Z::MINUS_ONE).unwrap();
@@ -109,21 +108,17 @@ fn compute_s(params: &GadgetParameters) -> MatZ {
         }
         sk
     };
-    MatZ::identity(&params.n, &params.n)
-        .unwrap()
-        .tensor_product(&sk)
+    MatZ::identity(&params.n, &params.n).tensor_product(&sk)
 }
 
 /// Computes `W` with `GW = -H^{-1}A [ I | 0 ] mod q`
 fn compute_w(params: &GadgetParameters, tag: &MatZq, a: &MatZq) -> MatZ {
     // TODO invert tag, remove this, once we can invert tags.
-    let identity =
-        MatZq::identity(tag.get_num_rows(), tag.get_num_columns(), tag.get_mod()).unwrap();
+    let identity = MatZq::identity(tag.get_num_rows(), tag.get_num_columns(), tag.get_mod());
     assert_eq!(&identity, tag);
     let tag_inv = tag;
 
-    let rhs =
-        Z::MINUS_ONE * tag_inv * (a * MatZ::identity(a.get_num_columns(), &params.m_bar).unwrap());
+    let rhs = Z::MINUS_ONE * tag_inv * (a * MatZ::identity(a.get_num_columns(), &params.m_bar));
     find_solution_gadget_mat(&rhs, &params.k, &params.base)
 }
 
@@ -132,7 +127,6 @@ mod test_gen_short_basis_for_trapdoor {
     use super::gen_short_basis_for_trapdoor;
     use crate::sample::g_trapdoor::{gadget_parameters::GadgetParameters, gen_trapdoor_default};
     use qfall_math::{
-        integer::Z,
         integer_mod_q::{MatZq, Modulus},
         traits::{GetNumColumns, GetNumRows},
     };
@@ -141,15 +135,15 @@ mod test_gen_short_basis_for_trapdoor {
     #[test]
     fn is_basis_not_power_tag_identity() {
         for n in [1, 5, 10, 12] {
-            let modulus = Modulus::try_from(&Z::from(127 + 3 * n)).unwrap();
+            let modulus = Modulus::from(127 + 3 * n);
             let params = GadgetParameters::init_default(n, &modulus);
             let (a, r) = gen_trapdoor_default(&params.n, &modulus);
 
-            let tag = MatZq::identity(&params.n, &params.n, &modulus).unwrap();
+            let tag = MatZq::identity(&params.n, &params.n, &modulus);
 
             let short_basis = gen_short_basis_for_trapdoor(&params, &tag, &a, &r);
 
-            let zero_vec = MatZq::new(a.get_num_rows(), 1, &modulus).unwrap();
+            let zero_vec = MatZq::new(a.get_num_rows(), 1, &modulus);
 
             for i in 0..short_basis.get_num_columns() {
                 assert_eq!(zero_vec, &a * short_basis.get_column(i).unwrap())
@@ -165,14 +159,14 @@ mod test_gen_sa {
         gadget_parameters::GadgetParameters, short_basis_classical::gen_sa_r,
     };
     use qfall_math::{
-        integer::{MatZ, Z},
+        integer::MatZ,
         integer_mod_q::{MatZq, Modulus},
     };
     use std::str::FromStr;
 
     /// Returns a fixed trapdoor and a matrix a for a fixed parameter set
     fn get_fixed_trapdoor_for_tag_identity() -> (GadgetParameters, MatZq, MatZ) {
-        let params = GadgetParameters::init_default(2, &Modulus::try_from(&Z::from(8)).unwrap());
+        let params = GadgetParameters::init_default(2, &Modulus::from(8));
 
         let a = MatZq::from_str(
             "[\
@@ -227,7 +221,7 @@ mod test_gen_sa {
     fn working_sa_r_identity() {
         let (params, a, _) = get_fixed_trapdoor_for_tag_identity();
         println!("{0}", params.k);
-        let tag = MatZq::identity(&params.n, &params.n, &params.q).unwrap();
+        let tag = MatZq::identity(&params.n, &params.n, &params.q);
         let sa_r = gen_sa_r(&params, &tag, &a);
 
         println!("{sa_r}");
@@ -266,7 +260,7 @@ mod test_compute_s {
     /// Ensure that the matrix s is computed correctly for a power-of-two modulus
     #[test]
     fn base_2_power_two() {
-        let params = GadgetParameters::init_default(2, &Modulus::try_from(&Z::from(16)).unwrap());
+        let params = GadgetParameters::init_default(2, &Modulus::from(16));
 
         let s = compute_s(&params);
 
@@ -288,7 +282,7 @@ mod test_compute_s {
     #[test]
     fn base_2_arbitrary() {
         let modulus = Z::from_str_b("1100110", 2).unwrap();
-        let params = GadgetParameters::init_default(1, &Modulus::try_from(&modulus).unwrap());
+        let params = GadgetParameters::init_default(1, &Modulus::from(&modulus));
 
         let s = compute_s(&params);
 
@@ -311,8 +305,7 @@ mod test_compute_s {
     /// Ensure that the matrix s is computed correctly for a power-of-two modulus
     #[test]
     fn base_5_power_5() {
-        let mut params =
-            GadgetParameters::init_default(1, &Modulus::try_from(&Z::from(625)).unwrap());
+        let mut params = GadgetParameters::init_default(1, &Modulus::from(625));
         params.k = Z::from(4);
         params.base = Z::from(5);
 
@@ -332,7 +325,7 @@ mod test_compute_s {
     #[test]
     fn base_5_arbitrary() {
         let modulus = Z::from_str_b("4123", 5).unwrap();
-        let mut params = GadgetParameters::init_default(1, &Modulus::try_from(&modulus).unwrap());
+        let mut params = GadgetParameters::init_default(1, &Modulus::from(&modulus));
         params.k = Z::from(4);
         params.base = Z::from(5);
 
@@ -366,8 +359,8 @@ mod test_compute_w {
     /// Ensure that `GW = A[I|0] mod q`
     #[test]
     fn working_example_tag_identity() {
-        let params = GadgetParameters::init_default(2, &Modulus::try_from(&Z::from(8)).unwrap());
-        let tag = MatZq::identity(2, 2, &params.q).unwrap();
+        let params = GadgetParameters::init_default(2, &Modulus::from(8));
+        let tag = MatZq::identity(2, 2, &params.q);
 
         let a = MatZq::from_str(
             "[\
@@ -381,7 +374,7 @@ mod test_compute_w {
         let g = gen_gadget_mat(&params.n, &params.k, &params.base).unwrap();
 
         let gw = MatZq::from((&(g * w), &params.q));
-        let rhs = &a * MatZ::identity(a.get_num_columns(), &params.m_bar).unwrap();
+        let rhs = &a * MatZ::identity(a.get_num_columns(), &params.m_bar);
 
         assert_eq!(gw, Z::MINUS_ONE * rhs)
     }

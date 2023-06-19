@@ -42,7 +42,7 @@ pub mod trapdoor_distribution;
 /// use qfall_math::integer::Z;
 /// use qfall_math::integer_mod_q::Modulus;
 ///
-/// let (a,r) = gen_trapdoor_default(42, &Modulus::try_from(&Z::from(101)).unwrap());
+/// let (a,r) = gen_trapdoor_default(42, &Modulus::from(101));
 /// ```
 ///
 /// # Panics...
@@ -68,10 +68,10 @@ pub fn gen_trapdoor_default(n: impl Into<Z>, modulus: &Modulus) -> (MatZq, MatZ)
 #[cfg(test)]
 mod test_gen_trapdoor_default {
     use super::gen_trapdoor_default;
-    use qfall_math::{integer::Z, integer_mod_q::Modulus};
+    use qfall_math::integer_mod_q::Modulus;
 
     #[test]
     fn working() {
-        let (_, _) = gen_trapdoor_default(100, &Modulus::try_from(&Z::from(32)).unwrap());
+        let (_, _) = gen_trapdoor_default(100, &Modulus::from(32));
     }
 }
