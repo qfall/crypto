@@ -37,9 +37,9 @@ use std::fmt::Display;
 /// use qfall_math::integer::Z;
 /// use qfall_math::integer_mod_q::{Modulus, MatZq};
 ///
-/// let params = GadgetParameters::init_default(42, &Modulus::try_from(&Z::from(42)).unwrap());
-/// let a_bar = MatZq::sample_uniform(42, &params.m_bar, &params.q).unwrap();
-/// let tag = MatZq::identity(42, 42, &params.q).unwrap();
+/// let params = GadgetParameters::init_default(42, &Modulus::from(42));
+/// let a_bar = MatZq::sample_uniform(42, &params.m_bar, &params.q);
+/// let tag = MatZq::identity(42, 42, &params.q);
 ///
 /// let (a,r) = gen_trapdoor(&params, &a_bar, &tag).unwrap();
 /// ```
@@ -84,7 +84,7 @@ pub fn gen_gadget_mat(
     base: &Z,
 ) -> Result<MatZ, MathError> {
     let gadget_vec = gen_gadget_vec(k, base);
-    let identity = MatZ::identity(n.clone(), n)?;
+    let identity = MatZ::identity(n.clone(), n);
     Ok(identity.tensor_product(&gadget_vec?.transpose()))
 }
 
@@ -105,7 +105,7 @@ pub fn gen_gadget_mat(
 /// let g = gen_gadget_vec(4, &Z::from(2));
 /// ```
 pub fn gen_gadget_vec(k: impl TryInto<i64> + Display, base: &Z) -> Result<MatZ, MathError> {
-    let mut out = MatZ::new(k, 1).unwrap();
+    let mut out = MatZ::new(k, 1);
     let mut i = 0;
     while out.set_entry(i, 0, &base.pow(i)?).is_ok() {
         i += 1;
@@ -154,7 +154,7 @@ pub fn find_solution_gadget_vec(value: &Zq, k: &Z, base: &Z) -> MatZ {
     }
 
     let mut value = value.get_value();
-    let mut out = MatZ::new(k, 1).unwrap();
+    let mut out = MatZ::new(k, 1);
     for i in 0..out.get_num_rows() {
         let val_i = Zq::try_from((&value, base)).unwrap().get_value();
         out.set_entry(i, 0, &val_i).unwrap();
@@ -298,20 +298,20 @@ mod test_gen_trapdoor {
     /// trapdoor for `a`
     #[test]
     fn is_trapdoor_without_tag() {
-        let modulus = Modulus::try_from(&Z::from(32)).unwrap();
+        let modulus = Modulus::from(32);
         let params = GadgetParameters::init_default(42, &modulus);
-        let a_bar = MatZq::sample_uniform(42, &params.m_bar, &params.q).unwrap();
-        let tag = MatZq::identity(42, 42, &params.q).unwrap();
+        let a_bar = MatZq::sample_uniform(42, &params.m_bar, &params.q);
+        let tag = MatZq::identity(42, 42, &params.q);
 
         // call gen_trapdoor to get matrix a and its 'trapdoor' r
         let (a, r) = gen_trapdoor(&params, &a_bar, &tag).unwrap();
 
         // generate the trapdoor for a from r as trapdoor = [[r],[I]]
         let trapdoor = r
-            .concat_vertical(
-                &MatZ::identity(a.get_num_columns() - r.get_num_rows(), r.get_num_columns())
-                    .unwrap(),
-            )
+            .concat_vertical(&MatZ::identity(
+                a.get_num_columns() - r.get_num_rows(),
+                r.get_num_columns(),
+            ))
             .unwrap();
 
         // ensure G = A*trapdoor (definition of a trapdoor)
@@ -326,9 +326,9 @@ mod test_gen_trapdoor {
     /// trapdoor for `a`
     #[test]
     fn is_trapdoor_with_tag() {
-        let modulus = Modulus::try_from(&Z::from(32)).unwrap();
+        let modulus = Modulus::from(32);
         let params = GadgetParameters::init_default(42, &modulus);
-        let a_bar = MatZq::sample_uniform(42, &params.m_bar, &params.q).unwrap();
+        let a_bar = MatZq::sample_uniform(42, &params.m_bar, &params.q);
         // calculate an invertible tag in Z_q^{n \times n}
         let tag = calculate_invertible_tag(42, &modulus);
 
@@ -337,10 +337,10 @@ mod test_gen_trapdoor {
 
         // generate the trapdoor for a from r as trapdoor = [[r],[I]]
         let trapdoor = r
-            .concat_vertical(
-                &MatZ::identity(a.get_num_columns() - r.get_num_rows(), r.get_num_columns())
-                    .unwrap(),
-            )
+            .concat_vertical(&MatZ::identity(
+                a.get_num_columns() - r.get_num_rows(),
+                r.get_num_columns(),
+            ))
             .unwrap();
 
         // ensure tag*G = A*trapdoor (definition of a trapdoor)
@@ -354,7 +354,7 @@ mod test_gen_trapdoor {
     /// Generates an invertible tag matrix (generates a diagonal matrix)
     fn calculate_invertible_tag(size: i64, modulus: &Modulus) -> MatZq {
         let max_value = Z::from(modulus);
-        let mut out = MatZq::identity(size, size, modulus).unwrap();
+        let mut out = MatZq::identity(size, size, modulus);
         // create a diagonal matrix with random values (because it is a diagonal matrix
         // with `1` on the diagonal, it is always invertible)
         for row in 0..size {
