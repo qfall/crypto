@@ -13,6 +13,7 @@ use qfall_math::{
     integer_mod_q::{MatZq, Modulus, Zq},
     traits::SetEntry,
 };
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fmt::Display;
 
@@ -103,8 +104,8 @@ pub fn hash_to_zq_sha256(string: &str, modulus: &Modulus) -> Zq {
 /// - ... if the number of rows or columns is less or equal to `0`.
 pub fn hash_to_mat_zq_sha256(
     string: &str,
-    num_rows: impl TryInto<i64> + Display + Into<i64>,
-    num_cols: impl TryInto<i64> + Display + Into<i64>,
+    num_rows: impl Into<i64> + Display,
+    num_cols: impl Into<i64> + Display,
     modulus: &Modulus,
 ) -> MatZq {
     let num_rows_new: i64 = num_rows.into();
@@ -213,5 +214,20 @@ mod tests_sha {
         let str1 = "Hello World!";
 
         let _ = hash_to_mat_zq_sha256(str1, 0, 0, &Modulus::from(16));
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct HashMatZq {
+    pub modulus: Modulus,
+    pub rows: i64,
+    pub cols: i64,
+}
+pub trait HashInto<Domain> {
+    fn hash(&self, m: &str) -> Domain;
+}
+impl HashInto<MatZq> for HashMatZq {
+    fn hash(&self, m: &str) -> MatZq {
+        hash_to_mat_zq_sha256(m, self.rows, self.cols, &self.modulus)
     }
 }
