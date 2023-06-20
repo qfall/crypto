@@ -19,9 +19,7 @@ use qfall_math::{
     rational::{MatQ, Q},
     traits::{GetNumRows, Pow},
 };
-use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize)]
 pub struct PSFGPV {
     pub pp: GadgetParameters,
     pub s: Q,

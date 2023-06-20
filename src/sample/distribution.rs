@@ -11,4 +11,5 @@
 
 pub mod binomial;
 pub mod discrete_gauss;
+pub mod psf;
 pub mod uniform;
