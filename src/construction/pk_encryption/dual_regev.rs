@@ -356,7 +356,7 @@ impl PKEncryption for DualRegev {
     fn enc(&self, pk: &Self::PublicKey, message: impl Into<Z>) -> Self::Cipher {
         // generate message = message mod 2
         let message: Z = message.into();
-        let message = Zq::try_from_z_z(&message, &Z::from(2)).unwrap();
+        let message = Zq::from((&message, 2));
         let message = message.get_value();
 
         // e <- SampleD over lattice Z^m, center 0 with gaussian parameter r
