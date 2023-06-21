@@ -141,6 +141,7 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     /// let range_fa = psf.fa(&a, &domain_sample);
     ///
     /// let preimage = psf.samp_p(&a, &r, &range_fa);
+    /// assert_eq!(range_fa, psf.fa(&a, &preimage))
     /// ```
     fn samp_p(&self, a: &MatZq, r: &MatZ, u: &MatZq) -> MatZ {
         let tag = MatZq::identity(&self.gp.n, &self.gp.n, &self.gp.q);
