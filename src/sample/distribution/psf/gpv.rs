@@ -17,7 +17,7 @@ use qfall_math::{
     integer::MatZ,
     integer_mod_q::MatZq,
     rational::{MatQ, Q},
-    traits::{GetNumRows, Pow},
+    traits::Pow,
 };
 
 pub struct PSFGPV {
@@ -35,7 +35,9 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     }
 
     fn samp_d(&self) -> MatZ {
-        todo!()
+        let m = &self.pp.n * &self.pp.k + &self.pp.m_bar;
+        let m = i64::try_from(&m).unwrap();
+        MatZ::sample_d_common(m, &self.pp.n, &self.s).unwrap()
     }
 
     fn samp_p(&self, a: &MatZq, r: &MatZ, u: &MatZq) -> MatZ {
@@ -57,6 +59,7 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     }
 
     fn check_dn(&self, sigma: &MatZ) -> bool {
-        Q::from(&sigma.norm_eucl_sqrd().unwrap()) <= self.s.pow(2).unwrap() * sigma.get_num_rows()
+        let m = &self.pp.n * &self.pp.k + &self.pp.m_bar;
+        Q::from(&sigma.norm_eucl_sqrd().unwrap()) <= self.s.pow(2).unwrap() * m
     }
 }
