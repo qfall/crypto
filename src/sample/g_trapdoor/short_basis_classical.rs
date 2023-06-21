@@ -281,7 +281,7 @@ mod test_compute_s {
     /// Ensure that the matrix s is computed correctly for a power-of-two modulus
     #[test]
     fn base_2_arbitrary() {
-        let modulus = Z::from_str_b("1100110", 2).unwrap();
+        let modulus = Z::from(0b1100110);
         let params = GadgetParameters::init_default(1, &Modulus::from(&modulus));
 
         let s = compute_s(&params);
@@ -297,7 +297,7 @@ mod test_compute_s {
             [0, 0, 0, 0, 0, -1, 1]]",
         )
         .unwrap();
-        println!("{}", Z::from_str_b("1100110", 2).unwrap());
+        println!("{}", Z::from(0b1100110));
 
         assert_eq!(s_cmp, s)
     }
