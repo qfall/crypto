@@ -134,7 +134,7 @@ pub fn gen_gadget_vec(k: impl TryInto<i64> + Display, base: &Z) -> Result<MatZ, 
 ///
 /// let k = Z::from(5);
 /// let base = Z::from(3);
-/// let value = Zq::try_from((&Z::from(29), &Z::from(125))).unwrap();
+/// let value = Zq::from((29,125));
 ///
 /// let sol = find_solution_gadget_vec(&value, &k, &base);
 ///
@@ -156,7 +156,7 @@ pub fn find_solution_gadget_vec(value: &Zq, k: &Z, base: &Z) -> MatZ {
     let mut value = value.get_value();
     let mut out = MatZ::new(k, 1);
     for i in 0..out.get_num_rows() {
-        let val_i = Zq::try_from((&value, base)).unwrap().get_value();
+        let val_i = Zq::from((&value, base)).get_value();
         out.set_entry(i, 0, &val_i).unwrap();
         value = value - val_i;
         value = value.div_exact(base).unwrap();
@@ -388,7 +388,7 @@ mod test_find_solution_gadget {
         let k = Z::from(5);
         let base = Z::from(3);
         for i in 0..124 {
-            let value = Zq::try_from((&Z::from(i), &Z::from(125))).unwrap();
+            let value = Zq::from((i, 125));
 
             let sol = find_solution_gadget_vec(&value, &k, &base);
 

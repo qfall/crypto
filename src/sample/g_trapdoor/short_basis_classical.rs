@@ -101,7 +101,7 @@ fn compute_s(params: &GadgetParameters) -> MatZ {
         // represent modulus in `base` and set last row accordingly
         let mut q = Z::from(&params.q);
         for i in 0..(sk.get_num_rows()) {
-            let q_i = Zq::try_from((&q, &params.base)).unwrap().get_value();
+            let q_i = Zq::from((&q, &params.base)).get_value();
             sk.set_entry(i, sk.get_num_columns() - 1, &q_i).unwrap();
             q = q - q_i;
             q = q.div_exact(&params.base).unwrap();
