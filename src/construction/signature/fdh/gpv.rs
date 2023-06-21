@@ -7,6 +7,7 @@
 // Mozilla Foundation. See <https://mozilla.org/en-US/MPL/2.0/>.
 
 //! A classical implementation of the [`Fdh`] scheme using the [`PSFGPV`]
+//! according to [\[1\]](<../index.html#:~:text=[1]>).
 
 use super::Fdh;
 use crate::{
@@ -21,6 +22,42 @@ use qfall_math::{
 use std::{collections::HashMap, marker::PhantomData};
 
 impl Fdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq> {
+    /// Initializes an FDH signature scheme from a [`PSFGPV`].
+    ///
+    /// This function corresponds to an implementation of an FDH-signature
+    /// scheme with the explicit PSF [`PSFGPV`] which is generated using
+    /// the default of [`GadgetParameters`].
+    ///
+    /// Parameters:
+    /// - `n`: The security parameter
+    /// - `modulus`: The modulus used for the G-Trapdoors
+    /// - `s`: The standard deviation with which is sampled
+    ///
+    /// Returns an explicit implementation of a FDH-signature scheme.
+    ///
+    /// # Example
+    /// ```
+    /// use qfall_crypto::construction::signature::fdh::Fdh;
+    /// use qfall_math::integer::Z;
+    /// use qfall_math::integer_mod_q::Modulus;
+    /// use qfall_math::rational::Q;
+    /// use crate::qfall_crypto::construction::signature::SignatureScheme;
+    ///
+    /// let s = Q::from(17);
+    /// let n = Z::from(4);
+    /// let modulus = Modulus::try_from(&Z::from(113)).unwrap();
+    ///
+    /// let mut fdh = Fdh::init_gpv(n, &modulus, &s);
+    ///
+    /// let m = "Hello World!";
+    ///
+    /// let (pk, sk) = fdh.gen();
+    /// let sigma = fdh.sign(m.to_owned(), &sk, &pk);
+    ///
+    /// assert_eq!(&sigma, &fdh.sign(m.to_owned(), &sk, &pk));
+    /// // TODO: include once all parameters are revised
+    /// // assert!(fdh.vfy(m.to_owned(), &sigma, &pk))
+    /// ```
     pub fn init_gpv(n: impl Into<Z>, modulus: &Modulus, s: &Q) -> Self {
         let n = n.into();
         let psf = PSFGPV {
@@ -29,7 +66,6 @@ impl Fdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq> {
         };
         let n = i64::try_from(&n).unwrap();
         let modulus = modulus.clone();
-        // let hash = move |m: &str| hash_to_mat_zq_sha256(m, n, 1, &modulus);
         Self {
             psf: Box::new(psf),
             storage: HashMap::new(),
