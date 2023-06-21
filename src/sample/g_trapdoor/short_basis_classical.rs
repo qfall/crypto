@@ -101,7 +101,7 @@ fn compute_s(params: &GadgetParameters) -> MatZ {
         // represent modulus in `base` and set last row accordingly
         let mut q = Z::from(&params.q);
         for i in 0..(sk.get_num_rows()) {
-            let q_i = Zq::try_from((&q, &params.base)).unwrap().get_value();
+            let q_i = Zq::from((&q, &params.base)).get_value();
             sk.set_entry(i, sk.get_num_columns() - 1, &q_i).unwrap();
             q = q - q_i;
             q = q.div_exact(&params.base).unwrap();
@@ -281,7 +281,7 @@ mod test_compute_s {
     /// Ensure that the matrix s is computed correctly for a power-of-two modulus
     #[test]
     fn base_2_arbitrary() {
-        let modulus = Z::from_str_b("1100110", 2).unwrap();
+        let modulus = Z::from(0b1100110);
         let params = GadgetParameters::init_default(1, &Modulus::from(&modulus));
 
         let s = compute_s(&params);
@@ -297,7 +297,7 @@ mod test_compute_s {
             [0, 0, 0, 0, 0, -1, 1]]",
         )
         .unwrap();
-        println!("{}", Z::from_str_b("1100110", 2).unwrap());
+        println!("{}", Z::from(0b1100110));
 
         assert_eq!(s_cmp, s)
     }

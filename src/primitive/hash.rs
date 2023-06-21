@@ -55,7 +55,7 @@ pub fn sha256(string: &str) -> String {
 /// let modulus = Modulus::from(7);
 ///
 /// let hash: Zq = hash_to_zq_sha256("Hello World!", &modulus);
-/// assert_eq!(Zq::try_from((2,7)).unwrap(), hash)
+/// assert_eq!(Zq::from((2, 7)), hash)
 /// ```
 pub fn hash_to_zq_sha256(string: &str, modulus: &Modulus) -> Zq {
     let modulus_new: Z = modulus.into();
@@ -73,7 +73,7 @@ pub fn hash_to_zq_sha256(string: &str, modulus: &Modulus) -> Zq {
         hex = hex + &sha256(&format!("{i} {string2}"));
     }
 
-    Zq::try_from((Z::from_str_b(&hex, 16).unwrap(), modulus)).unwrap()
+    Zq::from((Z::from_str_b(&hex, 16).unwrap(), modulus))
 }
 
 /// Hashes a given String literal into a [`MatZq`] .
@@ -100,7 +100,7 @@ pub fn hash_to_zq_sha256(string: &str, modulus: &Modulus) -> Zq {
 /// ```
 ///
 /// # Panics ...
-/// - ... if the number of rows or columns is less or equal to `0`.
+/// - if the number of rows or columns is less or equal to `0`.
 pub fn hash_to_mat_zq_sha256(
     string: &str,
     num_rows: impl TryInto<i64> + Display + Into<i64>,
@@ -165,8 +165,8 @@ mod tests_sha {
         let hash1 = hash_to_zq_sha256(str1, &Modulus::from(256));
         let hash2 = hash_to_zq_sha256(str2, &Modulus::from(16));
 
-        assert_eq!(Zq::try_from((150, 256)).unwrap(), hash1);
-        assert_eq!(Zq::try_from((12, 16)).unwrap(), hash2);
+        assert_eq!(Zq::from((150, 256)), hash1);
+        assert_eq!(Zq::from((12, 16)), hash2);
     }
 
     // ensure hashing into [`Zq`] hits the whole domain not just the first 256 bit
