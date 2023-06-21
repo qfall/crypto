@@ -146,8 +146,8 @@ pub fn gen_gadget_vec(k: impl TryInto<i64> + Display, base: &Z) -> Result<MatZ, 
 /// )
 /// ```
 ///
-/// # Panics if ...
-/// - ... the modulus of the value is greater than `base^k`
+/// # Panics ...
+/// - if the modulus of the value is greater than `base^k`.
 pub fn find_solution_gadget_vec(value: &Zq, k: &Z, base: &Z) -> MatZ {
     if base.pow(k).unwrap() < Z::from(&value.get_mod()) {
         panic!("The modulus is too large, the value is potentially not representable.");
@@ -198,8 +198,8 @@ pub fn find_solution_gadget_vec(value: &Zq, k: &Z, base: &Z) -> MatZ {
 /// )
 /// ```
 ///
-/// # Panics if ...
-/// - ... the modulus of the value is greater than `base^k`
+/// # Panics ...
+/// - if the modulus of the value is greater than `base^k`.
 pub fn find_solution_gadget_mat(value: &MatZq, k: &Z, base: &Z) -> MatZ {
     let mut vec_col: Vec<MatZ> = Vec::new();
     for i in 0..value.get_num_columns() as usize {

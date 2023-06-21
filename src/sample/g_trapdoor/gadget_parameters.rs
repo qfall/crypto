@@ -71,8 +71,8 @@ impl GadgetParameters {
     /// let params = GadgetParameters::init_default(42, &Modulus::from(42));
     /// ```
     ///
-    /// # Panics...
-    /// - ... if the security parameter `n` is not in `\[1, i64::MAX\]`.
+    /// # Panics ...
+    /// - if the security parameter `n` is not in `\[1, i64::MAX\]`.
     pub fn init_default(n: impl Into<Z>, modulus: &Modulus) -> Self {
         // panic if n < 1 (security parameter must be positive) and not larger than
         // [`i64`] because downstream matrices can be at most that size
