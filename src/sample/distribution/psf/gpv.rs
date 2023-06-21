@@ -145,16 +145,14 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     /// ```
     fn samp_p(&self, a: &MatZq, r: &MatZ, u: &MatZq) -> MatZ {
         let tag = MatZq::identity(&self.gp.n, &self.gp.n, &self.gp.q);
-
         let short_basis = gen_short_basis_for_trapdoor(&self.gp, &tag, a, r);
 
         let sol: MatZ = (&a.solve_gaussian_elimination(u).unwrap()).into();
 
         let center = MatQ::from(&(-1 * &sol));
         let s = &self.s * (Q::from(2) * Q::PI).sqrt();
-        let signature: MatZ = MatZ::sample_d(&short_basis, &self.gp.n, &center, &s).unwrap() + sol;
 
-        signature
+        sol + MatZ::sample_d(&short_basis, &self.gp.n, &center, &s).unwrap()
     }
 
     /// Implements the efficiently computable function `fa` which here corresponds to
