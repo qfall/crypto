@@ -24,7 +24,7 @@ impl Fdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq> {
     pub fn init_gpv(n: impl Into<Z>, modulus: &Modulus, s: &Q) -> Self {
         let n = n.into();
         let psf = PSFGPV {
-            pp: GadgetParameters::init_default(&n, modulus),
+            gp: GadgetParameters::init_default(&n, modulus),
             s: s.clone(),
         };
         let n = i64::try_from(&n).unwrap();
