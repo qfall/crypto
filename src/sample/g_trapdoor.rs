@@ -33,6 +33,7 @@ use qfall_math::{
 pub mod gadget_classical;
 pub mod gadget_parameters;
 pub mod gadget_ring;
+pub mod short_basis_classical;
 pub mod trapdoor_distribution;
 
 /// Computes a trapdoor with default values.
@@ -52,11 +53,11 @@ pub mod trapdoor_distribution;
 /// use qfall_math::integer::Z;
 /// use qfall_math::integer_mod_q::Modulus;
 ///
-/// let (a,r) = gen_trapdoor_default(42, &Modulus::try_from(&Z::from(101)).unwrap());
+/// let (a,r) = gen_trapdoor_default(42, &Modulus::from(101));
 /// ```
 ///
-/// # Panics...
-/// - ... if the security parameter `n` is not in `\[1, i64::MAX\]`.
+/// # Panics ...
+/// - if the security parameter `n` is not in `\[1, i64::MAX\]`.
 pub fn gen_trapdoor_default(n: impl Into<Z>, modulus: &Modulus) -> (MatZq, MatZ) {
     // panic if n < 1 (security parameter must be positive)
     let n = n.into();
@@ -65,10 +66,10 @@ pub fn gen_trapdoor_default(n: impl Into<Z>, modulus: &Modulus) -> (MatZq, MatZ)
     let params = GadgetParameters::init_default(n, modulus);
 
     // a_bar <-$ Z_q^{n * m_bar}
-    let a_bar = MatZq::sample_uniform(&params.n, &params.m_bar, &params.q).unwrap();
+    let a_bar = MatZq::sample_uniform(&params.n, &params.m_bar, &params.q);
 
     // tag = I_n
-    let tag = MatZq::identity(&params.n, &params.n, &params.q).unwrap();
+    let tag = MatZq::identity(&params.n, &params.n, &params.q);
 
     // we can unwrap, as we compute the parameters on our own and
     // they should always work
@@ -123,11 +124,11 @@ pub fn gen_trapdoor_ring_default(
 #[cfg(test)]
 mod test_gen_trapdoor_default {
     use super::gen_trapdoor_default;
-    use qfall_math::{integer::Z, integer_mod_q::Modulus};
+    use qfall_math::integer_mod_q::Modulus;
 
     #[test]
     fn working() {
-        let (_, _) = gen_trapdoor_default(100, &Modulus::try_from(&Z::from(32)).unwrap());
+        let (_, _) = gen_trapdoor_default(100, &Modulus::from(32));
     }
 }
 

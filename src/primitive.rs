@@ -10,4 +10,5 @@
 //! constructions/ purposes, but itself do not provide a security guarantee like
 //! confidentiality, integrity, ...
 
+pub mod hash;
 mod psf;
