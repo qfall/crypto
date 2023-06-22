@@ -45,8 +45,8 @@ pub mod trapdoor_distribution;
 /// let (a,r) = gen_trapdoor_default(42, &Modulus::from(101));
 /// ```
 ///
-/// # Panics...
-/// - ... if the security parameter `n` is not in `\[1, i64::MAX\]`.
+/// # Panics ...
+/// - if the security parameter `n` is not in `\[1, i64::MAX\]`.
 pub fn gen_trapdoor_default(n: impl Into<Z>, modulus: &Modulus) -> (MatZq, MatZ) {
     // panic if n < 1 (security parameter must be positive)
     let n = n.into();
