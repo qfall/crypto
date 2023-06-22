@@ -372,7 +372,7 @@ mod test_gen_trapdoor {
         for row in 0..size {
             for column in 0..size {
                 if row < column {
-                    out.set_entry(row, column, Z::sample_uniform(&0, &max_value).unwrap())
+                    out.set_entry(row, column, Z::sample_uniform(0, &max_value).unwrap())
                         .unwrap();
                 }
             }

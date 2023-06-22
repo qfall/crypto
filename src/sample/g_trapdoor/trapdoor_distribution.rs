@@ -92,12 +92,12 @@ impl TrapdoorDistributionRing for SampleZ {
         let n = i64::try_from(n).unwrap();
         let nr_rows = i64::try_from(nr_rows).unwrap();
         let nr_cols = i64::try_from(nr_cols).unwrap();
-        let mut out_mat = MatPolyOverZ::new(nr_rows, nr_cols).unwrap();
+        let mut out_mat = MatPolyOverZ::new(nr_rows, nr_cols);
         for i in 0..nr_rows {
             for j in 0..nr_cols {
                 let mut sample = PolyOverZ::default();
                 for k in 0..n {
-                    let sample_z = Z::sample_discrete_gauss(&n, &Z::ZERO, s).unwrap();
+                    let sample_z = Z::sample_discrete_gauss(n, &Z::ZERO, s).unwrap();
                     sample.set_coeff(k, &sample_z).unwrap();
                 }
                 out_mat.set_entry(i, j, &sample).unwrap();

@@ -71,7 +71,7 @@ pub fn gen_trapdoor_ring(
 
     // compute the parity check matrix
     // `A = [1 | a | g_1 - (a*r_1 + e_1) | ... | g_k - (a*r_k + e_k)]`
-    let mut big_a = MatPolyOverZ::new(1, &(&params.k + Z::from(2)))?;
+    let mut big_a = MatPolyOverZ::new(1, &(&params.k + Z::from(2)));
     let gadget_vec = gen_gadget_vec(&params.k, &params.base)?;
     let one = PolyOverZ::from_str("1  1")?;
     big_a.set_entry(0, 0, &one)?;
@@ -104,11 +104,12 @@ mod test_gen_trapdoor_ring {
         gadget_ring::gen_trapdoor_ring,
     };
     use qfall_math::{
-        integer::{MatPolyOverZ, PolyOverZ, Z},
+        integer::{PolyOverZ, Z},
         integer_mod_q::{MatPolynomialRingZq, Modulus},
         rational::Q,
         traits::{
-            GetCoefficient, GetEntry, GetNumColumns, GetNumRows, Pow, SetCoefficient, SetEntry,
+            Concatenate, GetCoefficient, GetEntry, GetNumColumns, GetNumRows, Pow, SetCoefficient,
+            SetEntry,
         },
     };
 
@@ -120,15 +121,15 @@ mod test_gen_trapdoor_ring {
         let params = GadgetParametersRing::init_default(42, &modulus);
         let a_bar = PolyOverZ::sample_uniform(&params.n, &0, &params.q).unwrap();
 
-        let mut unit_vector = MatPolyOverZ::new(1, &params.k).unwrap();
+        // call gen_trapdoor to get matrix a and its 'trapdoor' r
+        let (a, r, e) = gen_trapdoor_ring(&params, &a_bar, &Q::from(10)).unwrap();
+
+        let mut unit_vector = MatPolynomialRingZq::new(1, &params.k, &r.get_mod());
         for i in 0..(&params.k).try_into().unwrap() {
             let mut one = PolyOverZ::default();
             one.set_coeff(i, 1).unwrap();
             unit_vector.set_entry(0, i, &one).unwrap();
         }
-
-        // call gen_trapdoor to get matrix a and its 'trapdoor' r
-        let (a, r, e) = gen_trapdoor_ring(&params, &a_bar, &Q::from(10)).unwrap();
 
         // generate the trapdoor for a from r as trapdoor = [[r],[I]]
         let trapdoor = e
