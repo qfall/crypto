@@ -20,7 +20,7 @@
 //! <https://doi.org/10.1007/978-3-662-43414-7_3>
 
 use crate::sample::g_trapdoor::{
-    gadget_parameters::GadgetParametersRing, gadget_ring::gen_trapdoor_ring,
+    gadget_parameters::GadgetParametersRing, gadget_ring::gen_trapdoor_ring_lwe,
 };
 
 use self::{gadget_classical::gen_trapdoor, gadget_parameters::GadgetParameters};
@@ -118,7 +118,7 @@ pub fn gen_trapdoor_ring_default(
 
     // we can unwrap, as we compute the parameters on our own and
     // they should always work
-    gen_trapdoor_ring(&params, &a_bar, &s).unwrap()
+    gen_trapdoor_ring_lwe(&params, &a_bar, &s).unwrap()
 }
 
 #[cfg(test)]
