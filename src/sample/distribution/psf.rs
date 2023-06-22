@@ -21,11 +21,11 @@ pub trait PSF<A, Trapdoor, Domain, Range> {
     /// Samples an element in the domain according to a specified distribution
     fn samp_d(&self) -> Domain;
     /// Samples an element `e` in the domain according to a specified distribution
-    /// conditioned on `fa(a, e) = u`
+    /// conditioned on `f_a(a, e) = u`
     fn samp_p(&self, a: &A, r: &Trapdoor, u: &Range) -> Domain;
     /// Implements the efficiently computable function `fa`
     /// which is uniquely classified by `a`
-    fn fa(&self, a: &A, sigma: &Domain) -> Range;
+    fn f_a(&self, a: &A, sigma: &Domain) -> Range;
     /// Checks whether an element is in the correct domain (and not just the correct type)
-    fn check_dn(&self, sigma: &Domain) -> bool;
+    fn check_domain(&self, sigma: &Domain) -> bool;
 }

@@ -46,11 +46,11 @@ use qfall_math::{
 ///
 /// let (a, r) = psf.trap_gen();
 /// let domain_sample = psf.samp_d();
-/// let range_fa = psf.fa(&a, &domain_sample);
+/// let range_fa = psf.f_a(&a, &domain_sample);
 /// let preimage = psf.samp_p(&a, &r, &range_fa);
 ///
 /// // TODO: include it, once parameters are revised
-/// // assert!(psf.check_dn(&preimage));
+/// // assert!(psf.check_domain(&preimage));
 /// ```
 pub struct PSFGPV {
     pub gp: GadgetParameters,
@@ -121,7 +121,7 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     /// - `u`: The syndrome from the range
     ///
     /// Returns a sample `e` from the domain on the conditioned discrete
-    /// gaussian distribution `fa(a,e) = u`.
+    /// gaussian distribution `f_a(a,e) = u`.
     ///
     /// # Examples
     /// ```
@@ -138,10 +138,10 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     /// };
     /// let (a, r) = psf.trap_gen();
     /// let domain_sample = psf.samp_d();
-    /// let range_fa = psf.fa(&a, &domain_sample);
+    /// let range_fa = psf.f_a(&a, &domain_sample);
     ///
     /// let preimage = psf.samp_p(&a, &r, &range_fa);
-    /// assert_eq!(range_fa, psf.fa(&a, &preimage))
+    /// assert_eq!(range_fa, psf.f_a(&a, &preimage))
     /// ```
     fn samp_p(&self, a: &MatZq, r: &MatZ, u: &MatZq) -> MatZ {
         let tag = MatZq::identity(&self.gp.n, &self.gp.n, &self.gp.q);
@@ -159,8 +159,8 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     /// `a*value`
     ///
     /// Parameters:
-    /// - `a`: The parity-check matrix
-    /// - `value`: A Value from the domain
+    /// - `a`: The parity-check matrix of dimensions `n x m`
+    /// - `value`: A column vector of length `m`
     ///
     /// Returns `a*value`
     ///
@@ -179,9 +179,9 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     /// };
     /// let (a, r) = psf.trap_gen();
     /// let domain_sample = psf.samp_d();
-    /// let range_fa = psf.fa(&a, &domain_sample);
+    /// let range_fa = psf.f_a(&a, &domain_sample);
     /// ```
-    fn fa(&self, a: &MatZq, value: &MatZ) -> MatZq {
+    fn f_a(&self, a: &MatZq, value: &MatZ) -> MatZq {
         a * value
     }
 
@@ -210,9 +210,9 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     ///
     /// let vector = MatZ::new(8, 1);
     ///
-    /// assert!(psf.check_dn(&vector));
+    /// assert!(psf.check_domain(&vector));
     /// ```
-    fn check_dn(&self, sigma: &MatZ) -> bool {
+    fn check_domain(&self, sigma: &MatZ) -> bool {
         let m = &self.gp.n * &self.gp.k + &self.gp.m_bar;
         Q::from(&sigma.norm_eucl_sqrd().unwrap()) <= self.s.pow(2).unwrap() * &m
             && self.gp.n == Z::from(sigma.get_num_rows())
