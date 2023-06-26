@@ -20,6 +20,7 @@ use qfall_math::{
     rational::{MatQ, Q},
     traits::{GetNumRows, Pow},
 };
+use serde::{Deserialize, Serialize};
 
 /// A lattice-based implementation of a [`PSF`] according to
 /// [\[1\]](<../index.html#:~:text=[1]>) using
@@ -52,6 +53,7 @@ use qfall_math::{
 /// // TODO: include it, once parameters are revised
 /// // assert!(psf.check_domain(&preimage));
 /// ```
+#[derive(Serialize, Deserialize)]
 pub struct PSFGPV {
     pub gp: GadgetParameters,
     pub s: Q,
