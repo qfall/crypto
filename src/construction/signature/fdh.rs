@@ -121,12 +121,12 @@ where
     /// Checks if a signature is firstly within D_n, and then checks if
     /// the signature is actually a valid preimage under `fa` of `hash(m)`.
     fn vfy(&self, m: String, sigma: &Self::Signature, pk: &Self::PublicKey) -> bool {
-        if !self.psf.check_dn(sigma) {
+        if !self.psf.check_domain(sigma) {
             return false;
         }
 
         let u = (self.hash).hash(&m);
 
-        self.psf.fa(pk, sigma) == u
+        self.psf.f_a(pk, sigma) == u
     }
 }
