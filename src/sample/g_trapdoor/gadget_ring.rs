@@ -66,8 +66,8 @@ pub fn gen_trapdoor_ring_lwe(
     MathError,
 > {
     // Sample `r` and `e` using a provided distribution
-    let r = params.distribution.sample(&params.n, &Z::ONE, &params.k, s);
-    let e = params.distribution.sample(&params.n, &Z::ONE, &params.k, s);
+    let r = params.distribution.sample(&params.n, &params.k, s);
+    let e = params.distribution.sample(&params.n, &params.k, s);
 
     // compute the parity check matrix
     // `A = [1 | a | g^t - ar + e]`
@@ -178,7 +178,7 @@ mod test_find_solution_gadget_ring {
     use super::{find_solution_gadget_ring, gen_gadget_ring};
     use crate::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
     use qfall_math::{
-        integer::{PolyOverZ, Z},
+        integer::PolyOverZ,
         integer_mod_q::{MatPolynomialRingZq, Modulus, PolynomialRingZq},
     };
     use std::str::FromStr;

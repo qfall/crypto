@@ -17,8 +17,6 @@ use qfall_math::{
 
 /// This trait should be implemented by all distributions which should be
 /// used to generate a trapdoor.
-/// Within the [`GadgetParameters`](super::GadgetParameters) there is distribution which
-/// can be defined, from which the matrix `\bar A` is sampled.
 ///
 /// Parameters:
 /// - `m_bar`: number of rows of the matrix that is sampled
@@ -29,14 +27,26 @@ pub trait TrapdoorDistribution {
     fn sample(&self, m_bar: &Z, w: &Z) -> MatZ;
 }
 
+/// This trait should be implemented by all distributions which should be
+/// used to generate a ring-based trapdoor.
+///
+/// Parameters:
+/// - `n`: the length of the polynomials
+/// - `nr_cols`: the number of polynomials that are sampled
+/// - `s`: the standard deviation with which is sampled
+///
+/// Returns a matrix which is sampled according to the defined distribution
 pub trait TrapdoorDistributionRing {
-    fn sample(&self, n: &Z, nr_rows: &Z, nr_cols: &Z, s: &Q) -> MatPolyOverZ;
+    fn sample(&self, n: &Z, nr_cols: &Z, s: &Q) -> MatPolyOverZ;
 }
 
 /// A distribution which samples a matrix of type [`MatZ`] with entries in `\{-1,0,1\}`
 /// with probability `1/4` for `-1` and `1` an probability `1/2` for `0`
 pub struct PlusMinusOneZero;
 
+/// A distribution which samples a row vector of type [`MatPolyOverZ`] where each
+/// coefficient is a polynomial of degree `n-1` and each coefficient of the polynomial
+/// is sampled using [`Z::sample_discrete_gauss`]
 pub struct SampleZ;
 
 impl TrapdoorDistribution for PlusMinusOneZero {
@@ -69,11 +79,10 @@ impl TrapdoorDistribution for PlusMinusOneZero {
 
 impl TrapdoorDistributionRing for SampleZ {
     /// Sample a matrix of polynomials of length `n` with entries sampled
-    /// using SampleZ
+    /// using [`Z::sample_discrete_gauss`]
     ///
     /// Parameters:
     /// - `n`: degree of the polynomial
-    /// - `nr_rows`: number of rows of the matrix
     /// - `nr_cols`: number of columns of the matrix
     /// - `s`: the deviation used for SampleZ
     ///
@@ -88,20 +97,18 @@ impl TrapdoorDistributionRing for SampleZ {
     /// # Panics...
     /// - ... `n`, `nr_rows` or `nr_cols` does not fit into in `i64`
     /// or is smaller than `1`.
-    fn sample(&self, n: &Z, nr_rows: &Z, nr_cols: &Z, s: &Q) -> MatPolyOverZ {
+    fn sample(&self, n: &Z, nr_cols: &Z, s: &Q) -> MatPolyOverZ {
         let n = i64::try_from(n).unwrap();
-        let nr_rows = i64::try_from(nr_rows).unwrap();
         let nr_cols = i64::try_from(nr_cols).unwrap();
-        let mut out_mat = MatPolyOverZ::new(nr_rows, nr_cols);
-        for i in 0..nr_rows {
-            for j in 0..nr_cols {
-                let mut sample = PolyOverZ::default();
-                for k in 0..n {
-                    let sample_z = Z::sample_discrete_gauss(n, &Z::ZERO, s).unwrap();
-                    sample.set_coeff(k, &sample_z).unwrap();
-                }
-                out_mat.set_entry(i, j, &sample).unwrap();
+        let s = s * (Q::from(2) * Q::PI).sqrt();
+        let mut out_mat = MatPolyOverZ::new(1, nr_cols);
+        for j in 0..nr_cols {
+            let mut sample = PolyOverZ::default();
+            for k in 0..n {
+                let sample_z = Z::sample_discrete_gauss(n, &Z::ZERO, &s).unwrap();
+                sample.set_coeff(k, &sample_z).unwrap();
             }
+            out_mat.set_entry(0, j, &sample).unwrap();
         }
 
         out_mat
