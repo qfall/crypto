@@ -20,7 +20,7 @@ use qfall_math::{
     traits::{Pow, SetCoefficient},
 };
 
-/// Collects all parameters which are necessary to compute a g-trapdoor.
+/// Collects all parameters which are necessary to compute a G-trapdoor.
 /// You can either use [`GadgetParameters::init_default`] or set all values
 /// and distributions yourself.
 ///
@@ -50,9 +50,32 @@ pub struct GadgetParameters {
     pub distribution: Box<dyn TrapdoorDistribution>,
 }
 
+/// Collects all parameters which are necessary to compute a ring-based G-trapdoor.
+/// You can either use [`GadgetParametersRing::init_default`] or set all values
+/// and distributions yourself.
+///
+/// Attributes:
+/// - `n`: the security parameter
+/// - `k`: the size of the gadget vector: mostly taken as `log_base(q)`
+/// - `m_bar`: has to be chose appropriately for regularity and for
+/// the distribution to be subgaussian
+/// - `base`: the base with which the gadget-vector and matrix are generated
+/// - `q`: the modulus
+/// - `modulus`: the polynomial that is used for reduction
+/// - `distribution`: the distribution from which the matrix `\bar A` is sampled
+///
+/// # Examples
+/// ```
+/// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
+/// use qfall_math::integer::Z;
+/// use qfall_math::integer_mod_q::Modulus;
+///
+/// let params = GadgetParametersRing::init_default(42, &Modulus::from(42));
+/// ```
 pub struct GadgetParametersRing {
     pub n: Z,
     pub k: Z,
+    pub m_bar: Z,
     pub base: Z,
     pub q: Modulus,
     pub modulus: ModulusPolynomialRingZq,
@@ -113,6 +136,34 @@ impl GadgetParameters {
 }
 
 impl GadgetParametersRing {
+    /// Initializes default values for [`GadgetParametersRing`] to create a ring-based
+    /// G-trapdoor. The parameters follow the ones in [\[3\]](<../index.html#:~:text=[2]>).
+    ///
+    /// - `base = 2` is taken from [\[3\]](<../index.html#:~:text=[2]>)
+    /// - `k = log_2_ceil(q)` is taken from [\[3\]](<../index.html#:~:text=[2]>):
+    /// Theorem 1.
+    /// - `m_bar = 2 + k`: is taken from [\[3\]](<../index.html#:~:text=[2]>)
+    /// - the distribution is taken as [`SampleZ`],
+    /// as in [\[3\]](<../index.html#:~:text=[2]>)
+    /// - the modulus is defined by `X^n +1 mod q`as in [\[3\]](<../index.html#:~:text=[2]>)
+    ///
+    /// Parameters:
+    /// - `n`: the security parameter for the generation
+    /// - `modulus`: the modulus over which the TrapGen operates
+    ///
+    /// Returns an instantiation of default GadgetParameters based on the references mentioned above
+    ///
+    /// # Examples
+    /// ```
+    /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
+    /// use qfall_math::integer::Z;
+    /// use qfall_math::integer_mod_q::Modulus;
+    ///
+    /// let params = GadgetParametersRing::init_default(42, &Modulus::from(42));
+    /// ```
+    ///
+    /// # Panics ...
+    /// - if the security parameter `n` is not in `\[1, i64::MAX\]`.
     pub fn init_default(n: impl Into<Z>, modulus: &Modulus) -> Self {
         // panic if n < 1 (security parameter must be positive) and not larger than
         // [`i64`] because downstream matrices can be at most that size
@@ -127,7 +178,8 @@ impl GadgetParametersRing {
 
         Self {
             n,
-            k: log_q,
+            k: log_q.clone(),
+            m_bar: log_q + 2,
             base,
             modulus: ModulusPolynomialRingZq::try_from(&cycl_poly).unwrap(),
             q: modulus.clone(),

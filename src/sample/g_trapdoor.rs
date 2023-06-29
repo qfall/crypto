@@ -18,6 +18,10 @@
 //! Lisoněk, P. (eds) Selected Areas in Cryptography -- SAC 2013. SAC 2013. Lecture Notes
 //! in Computer Science(), vol 8282. Springer, Berlin, Heidelberg.
 //! <https://doi.org/10.1007/978-3-662-43414-7_3>
+//! - \[3\] Gür, K.D., Polyakov, Y., Rohloff, K., Ryan, G.W. and Savas, E., 2018,
+//! January. Implementation and evaluation of improved gaussian sampling for lattice
+//!  trapdoors. In Proceedings of the 6th Workshop on Encrypted Computing & Applied
+//! Homomorphic Cryptography (pp. 61-71). <https://dl.acm.org/doi/pdf/10.1145/3267973.3267975>
 
 use crate::sample::g_trapdoor::{
     gadget_parameters::GadgetParametersRing, gadget_ring::gen_trapdoor_ring_lwe,
@@ -84,7 +88,8 @@ pub fn gen_trapdoor_default(n: impl Into<Z>, modulus: &Modulus) -> (MatZq, MatZ)
 /// - `n`: the security parameter
 /// - `modulus`: the modulus for the trapdoor
 ///
-/// Returns a matrix `a` and its gadget-trapdoor `(r,e)` as in [\[2\]](<index.html#:~:text=[2]>): Construction 1 for some fixed set of parameters [`GadgetParameters::init_default`].
+/// Returns a matrix `a` and its gadget-trapdoor `(r,e)` as in [\[2\]](<index.html#:~:text=[2]>):
+/// Construction 1 for some fixed set of parameters [`GadgetParameters::init_default`].
 ///
 /// # Examples
 /// ```
@@ -126,6 +131,8 @@ mod test_gen_trapdoor_default {
     use super::gen_trapdoor_default;
     use qfall_math::integer_mod_q::Modulus;
 
+    /// Ensure that computing a a trapdoor is working when called with the default
+    /// parameters
     #[test]
     fn working() {
         let (_, _) = gen_trapdoor_default(100, &Modulus::from(32));
@@ -137,6 +144,8 @@ mod test_gen_trapdoor_ring_default {
     use super::gen_trapdoor_ring_default;
     use qfall_math::{integer::Z, integer_mod_q::Modulus};
 
+    /// Ensure that computing a a trapdoor is working when called with the default
+    /// parameters
     #[test]
     fn working() {
         let (_, _, _) =

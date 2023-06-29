@@ -84,6 +84,28 @@ pub fn gen_trapdoor_ring_lwe(
     ))
 }
 
+/// Generates a gadget vector based on its definition in [\[3\]](<../index.html#:~:text=[3]>).
+/// This corresponds to a vector `(base ^0, base^1, ..., base^{k-1})` where each entry
+/// is a constant polynomial.
+///
+/// Parameters:
+/// - `k`: the size of the gadget vector
+/// - `base`: the base with which the entries in the gadget vector are defined
+///
+/// Returns a gadget vector of length `k` with `base` as its base.
+///
+/// # Examples
+/// ```
+/// use qfall_crypto::sample::g_trapdoor::gadget_ring::gen_gadget_ring;
+/// use qfall_math::integer::Z;
+///
+/// let g = gen_gadget_ring(4, &Z::from(2));
+/// ```
+///
+/// # Errors and Failures
+/// - Returns a [`MathError`] of type [`InvalidMatrix`](MathError::InvalidMatrix)
+/// or of type [`OutOfBounds`](MathError::OutOfBounds), if `k` is either `0`,
+/// it is negative or it does not fit into an [`i64`].
 pub fn gen_gadget_ring(
     k: impl TryInto<i64> + Display,
     base: &Z,
@@ -96,6 +118,41 @@ pub fn gen_gadget_ring(
     Ok(out)
 }
 
+/// Computes an arbitrary solution for `<g^t,x> = value/(Modulus)`.
+///
+/// Parameters:
+/// - `u`: the element for which a solution has to be computed
+/// - `k`: the length of a gadget vector
+/// - `base`: the base with which the gadget vector is defined
+///
+/// Returns an arbitrary solution for `<g^t,x> = value/(Modulus)`
+///
+/// # Examples
+/// ```
+/// use qfall_math::integer::{Z, MatZ, PolyOverZ};
+/// use qfall_math::integer_mod_q::{Zq, Modulus, PolynomialRingZq};
+/// use qfall_crypto::sample::g_trapdoor::gadget_ring::gen_gadget_ring;
+/// use qfall_crypto::sample::g_trapdoor::gadget_ring::find_solution_gadget_ring;
+/// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
+/// use qfall_math::integer_mod_q::MatPolynomialRingZq;
+/// use qfall_math::traits::GetEntry;
+/// use std::str::FromStr;
+///
+/// let gp = GadgetParametersRing::init_default(9, &Modulus::from(128));
+///
+/// let gadget = gen_gadget_ring(&gp.k, &gp.base).unwrap();
+/// let gadget = MatPolynomialRingZq::from((&gadget, &gp.modulus));
+///
+/// let u = PolyOverZ::from_str("10  5 124 12 14 14 1 2 4 1 5").unwrap();
+/// let u = PolynomialRingZq::from((&u, &gp.modulus));
+///
+/// let solution = find_solution_gadget_ring(&u, &gp.k, &gp.base);
+/// let solution = MatPolynomialRingZq::from((&solution, &gp.modulus));
+/// assert_eq!(u, gadget.dot_product(&solution).unwrap())
+/// ```
+///
+/// # Panics ...
+/// - if the modulus of the value is greater than `base^k`.
 pub fn find_solution_gadget_ring(u: &PolynomialRingZq, k: &Z, base: &Z) -> MatPolyOverZ {
     let k_i64 = i64::try_from(k).unwrap();
     let ring_poly = u.get_poly();
@@ -134,6 +191,7 @@ mod test_gen_trapdoor_ring {
         traits::{Concatenate, GetCoefficient, GetEntry, GetNumColumns, GetNumRows, Pow},
     };
 
+    /// Computes a trapdoor using the given secrets `(r,e)`
     fn compute_trapdoor(
         r: &MatPolynomialRingZq,
         e: &MatPolynomialRingZq,
@@ -146,7 +204,7 @@ mod test_gen_trapdoor_ring {
         e.concat_vertical(r).unwrap().concat_vertical(&i_k).unwrap()
     }
 
-    /// assure that the trapdoor `r` returned from [`gen_trapdoor`] is actually a
+    /// Assure that the trapdoor `r` returned from [`gen_trapdoor`] is actually a
     /// trapdoor for `a`
     #[test]
     fn is_trapdoor() {
@@ -183,6 +241,7 @@ mod test_find_solution_gadget_ring {
     };
     use std::str::FromStr;
 
+    /// Ensures that the algorithm finds a correct solution such that `<g^t, x> = u`
     #[test]
     fn is_correct_solution() {
         let gp = GadgetParametersRing::init_default(3, &Modulus::from(32));
