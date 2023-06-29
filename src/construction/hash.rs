@@ -11,3 +11,4 @@
 //! implementing the `HashFunction` trait.
 
 mod sis;
+pub use sis::SISHash;
