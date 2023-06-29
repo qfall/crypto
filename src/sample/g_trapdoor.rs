@@ -23,11 +23,10 @@
 //!  trapdoors. In Proceedings of the 6th Workshop on Encrypted Computing & Applied
 //! Homomorphic Cryptography (pp. 61-71). <https://dl.acm.org/doi/pdf/10.1145/3267973.3267975>
 
+use self::{gadget_classical::gen_trapdoor, gadget_parameters::GadgetParameters};
 use crate::sample::g_trapdoor::{
     gadget_parameters::GadgetParametersRing, gadget_ring::gen_trapdoor_ring_lwe,
 };
-
-use self::{gadget_classical::gen_trapdoor, gadget_parameters::GadgetParameters};
 use qfall_math::{
     integer::{MatZ, PolyOverZ, Z},
     integer_mod_q::{MatPolynomialRingZq, MatZq, Modulus},

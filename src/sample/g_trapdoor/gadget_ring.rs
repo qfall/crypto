@@ -158,12 +158,12 @@ pub fn find_solution_gadget_ring(u: &PolynomialRingZq, k: &Z, base: &Z) -> MatPo
     let ring_poly = u.get_poly();
     let n = ring_poly.get_degree();
     let mut value = MatZq::new(n + 1, 1, u.get_mod().get_q());
+
     for i in 0..=n {
         let coeff = ring_poly.get_coeff(i).unwrap();
         value.set_entry(i, 0, coeff).unwrap();
     }
     let classical_sol = find_solution_gadget_mat(&value, k, base);
-    println!("{classical_sol}");
 
     let mut out = MatPolyOverZ::new(1, k);
     for i in 0..k_i64 {
@@ -174,7 +174,6 @@ pub fn find_solution_gadget_ring(u: &PolynomialRingZq, k: &Z, base: &Z) -> MatPo
         }
         out.set_entry(0, i, &poly).unwrap();
     }
-    println!("{out}");
     out
 }
 

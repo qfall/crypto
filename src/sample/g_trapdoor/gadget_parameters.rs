@@ -9,11 +9,10 @@
 //! This module contains the [`GadgetParameters`] object,
 //! which contains all parameters which are needed to generate a classical G-Trapdoor.
 
-use crate::sample::g_trapdoor::trapdoor_distribution::SampleZ;
-
 use super::trapdoor_distribution::{
     PlusMinusOneZero, TrapdoorDistribution, TrapdoorDistributionRing,
 };
+use crate::sample::g_trapdoor::trapdoor_distribution::SampleZ;
 use qfall_math::{
     integer::Z,
     integer_mod_q::{Modulus, ModulusPolynomialRingZq, PolyOverZq},
