@@ -38,7 +38,7 @@ use std::fmt::Display;
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::sample::g_trapdoor::{gadget_parameters::GadgetParametersRing, gadget_ring::gen_trapdoor_ring};
+/// use qfall_crypto::sample::g_trapdoor::{gadget_parameters::GadgetParametersRing, gadget_ring::gen_trapdoor_ring_lwe};
 /// use qfall_math::integer::{Z, PolyOverZ};
 /// use qfall_math::integer_mod_q::Modulus;
 /// use qfall_math::rational::Q;
