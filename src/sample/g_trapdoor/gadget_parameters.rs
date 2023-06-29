@@ -18,6 +18,7 @@ use qfall_math::{
     integer_mod_q::{Modulus, ModulusPolynomialRingZq, PolyOverZq},
     traits::{Pow, SetCoefficient},
 };
+use serde::{Deserialize, Serialize};
 
 /// Collects all parameters which are necessary to compute a G-trapdoor.
 /// You can either use [`GadgetParameters::init_default`] or set all values
@@ -40,6 +41,7 @@ use qfall_math::{
 ///
 /// let params = GadgetParameters::init_default(42, &Modulus::from(42));
 /// ```
+#[derive(Serialize, Deserialize)]
 pub struct GadgetParameters {
     pub n: Z,
     pub k: Z,

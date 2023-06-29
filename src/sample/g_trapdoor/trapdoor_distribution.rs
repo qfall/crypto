@@ -14,6 +14,7 @@ use qfall_math::{
     rational::Q,
     traits::{SetCoefficient, SetEntry},
 };
+use serde::{Deserialize, Serialize};
 
 /// This trait should be implemented by all distributions which should be
 /// used to generate a trapdoor.
@@ -23,6 +24,7 @@ use qfall_math::{
 /// - `w`: number of columns of the matrix that is sampled
 ///
 /// Returns a matrix which is sampled according to the defined distribution
+#[typetag::serde]
 pub trait TrapdoorDistribution {
     fn sample(&self, m_bar: &Z, w: &Z) -> MatZ;
 }
@@ -42,6 +44,7 @@ pub trait TrapdoorDistributionRing {
 
 /// A distribution which samples a matrix of type [`MatZ`] with entries in `\{-1,0,1\}`
 /// with probability `1/4` for `-1` and `1` an probability `1/2` for `0`
+#[derive(Serialize, Deserialize)]
 pub struct PlusMinusOneZero;
 
 /// A distribution which samples a row vector of type [`MatPolyOverZ`] where each
@@ -49,6 +52,7 @@ pub struct PlusMinusOneZero;
 /// is sampled using [`Z::sample_discrete_gauss`]
 pub struct SampleZ;
 
+#[typetag::serde]
 impl TrapdoorDistribution for PlusMinusOneZero {
     /// Sample a matrix from distribution with probability `1/2` for `0`
     /// and `1/4` each for `+/-1`.

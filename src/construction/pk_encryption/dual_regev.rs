@@ -6,7 +6,7 @@
 // the terms of the Mozilla Public License Version 2.0 as published by the
 // Mozilla Foundation. See <https://mozilla.org/en-US/MPL/2.0/>.
 
-//! This module contains an implementation of the IND-CCA secure
+//! This module contains an implementation of the IND-CPA secure
 //! public key Dual Regev encryption scheme.
 //!
 //! The main references are listed in the following:
@@ -25,6 +25,36 @@ use qfall_math::{
 };
 use serde::{Deserialize, Serialize};
 
+/// This struct manages and stores the public parameters of a [`DualRegev`]
+/// public key encryption instance.
+///
+/// Attributes:
+/// - `n`: specifies the security parameter, which is not equal to the bit-security level
+/// - `m`: defines the dimension of the underlying lattice
+/// - `q`: specifies the modulus over which the encryption is computed
+/// - `r`: specifies the gaussian parameter used for SampleD,
+///   i.e. used for encryption
+/// - `alpha`: specifies the gaussian parameter used for independent
+///   sampling from χ, i.e. for multiple discrete Gaussian samples used
+///   for key generation
+///
+/// # Examples
+/// ```
+/// use qfall_crypto::construction::pk_encryption::{DualRegev, PKEncryption};
+/// use qfall_math::integer::Z;
+/// // setup public parameters and key pair
+/// let dual_regev = DualRegev::default();
+/// let (pk, sk) = dual_regev.gen();
+///
+/// // encrypt a bit
+/// let msg = Z::ZERO; // must be a bit, i.e. msg = 0 or 1
+/// let cipher = dual_regev.enc(&pk, &msg);
+///
+/// // decrypt
+/// let m = dual_regev.dec(&sk, &cipher);
+///
+/// assert_eq!(msg, m);
+/// ```
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DualRegev {
     n: Z,       // security parameter
@@ -38,6 +68,13 @@ impl DualRegev {
     /// Instantiates a [`DualRegev`] PK encryption instance with the
     /// specified parameters if they ensure a secure and correct instance.
     ///
+    /// **WARNING:** The given parameters are not checked for security nor
+    /// correctness of the scheme.
+    /// If you want to check your parameters for provable security and correctness,
+    /// use [`DualRegev::check_correctness`] and [`DualRegev::check_security`].
+    /// Or use [`DualRegev::new_from_n`] for generating secure and correct
+    /// public parameters for [`DualRegev`] according to your choice of `n`.
+    ///
     /// Parameters:
     /// - `n`: specifies the security parameter and number of rows
     ///   of the uniform at random instantiated matrix `A`
@@ -46,44 +83,41 @@ impl DualRegev {
     /// - `r`: specifies the gaussian parameter used for SampleD,
     ///   i.e. used for encryption
     /// - `alpha`: specifies the gaussian parameter used for independent
-    ///   sampling from chi, i.e. for multiple discrete Gaussian samples used
+    ///   sampling from χ, i.e. for multiple discrete Gaussian samples used
     ///   for key generation
     ///
     /// Returns a correct and secure [`DualRegev`] PK encryption instance or
     /// a [`MathError`] if the instance would not be correct or secure.
     ///
-    /// # Example
+    /// # Examples
     /// ```
     /// use qfall_crypto::construction::pk_encryption::DualRegev;
     ///
-    /// let dual_regev = DualRegev::new(2, 16, 401, 4, 8).unwrap();
+    /// let dual_regev = DualRegev::new(2, 16, 443, 4, 0.15625);
     /// ```
     ///
-    /// # Errors and Failures
-    /// - Returns a [`MathError`] of type [`InvalidIntegerInput`](MathError::InvalidIntegerInput)
-    /// if at least one parameter was not chosen appropriately for a
-    /// correct and secure DualRegev public key encryption instance.
+    /// # Panics ...
+    /// - if the given modulus `q <= 1`.
     pub fn new(
         n: impl Into<Z>,
         m: impl Into<Z>,
         q: impl Into<Z>,
         r: impl Into<Q>,
         alpha: impl Into<Q>,
-    ) -> Result<Self, MathError> {
+    ) -> Self {
         let n: Z = n.into();
         let m: Z = m.into();
         let q: Z = q.into();
         let r: Q = r.into();
         let alpha: Q = alpha.into();
 
-        Self::check_params(&n, &m, &q, &r, &alpha)?;
-
         let q = Modulus::from(&q);
 
-        Ok(Self { n, m, q, r, alpha })
+        Self { n, m, q, r, alpha }
     }
 
-    /// Generates a new [`DualRegev`] instance, i.e. a new set of suitable public parameters,
+    /// Generates a new [`DualRegev`] instance, i.e. a new set of suitable
+    /// (provably secure and correct) public parameters,
     /// given the security parameter `n`.
     ///
     /// Parameters:
@@ -93,7 +127,7 @@ impl DualRegev {
     /// Returns a correct and secure [`DualRegev`] PK encryption instance or
     /// a [`MathError`] if the given `n <= 1`.
     ///
-    /// # Example
+    /// # Examples
     /// ```
     /// use qfall_crypto::construction::pk_encryption::DualRegev;
     ///
@@ -112,17 +146,29 @@ impl DualRegev {
         }
 
         let mut m: Z;
-        let mut q: Z;
+        let mut q: Modulus;
         let mut r: Q;
         let mut alpha: Q;
         (m, q, r, alpha) = Self::gen_new_public_parameters(&n);
-        while Self::check_params(&n, &m, &q, &r, &alpha).is_err() {
+        let mut out = Self {
+            n: n.clone(),
+            m,
+            q,
+            r,
+            alpha,
+        };
+        while out.check_correctness().is_err() || out.check_security().is_err() {
             (m, q, r, alpha) = Self::gen_new_public_parameters(&n);
+            out = Self {
+                n: n.clone(),
+                m,
+                q,
+                r,
+                alpha,
+            };
         }
 
-        let q = Modulus::from(&q);
-
-        Ok(Self { n, m, q, r, alpha })
+        Ok(out)
     }
 
     /// Generates new public parameters, which must not be secure or correct
@@ -137,7 +183,7 @@ impl DualRegev {
     /// Returns a set of public parameters `(m, q, r, alpha)` chosen according to
     /// the provided `n`.
     ///
-    /// # Example
+    /// # Examples
     /// ```compile_fail
     /// use qfall_crypto::construction::pk_encryption::DualRegev;
     /// use qfall_math::integer::Z;
@@ -145,7 +191,7 @@ impl DualRegev {
     ///
     /// let (m, q, r, alpha) = DualRegev::gen_new_public_parameters(&n);
     /// ```
-    fn gen_new_public_parameters(n: &Z) -> (Z, Z, Q, Q) {
+    fn gen_new_public_parameters(n: &Z) -> (Z, Modulus, Q, Q) {
         let n_i64 = i64::try_from(n).unwrap();
         // these powers are chosen according to experience s.t. at least every
         // fifth generation of public parameters outputs a valid pair
@@ -156,8 +202,7 @@ impl DualRegev {
             6..=8 => 6,
             9..=12 => 5,
             13..=30 => 4,
-            31..=5000 => 3,
-            _ => 2,
+            _ => 3,
         };
 
         // generate prime q in [n^power / 2, n^power]
@@ -166,55 +211,42 @@ impl DualRegev {
         let q = Z::sample_prime_uniform(&lower_bound, &upper_bound).unwrap();
 
         // choose m = 2 (n+1) lg q
-        let m = (Z::from(2) * (n + Z::ONE) * q.log(&10).unwrap()).round();
+        let m = (Z::from(2) * (n + Z::ONE) * q.log(&10).unwrap()).ceil();
 
         // choose r = log m
         let r = m.log(&2).unwrap();
 
         // alpha = 1/(sqrt(m) * log^2 m)
-        // TODO: remove ceil, when log is applicable to Qs
-        let alpha = 1 / m.sqrt() * (m.log(&2).unwrap()).ceil().log(&2).unwrap();
+        let alpha = 1 / (m.sqrt() * m.log(&2).unwrap().pow(2).unwrap());
+
+        let q = Modulus::from(&q);
 
         (m, q, r, alpha)
     }
 
     /// Checks a provided set of public parameters according to their validity
-    /// regarding security and completeness according to
-    /// Lemma 8.2 and 8.4 of [\[1\]](<index.html#:~:text=[1]>).
-    ///
-    /// Parameters:
-    /// - `n`: specifies the security parameter and number of rows
-    ///   of the uniform at random instantiated matrix `A`
-    /// - `m`: specifies the number of columns of matrix `A`
-    /// - `q`: specifies the modulus
-    /// - `r`: specifies the gaussian parameter used for SampleD,
-    ///   i.e. used for encryption
-    /// - `alpha`: specifies the gaussian parameter used for independent
-    ///   sampling from chi, i.e. for [`MatZ::sample_discrete_gauss`] used
-    ///   for key generation
+    /// regarding correctness and completeness according to
+    /// Lemma 8.2 of [\[1\]](<index.html#:~:text=[1]>).
     ///
     /// Returns an empty result or a [`MathError`] if the instance would
-    /// not be correct or secure.
+    /// not be correct.
     ///
-    /// # Example
-    /// ```compile_fail
+    /// # Examples
+    /// ```
     /// use qfall_crypto::construction::pk_encryption::DualRegev;
-    /// use qfall_math::{integer::Z, rational::Q};
-    /// let n = Z::from(2);
-    /// let m = Z::from(16);
-    /// let q = Z::from(401);
-    /// let r = Q::from(4);
-    /// let alpha = Q::from(8);
+    /// let dr = DualRegev::default();
     ///
-    /// let is_valid = DualRegev::check_params(&n, &m, &q, &r, &alpha).is_err();
+    /// let is_valid = dr.check_correctness().is_ok();
     /// ```
     ///
     /// # Errors and Failures
     /// - Returns a [`MathError`] of type [`InvalidIntegerInput`](MathError::InvalidIntegerInput)
     /// if at least one parameter was not chosen appropriately for a
-    /// correct and secure DualRegev public key encryption instance.
-    fn check_params(n: &Z, m: &Z, q: &Z, r: &Q, alpha: &Q) -> Result<(), MathError> {
-        if n <= &Z::ONE {
+    /// correct DualRegev public key encryption instance.
+    pub fn check_correctness(&self) -> Result<(), MathError> {
+        let q: Z = Z::from(&self.q);
+
+        if self.n <= Z::ONE {
             return Err(MathError::InvalidIntegerInput(String::from(
                 "n must be chosen bigger than 1.",
             )));
@@ -225,39 +257,62 @@ impl DualRegev {
             )));
         }
 
-        // Security requirements
-        // q * α >= n
-        if q * alpha < Q::from(n) {
-            return Err(MathError::InvalidIntegerInput(String::from(
-                "Security is not guaranteed as q * α < n, but q * α >= n is required.",
-            )));
-        }
-        // m >= 2(n + 1) lg (q)
-        if Q::from(m) < 2 * (n + 1) * q.log(&10).unwrap() {
-            return Err(MathError::InvalidIntegerInput(String::from(
-                "Security is not guaranteed as m < 2(n + 1) lg (q),
-                but m >= 2(n + 1) lg (q) is required.",
-            )));
-        }
-        // r >= ω( sqrt( log m ) )
-        if r < &m.log(&2).unwrap().sqrt() {
-            return Err(MathError::InvalidIntegerInput(String::from(
-                "Security is not guaranteed as r < sqrt( log m ) and r >= ω(sqrt(log m)) is required."
-            )));
-        }
-
         // Completeness requirements
         // q >= 5 * r * m
-        if Q::from(q) < 5 * r * m {
+        if Q::from(q) < 5 * &self.r * &self.m {
             return Err(MathError::InvalidIntegerInput(String::from(
                 "Completeness is not guaranteed as q < 5rm, but q >= 5rm is required.",
             )));
         }
         // α <= 1/(r * sqrt(m) * ω(sqrt(log n))
-        if alpha > &(1 / (r * m.sqrt() * n.log(&2).unwrap().sqrt())) {
+        if self.alpha > 1 / (&self.r * self.m.sqrt() * self.n.log(&2).unwrap().sqrt()) {
             return Err(MathError::InvalidIntegerInput(String::from(
-                "Completeness is not guaranteed as α > 1/(r*sqrt(m)*ω(sqrt(log n)),
-                but α <= 1/(r*sqrt(m)*ω(sqrt(log n)) is required.",
+                "Completeness is not guaranteed as α > 1/(r*sqrt(m)*ω(sqrt(log n)), but α <= 1/(r*sqrt(m)*ω(sqrt(log n)) is required.",
+            )));
+        }
+
+        Ok(())
+    }
+
+    /// Checks a provided set of public parameters according to their validity
+    /// regarding security according to
+    /// Lemma 8.4 of [\[1\]](<index.html#:~:text=[1]>).
+    ///
+    /// Returns an empty result or a [`MathError`] if the instance would
+    /// not be secure.
+    ///
+    /// # Examples
+    /// ```
+    /// use qfall_crypto::construction::pk_encryption::DualRegev;
+    /// let dr = DualRegev::default();
+    ///
+    /// let is_valid = dr.check_security().is_ok();
+    /// ```
+    ///
+    /// # Errors and Failures
+    /// - Returns a [`MathError`] of type [`InvalidIntegerInput`](MathError::InvalidIntegerInput)
+    /// if at least one parameter was not chosen appropriately for a
+    /// secure DualRegev public key encryption instance.
+    pub fn check_security(&self) -> Result<(), MathError> {
+        let q: Z = Z::from(&self.q);
+
+        // Security requirements
+        // q * α >= n
+        if &q * &self.alpha < Q::from(&self.n) {
+            return Err(MathError::InvalidIntegerInput(String::from(
+                "Security is not guaranteed as q * α < n, but q * α >= n is required.",
+            )));
+        }
+        // m >= 2(n + 1) lg (q)
+        if Q::from(&self.m) < 2 * (&self.n + 1) * q.log(&10).unwrap() {
+            return Err(MathError::InvalidIntegerInput(String::from(
+                "Security is not guaranteed as m < 2(n + 1) lg (q), but m >= 2(n + 1) lg (q) is required.",
+            )));
+        }
+        // r >= ω( sqrt( log m ) )
+        if self.r < self.m.log(&2).unwrap().sqrt() {
+            return Err(MathError::InvalidIntegerInput(String::from(
+                "Security is not guaranteed as r < sqrt( log m ) and r >= ω(sqrt(log m)) is required."
             )));
         }
 
@@ -266,10 +321,10 @@ impl DualRegev {
 
     /// This function instantiates a 128-bit secure [`DualRegev`] scheme.
     ///
-    /// The public parameters used for this scheme were generated via `DualRegev::new_from_n(53)`
+    /// The public parameters used for this scheme were generated via `DualRegev::new_from_n(55)`
     /// and its bit-security determined via the [lattice estimator](https://github.com/malb/lattice-estimator).
     pub fn secure128() -> Self {
-        Self::new(53, 558, 146273, 9.525, 78.48).unwrap()
+        Self::new(55, 579, 147557, 9.2, 0.00049)
     }
 }
 
@@ -278,7 +333,7 @@ impl Default for DualRegev {
     /// This parameter choice is not secure as the dimension of the lattice is too small,
     /// but it provides an efficient working example.
     ///
-    /// # Example
+    /// # Examples
     /// ```
     /// use qfall_crypto::construction::pk_encryption::DualRegev;
     ///
@@ -287,9 +342,9 @@ impl Default for DualRegev {
     fn default() -> Self {
         let n = Z::from(2);
         let m = Z::from(16);
-        let q = Modulus::from(401);
+        let q = Modulus::from(443);
         let r = Q::from(4);
-        let alpha = Q::from(8);
+        let alpha = Q::from((1, 64));
 
         Self { n, m, q, r, alpha }
     }
@@ -309,7 +364,7 @@ impl PKEncryption for DualRegev {
     ///
     /// Then, `pk = (A, p)` and `sk = s` is output.
     ///
-    /// # Example
+    /// # Examples
     /// ```
     /// use qfall_crypto::construction::pk_encryption::{PKEncryption, DualRegev};
     /// let dual_regev = DualRegev::default();
@@ -323,8 +378,15 @@ impl PKEncryption for DualRegev {
         // A <- Z_q^{n x m}
         let mat_a = MatZq::sample_uniform(&self.n, &self.m, &self.q);
         // x <- χ^m
-        let vec_x =
-            MatZq::sample_discrete_gauss(&self.m, 1, &self.q, &self.n, 0, &self.alpha).unwrap();
+        let vec_x = MatZq::sample_discrete_gauss(
+            &self.m,
+            1,
+            &self.q,
+            &self.n,
+            0,
+            &(&self.alpha * Z::from(&self.q)),
+        )
+        .unwrap();
         // p = A^t * s + x
         let vec_p = mat_a.transpose() * &vec_s + vec_x;
 
@@ -345,7 +407,7 @@ impl PKEncryption for DualRegev {
     ///
     /// Returns a cipher of the form `cipher = (u, c)` for [`MatZq`] `u` and [`Zq`] `c`.
     ///
-    /// # Example
+    /// # Examples
     /// ```
     /// use qfall_crypto::construction::pk_encryption::{PKEncryption, DualRegev};
     /// let dual_regev = DualRegev::default();
@@ -356,7 +418,7 @@ impl PKEncryption for DualRegev {
     fn enc(&self, pk: &Self::PublicKey, message: impl Into<Z>) -> Self::Cipher {
         // generate message = message mod 2
         let message: Z = message.into();
-        let message = Zq::from((message, 2));
+        let message = Zq::from((&message, 2));
         let message = message.get_value();
 
         // e <- SampleD over lattice Z^m, center 0 with gaussian parameter r
@@ -381,7 +443,7 @@ impl PKEncryption for DualRegev {
     ///
     /// Returns the decryption of `cipher` as a [`Z`] instance.
     ///
-    /// # Example
+    /// # Examples
     /// ```
     /// use qfall_crypto::construction::pk_encryption::{PKEncryption, DualRegev};
     /// use qfall_math::integer::Z;
@@ -411,30 +473,21 @@ mod test_pp_generation {
     use super::DualRegev;
     use super::Z;
 
-    /// Checks whether `new` works properly for correct and secure parameter choices.
+    /// Checks whether `new` is available for types implementing [`Into<Z>`].
     #[test]
-    fn new_suitable() {
-        assert!(DualRegev::new(2, 16, 401, 4, 8).is_ok());
-        assert!(DualRegev::new(6, 62, 24781, 6, 21).is_ok());
-        assert!(DualRegev::new(20, 210, 99823, 8, 43).is_ok());
-    }
-
-    /// Checks whether `new` returns an error for insecure or not complete public parameters.
-    #[test]
-    fn new_unsuitable() {
-        assert!(DualRegev::new(2, 16, 401, 4, 20).is_err());
-        assert!(DualRegev::new(2, 16, 401, 6, 8).is_err());
-        assert!(DualRegev::new(2, 16, 500, 4, 8).is_err());
-        assert!(DualRegev::new(2, 16, 399, 4, 8).is_err());
-        assert!(DualRegev::new(2, 30, 401, 4, 8).is_err());
-        assert!(DualRegev::new(1, 16, 401, 4, 20).is_err());
+    fn new_availability() {
+        let _ = DualRegev::new(2u8, 2u16, 2u32, 2u64, 2i8);
+        let _ = DualRegev::new(2u16, 2u64, 2i32, 2i64, 2i16);
+        let _ = DualRegev::new(2i16, 2i64, 2u32, 2u8, 2u16);
+        let _ = DualRegev::new(Z::from(2), &Z::from(2), 2u8, 2i8, 2u32);
     }
 
     /// Checks whether `new_from_n` works properly for different choices of n.
     #[test]
     fn suitable_security_params() {
         let n_choices = [
-            2, 3, 4, 5, 6, 8, 9, 12, 13, 30, 21, 50, 100, 250, 500, 1000, 2500, 5000, 5001, 10000,
+            2, 3, 4, 5, 6, 7, 8, 9, 10, 25, 50, 75, 100, 250, 500, 750, 1000, 2500, 5000, 5001,
+            10000,
         ];
 
         for n in n_choices {
@@ -447,26 +500,29 @@ mod test_pp_generation {
     fn default_suitable() {
         let dr = DualRegev::default();
 
-        assert!(DualRegev::check_params(&dr.n, &dr.m, &Z::from(&dr.q), &dr.r, &dr.alpha).is_ok());
+        assert!(dr.check_correctness().is_ok());
+        assert!(dr.check_security().is_ok());
     }
 
     /// Checks whether the generated public parameters from `new_from_n` are
     /// valid choices according to security and correctness of the scheme.
     #[test]
     fn choice_valid() {
-        let n_choices = [2, 3, 5, 8, 10, 14, 25, 50, 125, 300, 600, 1200, 4000, 6000];
+        let n_choices = [
+            2, 3, 4, 5, 6, 7, 8, 9, 10, 25, 50, 75, 100, 250, 500, 750, 1000, 2500, 5000, 5001,
+            10000,
+        ];
 
         for n in n_choices {
             let dr = DualRegev::new_from_n(n).unwrap();
-            assert!(
-                DualRegev::check_params(&dr.n, &dr.m, &Z::from(&dr.q), &dr.r, &dr.alpha).is_ok()
-            );
+            assert!(dr.check_correctness().is_ok());
+            assert!(dr.check_security().is_ok());
         }
     }
 
     /// Ensures that `new_from_n` is available for types implementing [`Into<Z>`].
     #[test]
-    fn availability() {
+    fn new_from_n_availability() {
         let _ = DualRegev::new_from_n(2u8);
         let _ = DualRegev::new_from_n(2u16);
         let _ = DualRegev::new_from_n(2u32);
@@ -492,8 +548,8 @@ mod test_pp_generation {
     fn secure128_validity() {
         let dr = DualRegev::secure128();
 
-        let res = DualRegev::check_params(&dr.n, &dr.m, &Z::from(dr.q), &dr.r, &dr.alpha);
-        assert!(res.is_ok());
+        assert!(dr.check_correctness().is_ok());
+        assert!(dr.check_security().is_ok());
     }
 }
 
@@ -508,7 +564,7 @@ mod test_dual_regev {
     #[test]
     fn cycle_zero_small_n() {
         let msg = Z::ZERO;
-        let dr = DualRegev::new_from_n(5).unwrap();
+        let dr = DualRegev::default();
 
         let (pk, sk) = dr.gen();
         let cipher = dr.enc(&pk, &msg);
@@ -521,7 +577,7 @@ mod test_dual_regev {
     #[test]
     fn cycle_one_small_n() {
         let msg = Z::ONE;
-        let dr = DualRegev::new_from_n(5).unwrap();
+        let dr = DualRegev::default();
 
         let (pk, sk) = dr.gen();
         let cipher = dr.enc(&pk, &msg);
@@ -534,7 +590,7 @@ mod test_dual_regev {
     #[test]
     fn cycle_zero_large_n() {
         let msg = Z::ZERO;
-        let dr = DualRegev::new_from_n(50).unwrap();
+        let dr = DualRegev::secure128();
 
         let (pk, sk) = dr.gen();
         let cipher = dr.enc(&pk, &msg);
@@ -547,7 +603,7 @@ mod test_dual_regev {
     #[test]
     fn cycle_one_large_n() {
         let msg = Z::ONE;
-        let dr = DualRegev::new_from_n(50).unwrap();
+        let dr = DualRegev::secure128();
 
         let (pk, sk) = dr.gen();
         let cipher = dr.enc(&pk, &msg);
