@@ -15,9 +15,39 @@
 //! In: Theoretical Computer Science 10.4.
 //! <https://web.eecs.umich.edu/~cpeikert/pubs/lattice-survey.pdf>
 
-use qfall_math::{error::MathError, integer::Z, integer_mod_q::MatZq};
+use qfall_math::{
+    error::MathError,
+    integer::Z,
+    integer_mod_q::MatZq,
+    traits::{GetNumColumns, GetNumRows},
+};
 use serde::{Deserialize, Serialize};
 
+/// This struct keeps an instance of the [`SISHash`] including
+/// its key and public parameters implicitely stored as `n = key.#rows()`,
+/// `m = key.#columns`, and `q = key.modulus`.
+///
+/// Attributes:
+/// - `n`: specifies the security parameter, which is not equal to the bit-security level
+/// - `m`: defines the number of columns of `A` defining this SIS instance
+/// - `q`: specifies the modulus
+///
+/// # Examples
+/// ```
+/// use qfall_crypto::construction::hash::SISHash;
+/// use qfall_math::integer_mod_q::MatZq;
+/// // setup public parameters and key pair
+/// let hash = SISHash::gen(5, 18, 11).unwrap();
+///
+/// // check provable collision-resistance of hash
+/// assert!(hash.check_security().is_ok());
+///
+/// // generate something to hash
+/// let msg = MatZq::sample_uniform(18, 1, 11);
+///
+/// // hash the message
+/// let result = hash.hash(&msg);
+/// ```
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SISHash {
     key: MatZq, // implicitely contains n = nrows, m = ncols, q = modulus
@@ -34,8 +64,7 @@ impl SISHash {
     ///
     /// Returns a new instance of a [`SISHash`] function with freshly
     /// chosen secret key `A` of type [`MatZq`], dimensions `n x m`,
-    /// and modulus `q`. Otherwise, a [`MathError`] is returned, if `n <= 0`
-    /// or `m < n log q`, or `q <= ⌈sqrt(n log q)⌉` as then collision-resistance is not ensured.
+    /// and modulus `q`. Otherwise, a [`MathError`] is returned, if `n <= 0`.
     ///
     /// # Examples
     /// ```
@@ -46,8 +75,7 @@ impl SISHash {
     ///
     /// # Errors and Failures
     /// - Returns a [`MathError`] of type [`InvalidIntegerInput`](MathError::InvalidIntegerInput)
-    /// if `n <= 0` or `m < n log q`, or `q <= ⌈sqrt(n log q)⌉`
-    /// as then collision-resistance is not ensured.
+    /// if `n <= 0`.
     pub fn gen(n: impl Into<Z>, m: impl Into<Z>, q: impl Into<Z>) -> Result<Self, MathError> {
         let n: Z = n.into();
         let m: Z = m.into();
@@ -58,6 +86,35 @@ impl SISHash {
                 "n must be chosen bigger than 0.",
             )));
         }
+
+        let mat_a = MatZq::sample_uniform(&n, &m, q);
+
+        Ok(Self { key: mat_a })
+    }
+
+    /// Checks whether the [`SISHash`] instance is provably collision-resistant.
+    ///
+    /// Returns an empty result if the instance is provably secure.
+    /// Otherwise, a [`MathError`] is returned, if or `m < n log q`,
+    /// or `q <= ⌈sqrt(n log q)⌉` as collision-resistance
+    /// would otherwise not be ensured.
+    ///
+    /// # Examples
+    /// ```
+    /// use qfall_crypto::construction::hash::SISHash;
+    /// let hash = SISHash::gen(5, 18, 11).unwrap();
+    ///
+    /// assert!(hash.check_security().is_ok());
+    /// ```
+    ///
+    /// # Errors and Failures
+    /// - Returns a [`MathError`] of type [`InvalidIntegerInput`](MathError::InvalidIntegerInput)
+    /// if `m < n log q`, or `q <= ⌈sqrt(n log q)⌉`
+    /// as collision-resistance would otherwise not be ensured.
+    pub fn check_security(&self) -> Result<(), MathError> {
+        let n: Z = self.key.get_num_rows().into();
+        let m: Z = self.key.get_num_columns().into();
+        let q: Z = self.key.get_mod().into();
 
         // computed according to bullet point 3 of section 4.1.1 in Decade
         let m_bar = (&n * q.log(&2).unwrap()).ceil();
@@ -75,9 +132,7 @@ impl SISHash {
             )));
         }
 
-        let mat_a = MatZq::sample_uniform(&n, &m, q);
-
-        Ok(Self { key: mat_a })
+        Ok(())
     }
 
     /// Applies f_A to `value`, i.e. computes `A * value`.
@@ -129,26 +184,26 @@ mod test_gen {
         assert!(res_2.is_err());
     }
 
-    /// Checks whether too small chosen `m` results in an error.
+    /// Checks whether too small chosen `m` results in an error in the security check.
     #[test]
-    fn invalid_m() {
-        let res_0 = SISHash::gen(1, 0, 2);
-        let res_1 = SISHash::gen(2, 2, 2);
-        let res_2 = SISHash::gen(4, 5, i64::MAX);
+    fn insecure_m() {
+        let res_0 = SISHash::gen(1, 1, 4).unwrap();
+        let res_1 = SISHash::gen(2, 2, 2).unwrap();
+        let res_2 = SISHash::gen(4, 5, i64::MAX).unwrap();
 
-        assert!(res_0.is_err());
-        assert!(res_1.is_err());
-        assert!(res_2.is_err());
+        assert!(res_0.check_security().is_err());
+        assert!(res_1.check_security().is_err());
+        assert!(res_2.check_security().is_err());
     }
 
-    /// Checks whether too small chosen `q` results in an error.
+    /// Checks whether too small chosen `q` results in an error in the security check.
     #[test]
-    fn invalid_q() {
-        let res_0 = SISHash::gen(10, 50, 6);
-        let res_1 = SISHash::gen(5, 50, 4);
+    fn insecure_q() {
+        let res_0 = SISHash::gen(10, 50, 6).unwrap();
+        let res_1 = SISHash::gen(5, 50, 4).unwrap();
 
-        assert!(res_0.is_err());
-        assert!(res_1.is_err());
+        assert!(res_0.check_security().is_err());
+        assert!(res_1.check_security().is_err());
     }
 
     /// Ensures that a working example returns a proper instance.
@@ -156,6 +211,7 @@ mod test_gen {
     fn working_example() {
         let hash = SISHash::gen(5, 18, 11).unwrap();
 
+        assert!(hash.check_security().is_ok());
         assert_eq!(5, hash.key.get_num_rows());
         assert_eq!(18, hash.key.get_num_columns());
         assert_eq!(Z::from(11), Z::from(hash.key.get_mod()));
@@ -175,7 +231,8 @@ mod test_gen {
 
 #[cfg(test)]
 mod test_hash {
-    use super::{MatZq, SISHash};
+    use super::{MatZq, SISHash, Z};
+    use qfall_math::traits::{GetNumColumns, GetNumRows};
 
     /// Ensures that non-column-vectors result in a panic.
     #[should_panic]
@@ -210,9 +267,13 @@ mod test_hash {
     /// Ensures that a working example returns a proper instance.
     #[test]
     fn working_example() {
-        let hash = SISHash::gen(1, 3, 7).unwrap();
-        let value = MatZq::new(3, 1, 7);
+        let hash = SISHash::gen(5, 18, 11).unwrap();
+        let value = MatZq::new(18, 1, 11);
 
-        hash.hash(&value);
+        let res = hash.hash(&value);
+
+        assert_eq!(5, res.get_num_rows());
+        assert_eq!(1, res.get_num_columns());
+        assert_eq!(Z::from(11), res.get_mod().into());
     }
 }
