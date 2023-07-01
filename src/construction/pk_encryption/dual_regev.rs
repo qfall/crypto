@@ -321,10 +321,10 @@ impl DualRegev {
 
     /// This function instantiates a 128-bit secure [`DualRegev`] scheme.
     ///
-    /// The public parameters used for this scheme were generated via `DualRegev::new_from_n(55)`
+    /// The public parameters used for this scheme were generated via `DualRegev::new_from_n(350)`
     /// and its bit-security determined via the [lattice estimator](https://github.com/malb/lattice-estimator).
     pub fn secure128() -> Self {
-        Self::new(55, 579, 147557, 9.2, 0.00049)
+        Self::new(350, 5248, 29892991, 12.357, 0.00009)
     }
 }
 
@@ -590,7 +590,7 @@ mod test_dual_regev {
     #[test]
     fn cycle_zero_large_n() {
         let msg = Z::ZERO;
-        let dr = DualRegev::secure128();
+        let dr = DualRegev::new_from_n(50).unwrap();
 
         let (pk, sk) = dr.gen();
         let cipher = dr.enc(&pk, &msg);
@@ -603,7 +603,7 @@ mod test_dual_regev {
     #[test]
     fn cycle_one_large_n() {
         let msg = Z::ONE;
-        let dr = DualRegev::secure128();
+        let dr = DualRegev::new_from_n(50).unwrap();
 
         let (pk, sk) = dr.gen();
         let cipher = dr.enc(&pk, &msg);
