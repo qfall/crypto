@@ -211,13 +211,13 @@ impl DualRegev {
         let q = Z::sample_prime_uniform(&lower_bound, &upper_bound).unwrap();
 
         // choose m = 2 (n+1) lg q
-        let m = (Z::from(2) * (n + Z::ONE) * q.log(&10).unwrap()).ceil();
+        let m = (Z::from(2) * (n + Z::ONE) * q.log(10).unwrap()).ceil();
 
         // choose r = log m
-        let r = m.log(&2).unwrap();
+        let r = m.log(2).unwrap();
 
         // alpha = 1/(sqrt(m) * log^2 m)
-        let alpha = 1 / (m.sqrt() * m.log(&2).unwrap().pow(2).unwrap());
+        let alpha = 1 / (m.sqrt() * m.log(2).unwrap().pow(2).unwrap());
 
         let q = Modulus::from(&q);
 
@@ -265,7 +265,7 @@ impl DualRegev {
             )));
         }
         // α <= 1/(r * sqrt(m) * ω(sqrt(log n))
-        if self.alpha > 1 / (&self.r * self.m.sqrt() * self.n.log(&2).unwrap().sqrt()) {
+        if self.alpha > 1 / (&self.r * self.m.sqrt() * self.n.log(2).unwrap().sqrt()) {
             return Err(MathError::InvalidIntegerInput(String::from(
                 "Completeness is not guaranteed as α > 1/(r*sqrt(m)*ω(sqrt(log n)), but α <= 1/(r*sqrt(m)*ω(sqrt(log n)) is required.",
             )));
@@ -304,13 +304,13 @@ impl DualRegev {
             )));
         }
         // m >= 2(n + 1) lg (q)
-        if Q::from(&self.m) < 2 * (&self.n + 1) * q.log(&10).unwrap() {
+        if Q::from(&self.m) < 2 * (&self.n + 1) * q.log(10).unwrap() {
             return Err(MathError::InvalidIntegerInput(String::from(
                 "Security is not guaranteed as m < 2(n + 1) lg (q), but m >= 2(n + 1) lg (q) is required.",
             )));
         }
         // r >= ω( sqrt( log m ) )
-        if self.r < self.m.log(&2).unwrap().sqrt() {
+        if self.r < self.m.log(2).unwrap().sqrt() {
             return Err(MathError::InvalidIntegerInput(String::from(
                 "Security is not guaranteed as r < sqrt( log m ) and r >= ω(sqrt(log m)) is required."
             )));

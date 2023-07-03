@@ -117,7 +117,7 @@ impl SISHash {
         let q: Z = self.key.get_mod().into();
 
         // computed according to bullet point 3 of section 4.1.1 in Decade
-        let m_bar = (&n * q.log(&2).unwrap()).ceil();
+        let m_bar = (&n * q.log(2).unwrap()).ceil();
 
         // m >= m_bar according to bullet point 3 of section 4.1.1 in Decade
         if m < m_bar {
