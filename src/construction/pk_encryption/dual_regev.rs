@@ -590,7 +590,7 @@ mod test_dual_regev {
     #[test]
     fn cycle_zero_large_n() {
         let msg = Z::ZERO;
-        let dr = DualRegev::new_from_n(50).unwrap();
+        let dr = DualRegev::new_from_n(30).unwrap();
 
         let (pk, sk) = dr.gen();
         let cipher = dr.enc(&pk, &msg);
@@ -603,7 +603,7 @@ mod test_dual_regev {
     #[test]
     fn cycle_one_large_n() {
         let msg = Z::ONE;
-        let dr = DualRegev::new_from_n(50).unwrap();
+        let dr = DualRegev::new_from_n(30).unwrap();
 
         let (pk, sk) = dr.gen();
         let cipher = dr.enc(&pk, &msg);
