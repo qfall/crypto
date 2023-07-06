@@ -114,7 +114,7 @@ impl Regev {
 
     /// Generates a new [`Regev`] instance, i.e. a new set of suitable
     /// (provably secure and correct) public parameters,
-    /// given the security parameter `n`.
+    /// given the security parameter `n` for `n >= 10`.
     ///
     /// Parameters:
     /// - `n`: specifies the security parameter and number of rows
@@ -127,7 +127,7 @@ impl Regev {
     /// ```
     /// use qfall_crypto::construction::pk_encryption::Regev;
     ///
-    /// let regev = Regev::new_from_n(4).unwrap();
+    /// let regev = Regev::new_from_n(15).unwrap();
     /// ```
     ///
     /// # Errors and Failures
@@ -135,9 +135,9 @@ impl Regev {
     /// if `n <= 1`.
     pub fn new_from_n(n: impl Into<Z>) -> Result<Self, MathError> {
         let n = n.into();
-        if n <= Z::ONE {
+        if n <= Z::from(9) {
             return Err(MathError::InvalidIntegerInput(String::from(
-                "n must be chosen bigger than 1.",
+                "Choose n >= 10 as this function does not return parameters ensuring proper correctness of the scheme otherwise.",
             )));
         }
 
@@ -200,10 +200,10 @@ impl Regev {
         let q = Z::sample_prime_uniform(&lower_bound, &upper_bound).unwrap();
 
         // choose m = 1.05 * (n+1) log q
-        let m = (n + Z::ONE) * q.log(&2).unwrap().ceil();
+        let m = (n + Z::ONE) * q.log(2).unwrap().ceil();
 
         // alpha = 1/(sqrt(n) * log^2 n)
-        let alpha = 1 / (n.sqrt() * n.log(&2).unwrap().pow(2).unwrap());
+        let alpha = 1 / (n.sqrt() * n.log(2).unwrap().pow(2).unwrap());
 
         let q = Modulus::from(q);
 
@@ -247,9 +247,15 @@ impl Regev {
 
         // Correctness requirements
         // α = o (1 / ( sqrt(n) * log n ) )
-        if self.alpha > 1 / (self.n.sqrt() * self.n.log(&2).unwrap()) {
+        if self.alpha > 1 / (self.n.sqrt() * self.n.log(2).unwrap()) {
             return Err(MathError::InvalidIntegerInput(String::from(
                 "Completeness is not guaranteed as α >= 1 / (sqrt(n) * log n), but α < 1 / (sqrt(n) * log n) is required."
+            )));
+        }
+
+        if 20 * self.m.sqrt() * &self.alpha > Q::from(q) {
+            return Err(MathError::InvalidIntegerInput(String::from(
+                "Completeness is not guaranteed as 5 * sqrt(m) * α > q/4, but 5 * sqrt(m) * α <= q/4 is required."
             )));
         }
 
@@ -286,7 +292,7 @@ impl Regev {
             )));
         }
         // m >= (n + 1) log q
-        if self.m < ((&self.n + Z::ONE) * q.log(&2).unwrap()).ceil() {
+        if self.m < ((&self.n + Z::ONE) * q.log(2).unwrap()).ceil() {
             return Err(MathError::InvalidIntegerInput(String::from(
                 "Security is not guaranteed as m < (n + 1) log q,
                 but m >= (n + 1) log q is required.",
@@ -301,7 +307,7 @@ impl Regev {
     /// The public parameters used for this scheme were generated via `Regev::new_from_n(350)`
     /// and its bit-security determined via the [lattice estimator](https://github.com/malb/lattice-estimator).
     pub fn secure128() -> Self {
-        Self::new(230, 5313, 7228393, 0.0011).unwrap()
+        Self::new(230, 5313, 7764299, 0.0011).unwrap()
     }
 }
 
@@ -317,10 +323,10 @@ impl Default for Regev {
     /// let regev = Regev::default();
     /// ```
     fn default() -> Self {
-        let n = Z::from(5);
-        let m = Z::from(54);
-        let q = Modulus::from(359);
-        let alpha = Q::from(0.08);
+        let n = Z::from(13);
+        let m = Z::from(154);
+        let q = Modulus::from(1427);
+        let alpha = Q::from(0.02);
 
         Self { n, m, q, alpha }
     }
@@ -475,7 +481,7 @@ mod test_pp_generation {
     #[test]
     fn suitable_security_params() {
         let n_choices = [
-            2, 3, 5, 8, 10, 14, 25, 50, 100, 250, 500, 1000, 2500, 5000, 5001, 10000,
+            10, 11, 12, 13, 14, 25, 50, 100, 250, 500, 1000, 2500, 5000, 5001, 10000,
         ];
 
         for n in n_choices {
@@ -496,7 +502,7 @@ mod test_pp_generation {
     /// valid choices according to security and correctness of the scheme.
     #[test]
     fn choice_valid() {
-        let n_choices = [2, 3, 5, 8, 10, 14, 25, 50, 125, 300, 600, 1200, 4000, 6000];
+        let n_choices = [10, 14, 25, 50, 125, 300, 600, 1200, 4000, 6000];
 
         for n in n_choices {
             let regev = Regev::new_from_n(n).unwrap();
