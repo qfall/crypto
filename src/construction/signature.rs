@@ -15,7 +15,7 @@
 //! <https://doi.org/10.1145/1374376.1374407>
 
 pub mod fdh;
-mod pfdh;
+pub mod pfdh;
 
 /// This trait captures the essential functionalities each signature scheme has to support.
 /// These include
