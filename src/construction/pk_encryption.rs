@@ -30,6 +30,7 @@
 
 mod dual_regev;
 mod dual_regev_discrete_gauss;
+mod identity_based_encryption;
 mod lpr;
 mod regev;
 mod regev_discrete_gauss;
