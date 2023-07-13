@@ -53,8 +53,8 @@ impl TrapdoorDistribution for PlusMinusOneZero {
     /// let mat = PlusMinusOneZero.sample(42, 24);
     /// ```
     fn sample(&self, m_bar: i64, w: i64) -> MatZ {
-        let mat_1 = MatZ::sample_uniform(m_bar, w, &0, &2).unwrap();
-        let mat_2 = MatZ::sample_uniform(m_bar, w, &0, &2).unwrap();
+        let mat_1 = MatZ::sample_uniform(m_bar, w, 0, 2).unwrap();
+        let mat_2 = MatZ::sample_uniform(m_bar, w, 0, 2).unwrap();
         mat_1 - mat_2
     }
 }

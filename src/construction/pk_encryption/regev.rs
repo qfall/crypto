@@ -407,7 +407,7 @@ impl PKEncryption for Regev {
         let message = message.get_value();
 
         // x <- Z_2^m
-        let vec_x = MatZ::sample_uniform(&self.m, 1, &0, &2).unwrap();
+        let vec_x = MatZ::sample_uniform(&self.m, 1, 0, 2).unwrap();
 
         // c = A * x + [0^{1xn} | msg *  ⌊q/2⌋]^t
         let mut c = pk * vec_x;
