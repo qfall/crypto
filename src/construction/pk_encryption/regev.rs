@@ -121,7 +121,7 @@ impl Regev {
     ///   of the uniform at random instantiated matrix `A`
     ///
     /// Returns a correct and secure [`Regev`] PK encryption instance or
-    /// a [`MathError`] if the given `n <= 1`.
+    /// a [`MathError`] if the given `n < 10`.
     ///
     /// # Examples
     /// ```
@@ -288,14 +288,14 @@ impl Regev {
         // q * α >= 2 sqrt(n)
         if &q * &self.alpha < 2 * self.n.sqrt() {
             return Err(MathError::InvalidIntegerInput(String::from(
-                "Security is not guaranteed as q * α < n, but q * α >= n is required.",
+                "Security is not guaranteed as q * α < 2 sqrt(n), but q * α >= 2 sqrt(n) is required.",
             )));
         }
-        // m >= (n + 1) log q
-        if self.m < ((&self.n + Z::ONE) * q.log(2).unwrap()).ceil() {
+        // m > (n + 1) log q
+        if self.m <= ((&self.n + Z::ONE) * q.log(2).unwrap()).ceil() {
             return Err(MathError::InvalidIntegerInput(String::from(
-                "Security is not guaranteed as m < (n + 1) log q,
-                but m >= (n + 1) log q is required.",
+                "Security is not guaranteed as m <= (n + 1) log q,
+                but m > (n + 1) log q is required.",
             )));
         }
 
@@ -381,9 +381,8 @@ impl PKEncryption for Regev {
     }
 
     /// Generates an encryption of `message mod 2` for the provided public key by following these steps:
-    /// e <- SampleD over lattice Z^m, center 0 with gaussian parameter r
     /// - x <- Z_2^m
-    /// - c = A * x + [0^{1xn} | msg *  ⌊q/2⌋]^t
+    /// - c = A * x + [0^{1 x n} | msg *  ⌊q/2⌋]^t
     ///
     /// Then, cipher `c` is output.
     ///
