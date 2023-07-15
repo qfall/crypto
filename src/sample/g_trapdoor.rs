@@ -60,7 +60,7 @@ pub mod trapdoor_distribution;
 /// ```
 ///
 /// # Panics ...
-/// - if the security parameter `n` is not in `\[1, i64::MAX\]`.
+/// - if the security parameter `n` is not in `[1, i64::MAX]`.
 pub fn gen_trapdoor_default(n: impl Into<Z>, modulus: &Modulus) -> (MatZq, MatZ) {
     // panic if n < 1 (security parameter must be positive)
     let n = n.into();
@@ -100,7 +100,7 @@ pub fn gen_trapdoor_default(n: impl Into<Z>, modulus: &Modulus) -> (MatZq, MatZ)
 /// ```
 ///
 /// # Panics...
-/// - ... if the security parameter `n` is not in `\[1, i64::MAX\]`.
+/// - if the security parameter `n` is not in `[1, i64::MAX]`.
 pub fn gen_trapdoor_ring_default(
     n: impl Into<Z>,
     modulus: &Modulus,
