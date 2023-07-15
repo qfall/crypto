@@ -28,7 +28,7 @@ use crate::sample::g_trapdoor::{
     gadget_parameters::GadgetParametersRing, gadget_ring::gen_trapdoor_ring_lwe,
 };
 use qfall_math::{
-    integer::{MatZ, PolyOverZ, Z},
+    integer::{MatPolyOverZ, MatZ, PolyOverZ, Z},
     integer_mod_q::{MatPolynomialRingZq, MatZq, Modulus},
     rational::Q,
 };
@@ -105,11 +105,7 @@ pub fn gen_trapdoor_ring_default(
     n: impl Into<Z>,
     modulus: &Modulus,
     s: impl Into<Q>,
-) -> (
-    MatPolynomialRingZq,
-    MatPolynomialRingZq,
-    MatPolynomialRingZq,
-) {
+) -> (MatPolynomialRingZq, MatPolyOverZ, MatPolyOverZ) {
     // panic if n < 1 (security parameter must be positive)
     let n = n.into();
     assert!(n >= Z::ONE);
@@ -118,7 +114,7 @@ pub fn gen_trapdoor_ring_default(
     let params = GadgetParametersRing::init_default(n, modulus);
 
     // a_bar <-$ Zq[X]^n
-    let a_bar = PolyOverZ::sample_uniform(&params.n, &0, &params.q).unwrap();
+    let a_bar = PolyOverZ::sample_uniform(&params.n, 0, &params.q).unwrap();
 
     // we can unwrap, as we compute the parameters on our own and
     // they should always work

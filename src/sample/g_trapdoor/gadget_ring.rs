@@ -57,14 +57,7 @@ pub fn gen_trapdoor_ring_lwe(
     params: &GadgetParametersRing,
     a_bar: &PolyOverZ,
     s: &Q,
-) -> Result<
-    (
-        MatPolynomialRingZq,
-        MatPolynomialRingZq,
-        MatPolynomialRingZq,
-    ),
-    MathError,
-> {
+) -> Result<(MatPolynomialRingZq, MatPolyOverZ, MatPolyOverZ), MathError> {
     // Sample `r` and `e` using a provided distribution
     let r = params.distribution.sample(&params.n, &params.k, s);
     let e = params.distribution.sample(&params.n, &params.k, s);
@@ -77,11 +70,7 @@ pub fn gen_trapdoor_ring_lwe(
     let g = gen_gadget_ring(&params.k, &params.base)?;
     big_a = big_a.concat_horizontal(&(g.transpose() - (a_bar * &r + &e)))?;
 
-    Ok((
-        MatPolynomialRingZq::from((&big_a, &params.modulus)),
-        MatPolynomialRingZq::from((&r, &params.modulus)),
-        MatPolynomialRingZq::from((&e, &params.modulus)),
-    ))
+    Ok((MatPolynomialRingZq::from((&big_a, &params.modulus)), r, e))
 }
 
 /// Generates a gadget vector based on its definition in [\[3\]](<../index.html#:~:text=[3]>).
@@ -185,20 +174,14 @@ mod test_gen_trapdoor_ring {
     };
     use qfall_math::{
         integer::{MatPolyOverZ, PolyOverZ, Z},
-        integer_mod_q::{MatPolynomialRingZq, Modulus, ModulusPolynomialRingZq},
+        integer_mod_q::{MatPolynomialRingZq, Modulus},
         rational::Q,
         traits::{Concatenate, GetCoefficient, GetEntry, GetNumColumns, GetNumRows, Pow},
     };
 
     /// Computes a trapdoor using the given secrets `(r,e)`
-    fn compute_trapdoor(
-        r: &MatPolynomialRingZq,
-        e: &MatPolynomialRingZq,
-        k: &Z,
-        modulus: &ModulusPolynomialRingZq,
-    ) -> MatPolynomialRingZq {
+    fn compute_trapdoor(r: &MatPolyOverZ, e: &MatPolyOverZ, k: &Z) -> MatPolyOverZ {
         let i_k = MatPolyOverZ::identity(k, k);
-        let i_k = MatPolynomialRingZq::from((&i_k, modulus));
 
         e.concat_vertical(r).unwrap().concat_vertical(&i_k).unwrap()
     }
@@ -215,7 +198,8 @@ mod test_gen_trapdoor_ring {
         let (a, r, e) = gen_trapdoor_ring_lwe(&params, &a_bar, &Q::from(10)).unwrap();
 
         // generate the trapdoor for a from r as trapdoor = [[e],[r],[I]]
-        let trapdoor = compute_trapdoor(&r, &e, &params.k, &a.get_mod());
+        let trapdoor =
+            MatPolynomialRingZq::from((&compute_trapdoor(&r, &e, &params.k), &params.modulus));
 
         // ensure G = A*trapdoor (definition of a trapdoor)
         let res: MatPolynomialRingZq = &a * &trapdoor;
