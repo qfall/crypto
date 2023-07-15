@@ -138,15 +138,16 @@ impl GadgetParameters {
 
 impl GadgetParametersRing {
     /// Initializes default values for [`GadgetParametersRing`] to create a ring-based
-    /// G-trapdoor. The parameters follow the ones in [\[3\]](<../index.html#:~:text=[2]>).
+    /// G-trapdoor. The parameters follow the ones in
+    /// [\[3\]](<../index.html#:~:text=[3]>): Algorithm 1.
     ///
-    /// - `base = 2` is taken from [\[3\]](<../index.html#:~:text=[2]>)
-    /// - `k = log_2_ceil(q)` is taken from [\[3\]](<../index.html#:~:text=[2]>):
-    /// Theorem 1.
-    /// - `m_bar = 2 + k`: is taken from [\[3\]](<../index.html#:~:text=[2]>)
+    /// - `base = 2` is taken from [\[3\]](<../index.html#:~:text=[3]>)
+    /// - `k = log_2_ceil(q)` is taken from [\[3\]](<../index.html#:~:text=[3]>):
+    /// Algorithm 1.
+    /// - `m_bar = 2 + k`: is taken from [\[3\]](<../index.html#:~:text=[3]>)
     /// - the distribution is taken as [`SampleZ`],
-    /// as in [\[3\]](<../index.html#:~:text=[2]>)
-    /// - the modulus is defined by `X^n +1 mod q`as in [\[3\]](<../index.html#:~:text=[2]>)
+    /// as in [\[3\]](<../index.html#:~:text=[3]>)
+    /// - the modulus is defined by `X^n +1 mod q`as in [\[3\]](<../index.html#:~:text=[3]>)
     ///
     /// Parameters:
     /// - `n`: the security parameter for the generation
