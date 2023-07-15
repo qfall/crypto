@@ -11,7 +11,9 @@
 //! cryptographic schemes implementing the `PKEncryption` trait.
 
 mod dual_regev;
+mod regev;
 pub use dual_regev::DualRegev;
+pub use regev::Regev;
 
 use qfall_math::integer::Z;
 

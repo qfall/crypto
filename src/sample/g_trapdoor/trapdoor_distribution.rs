@@ -74,9 +74,9 @@ impl TrapdoorDistribution for PlusMinusOneZero {
     /// ```
     /// # Panics...
     /// - if `m_bar` or `w` does not fit into in `i64` or is smaller than `1`.
-    fn sample(&self, m_bar: &Z, w: &Z) -> MatZ {
-        let mat_1 = MatZ::sample_uniform(m_bar, w, &0, &2).unwrap();
-        let mat_2 = MatZ::sample_uniform(m_bar, w, &0, &2).unwrap();
+    fn sample(&self, m_bar: i64, w: i64) -> MatZ {
+        let mat_1 = MatZ::sample_uniform(m_bar, w, 0, 2).unwrap();
+        let mat_2 = MatZ::sample_uniform(m_bar, w, 0, 2).unwrap();
         mat_1 - mat_2
     }
 }
