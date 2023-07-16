@@ -96,3 +96,31 @@ impl GadgetParameters {
         }
     }
 }
+
+#[cfg(test)]
+mod test_default_parameter {
+    use qfall_math::{integer::Z, integer_mod_q::Modulus, traits::Pow};
+
+    use crate::sample::g_trapdoor::gadget_parameters::GadgetParameters;
+
+    /// Ensure that this test fails, if the default parameters are changed
+    #[test]
+    fn default_unchanged() {
+        for n in [5, 10, 50, 100] {
+            for k in [5, 10, 25] {
+                let q = 2_i64.pow(k);
+
+                let n_log_2_pow_2 = Z::from(n).log_ceil(2).unwrap().pow(2).unwrap();
+                let m_bar = n * k + n_log_2_pow_2;
+
+                let gp = GadgetParameters::init_default(n, &Modulus::from(q));
+
+                assert_eq!(Z::from(2), gp.base);
+                assert_eq!(Z::from(k), gp.k);
+                assert_eq!(m_bar, gp.m_bar);
+                assert_eq!(Z::from(n), gp.n);
+                assert_eq!(Modulus::from(q), gp.q);
+            }
+        }
+    }
+}

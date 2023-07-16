@@ -67,11 +67,55 @@ pub fn gen_trapdoor_default(n: impl Into<Z>, modulus: &Modulus) -> (MatZq, MatZ)
 
 #[cfg(test)]
 mod test_gen_trapdoor_default {
-    use super::gen_trapdoor_default;
-    use qfall_math::integer_mod_q::Modulus;
+    use crate::sample::g_trapdoor::gadget_classical::gen_gadget_mat;
 
+    use super::gen_trapdoor_default;
+    use qfall_math::{
+        integer::{MatZ, Z},
+        integer_mod_q::Modulus,
+        traits::{Concatenate, GetNumColumns, GetNumRows, Pow},
+    };
+
+    /// Ensures that the default parameters are used correctly and the expected
+    /// dimensions are returned.
     #[test]
-    fn working() {
-        let (_, _) = gen_trapdoor_default(100, &Modulus::from(32));
+    fn correct_default_dimensions() {
+        for n in [5, 10, 50] {
+            for k in [5, 10] {
+                let q = 2_i64.pow(k);
+
+                let n_log_2_pow_2 = Z::from(n).log_ceil(2).unwrap().pow(2).unwrap();
+                let m_bar = n * k + n_log_2_pow_2;
+                let m = &m_bar + n * k;
+
+                let (a, r) = gen_trapdoor_default(n, &Modulus::from(q));
+
+                assert_eq!(n as i64, a.get_num_rows());
+                assert_eq!(m, Z::from(a.get_num_columns()));
+
+                assert_eq!(m_bar, Z::from(r.get_num_rows()));
+                assert_eq!((n * k) as i64, r.get_num_columns());
+            }
+        }
+    }
+
+    /// Ensures that for several parameter choices the generated G-Trapdoor is
+    /// actually a trapdoor.
+    #[test]
+    fn ensure_is_trapdoor() {
+        for n in [5, 10, 25] {
+            for k in [5, 10] {
+                let q = 2_i64.pow(k);
+
+                let (a, r) = gen_trapdoor_default(n, &Modulus::from(q));
+
+                let trapdoor = r.concat_vertical(&MatZ::identity(n * k, n * k)).unwrap();
+
+                assert_eq!(
+                    gen_gadget_mat(n, k, &Z::from(2)).unwrap(),
+                    MatZ::from(&(a * trapdoor))
+                )
+            }
+        }
     }
 }
