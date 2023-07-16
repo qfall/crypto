@@ -192,7 +192,7 @@ mod test_gen_trapdoor_ring {
     fn is_trapdoor() {
         let modulus = Modulus::try_from(&Z::from(32)).unwrap();
         let params = GadgetParametersRing::init_default(6, &modulus);
-        let a_bar = PolyOverZ::sample_uniform(&params.n, &0, &params.q).unwrap();
+        let a_bar = PolyOverZ::sample_uniform(&params.n, 0, &params.q).unwrap();
 
         // call gen_trapdoor to get matrix a and its 'trapdoor' r
         let (a, r, e) = gen_trapdoor_ring_lwe(&params, &a_bar, &Q::from(10)).unwrap();
