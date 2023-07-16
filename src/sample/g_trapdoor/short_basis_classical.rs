@@ -22,8 +22,9 @@ use qfall_math::{
 /// *Note*: At the moment this function does not support tags other than the identity.
 /// The function will panic right now, if anything else was provided.
 ///
-/// The matrix is generated as `[ I | R, 0 | I ] * [ I | 0, W | S ]`
-/// where `W` is a solution of `GW = -H^{-1}A [ I | 0 ] mod q`
+/// The matrix is generated as `[ I | R, 0 | I ] * [ 0 | I, S' | W ]`
+/// where `W` is a solution of `GW = -H^{-1}A [ I | 0 ] mod q` and `S'` is a
+/// reordering of `S` (if `base^k=q` then reversed, otherwise the same as before).
 ///
 /// Parameters:
 /// - `params`: the gadget parameters with which the trapdoor was generated
@@ -71,21 +72,25 @@ fn gen_sa_l(r: &MatZ) -> MatZ {
     left.concat_horizontal(&right).unwrap()
 }
 
-/// Computes `[ I | 0, W | S ]`
+/// Computes `[ 0 | I, S' | W ]`
 fn gen_sa_r(params: &GadgetParameters, tag: &MatZq, a: &MatZq) -> MatZ {
-    let s = compute_s(params);
+    let mut s = compute_s(params);
+    // if `base^k = q`, then the reverse of `S` has a shorter diagonalization
+    if params.base.pow(&params.k).unwrap() == Z::from(&params.q) {
+        s.reverse_columns();
+    }
     let w = compute_w(params, tag, a);
 
-    let identity_upper = MatZ::identity(
-        w.get_num_columns(),
-        w.get_num_columns() + s.get_num_columns(),
-    );
+    let zero = MatZ::new(w.get_num_columns(), s.get_num_columns());
+    let identity_upper = zero
+        .concat_horizontal(&MatZ::identity(w.get_num_columns(), w.get_num_columns()))
+        .unwrap();
 
-    let ws = w.concat_horizontal(&s).unwrap();
-    identity_upper.concat_vertical(&ws).unwrap()
+    let sw = s.concat_horizontal(&w).unwrap();
+    identity_upper.concat_vertical(&sw).unwrap()
 }
 
-/// Compute S for `[ I | 0, W | S ]`
+/// Compute S for `[ 0 | I, S' | W ]`
 fn compute_s(params: &GadgetParameters) -> MatZ {
     let id_k = MatZ::identity(&params.k, &params.k);
     let mut sk = &params.base * id_k;
