@@ -202,6 +202,7 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     /// use qfall_math::integer_mod_q::Modulus;
     /// use crate::qfall_crypto::sample::distribution::psf::PSF;
     /// use qfall_math::integer::MatZ;
+    /// use qfall_math::traits::GetNumColumns;
     ///
     /// let modulus = Modulus::from(64);
     /// let psf = PSFGPV {
