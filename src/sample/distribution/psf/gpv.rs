@@ -210,7 +210,7 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     /// };
     /// let (a, r) = psf.trap_gen();
     ///
-    /// let vector = MatZ::new(8, 1);
+    /// let vector = MatZ::new(a.get_num_columns(), 1);
     ///
     /// assert!(psf.check_domain(&vector));
     /// ```
