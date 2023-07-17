@@ -133,10 +133,11 @@ mod test_gen_short_basis_for_trapdoor {
     use crate::sample::g_trapdoor::{gadget_parameters::GadgetParameters, gen_trapdoor_default};
     use qfall_math::{
         integer_mod_q::{MatZq, Modulus},
-        traits::{GetNumColumns, GetNumRows},
+        rational::{MatQ, Q},
+        traits::{GetNumColumns, GetNumRows, Pow},
     };
 
-    /// ensure that every vector within the returned basis is in `\Lambda^\perp(A)`
+    /// Ensure that every vector within the returned basis is in `\Lambda^\perp(A)`
     #[test]
     fn is_basis_not_power_tag_identity() {
         for n in [1, 5, 10, 12] {
@@ -152,6 +153,58 @@ mod test_gen_short_basis_for_trapdoor {
 
             for i in 0..short_basis.get_num_columns() {
                 assert_eq!(zero_vec, &a * short_basis.get_column(i).unwrap())
+            }
+        }
+    }
+
+    /// Ensure that the orthogonalized short base length is upper bounded by
+    /// `(s_1(R)+1)*||\tilde S'||`
+    #[test]
+    fn ensure_orthogonalized_length_perfect_power() {
+        for n in [1, 5, 7] {
+            let modulus = Modulus::from(128);
+            let params = GadgetParameters::init_default(n, &modulus);
+            let (a, r) = gen_trapdoor_default(&params.n, &modulus);
+
+            let tag = MatZq::identity(&params.n, &params.n, &modulus);
+
+            let short_basis = gen_short_basis_for_trapdoor(&params, &tag, &a, &r);
+
+            let orthogonalized_short_basis = MatQ::from(&short_basis).gso();
+
+            let s1_r = Q::from(n * 7).sqrt();
+            let orth_s_length = 2;
+            let upper_bound: Q = (s1_r + 1) * orth_s_length;
+            for i in 0..orthogonalized_short_basis.get_num_columns() {
+                let b_tilde_i = orthogonalized_short_basis.get_column(i).unwrap();
+
+                assert!(b_tilde_i.norm_eucl_sqrd().unwrap() <= upper_bound.pow(2).unwrap())
+            }
+        }
+    }
+
+    /// Ensure that the orthogonalized short base length is upper bounded by
+    /// `(s_1(R)+1)*||\tilde S'||`
+    #[test]
+    fn ensure_orthogonalized_length_not_perfect_power() {
+        for n in [1, 5, 7] {
+            let modulus = Modulus::from(127);
+            let params = GadgetParameters::init_default(n, &modulus);
+            let (a, r) = gen_trapdoor_default(&params.n, &modulus);
+
+            let tag = MatZq::identity(&params.n, &params.n, &modulus);
+
+            let short_basis = gen_short_basis_for_trapdoor(&params, &tag, &a, &r);
+
+            let orthogonalized_short_basis = MatQ::from(&short_basis).gso();
+
+            let s1_r = Q::from(n * 7).sqrt();
+            let orth_s_length = Q::from(5).sqrt();
+            let upper_bound: Q = (s1_r + 1) * orth_s_length;
+            for i in 0..orthogonalized_short_basis.get_num_columns() {
+                let b_tilde_i = orthogonalized_short_basis.get_column(i).unwrap();
+
+                assert!(b_tilde_i.norm_eucl_sqrd().unwrap() <= upper_bound.pow(2).unwrap())
             }
         }
     }
