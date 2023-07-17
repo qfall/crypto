@@ -10,5 +10,6 @@
 //! constructions can be build on.
 
 pub mod hash;
+pub mod identity_based_encryption;
 pub mod pk_encryption;
 pub mod signature;
