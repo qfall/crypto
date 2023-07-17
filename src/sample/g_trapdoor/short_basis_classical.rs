@@ -172,7 +172,7 @@ mod test_gen_short_basis_for_trapdoor {
 
             let orthogonalized_short_basis = MatQ::from(&short_basis).gso();
 
-            let s1_r = Q::from(n * 7).sqrt();
+            let s1_r = params.m_bar.sqrt();
             let orth_s_length = 2;
             let upper_bound: Q = (s1_r + 1) * orth_s_length;
             for i in 0..orthogonalized_short_basis.get_num_columns() {
@@ -198,7 +198,7 @@ mod test_gen_short_basis_for_trapdoor {
 
             let orthogonalized_short_basis = MatQ::from(&short_basis).gso();
 
-            let s1_r = Q::from(n * 7).sqrt();
+            let s1_r = params.m_bar.sqrt();
             let orth_s_length = Q::from(5).sqrt();
             let upper_bound: Q = (s1_r + 1) * orth_s_length;
             for i in 0..orthogonalized_short_basis.get_num_columns() {
