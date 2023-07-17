@@ -217,6 +217,6 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     fn check_domain(&self, sigma: &MatZ) -> bool {
         let m = &self.gp.n * &self.gp.k + &self.gp.m_bar;
         Q::from(&sigma.norm_eucl_sqrd().unwrap()) <= self.s.pow(2).unwrap() * &m
-            && self.gp.n == Z::from(sigma.get_num_rows())
+            && m == Z::from(sigma.get_num_rows())
     }
 }
