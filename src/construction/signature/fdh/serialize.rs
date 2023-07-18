@@ -129,7 +129,7 @@ mod test_deserialization {
     /// Ensure that deserialization works.
     #[test]
     fn deserialize_gpv() {
-        let s = Q::from(10);
+        let s = Q::from(20);
         let n = Z::from(2);
         let modulus = Modulus::try_from(&Z::from(127)).unwrap();
 
