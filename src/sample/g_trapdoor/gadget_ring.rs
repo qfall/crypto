@@ -13,9 +13,9 @@ use super::{gadget_classical::find_solution_gadget_mat, gadget_parameters::Gadge
 use qfall_math::{
     error::MathError,
     integer::{MatPolyOverZ, PolyOverZ, Z},
-    integer_mod_q::{MatPolynomialRingZq, MatZq, PolynomialRingZq},
+    integer_mod_q::{MatPolynomialRingZq, MatZq, Modulus, PolyOverZq, PolynomialRingZq},
     rational::Q,
-    traits::{Concatenate, GetCoefficient, GetEntry, Pow, SetCoefficient, SetEntry},
+    traits::{Concatenate, GetEntry, IntoCoefficientEmbedding, Pow, SetCoefficient, SetEntry},
 };
 use std::fmt::Display;
 
@@ -127,7 +127,7 @@ pub fn gen_gadget_ring(
 /// use qfall_math::traits::GetEntry;
 /// use std::str::FromStr;
 ///
-/// let gp = GadgetParametersRing::init_default(9, &Modulus::from(128));
+/// let gp = GadgetParametersRing::init_default(10, &Modulus::from(128));
 ///
 /// let gadget = gen_gadget_ring(&gp.k, &gp.base).unwrap();
 /// let gadget = MatPolynomialRingZq::from((&gadget, &gp.modulus));
@@ -144,20 +144,17 @@ pub fn gen_gadget_ring(
 /// - if the modulus of the value is greater than `base^k`.
 pub fn find_solution_gadget_ring(u: &PolynomialRingZq, k: &Z, base: &Z) -> MatPolyOverZ {
     let k_i64 = i64::try_from(k).unwrap();
-    let ring_poly = u.get_poly();
-    let n = ring_poly.get_degree();
-    let mut value = MatZq::new(n + 1, 1, u.get_mod().get_q());
+    let modulus = u.get_mod();
+    let size = PolyOverZq::from(&modulus).get_degree();
+    let value = u.get_poly().into_coefficient_embedding(size);
+    let value = MatZq::from((&value, &Modulus::from(modulus.get_q())));
 
-    for i in 0..=n {
-        let coeff = ring_poly.get_coeff(i).unwrap();
-        value.set_entry(i, 0, coeff).unwrap();
-    }
     let classical_sol = find_solution_gadget_mat(&value, k, base);
 
     let mut out = MatPolyOverZ::new(1, k);
     for i in 0..k_i64 {
         let mut poly = PolyOverZ::default();
-        for j in 0..=n {
+        for j in 0..size {
             let entry = classical_sol.get_entry(i + j * k_i64, 0).unwrap();
             poly.set_coeff(j, &entry).unwrap();
         }
