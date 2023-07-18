@@ -25,6 +25,9 @@ use qfall_math::{
 /// The matrix is generated as `[ I | R, 0 | I ] * [ 0 | I, S' | W ]`
 /// where `W` is a solution of `GW = -H^{-1}A [ I | 0 ] mod q` and `S'` is a
 /// reordering of `S` (if `base^k=q` then reversed, otherwise the same as before).
+/// This corresponds to an appropriate reordering from
+/// [\[1\]](<../index.html#:~:text=[1]>) and Lemma 3.2 from
+/// [\[2\]](<../index.html#:~:text=[2]>).
 ///
 /// Parameters:
 /// - `params`: the gadget parameters with which the trapdoor was generated
