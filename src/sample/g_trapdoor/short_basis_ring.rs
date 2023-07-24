@@ -1,3 +1,14 @@
+// Copyright © 2023 Marvin Beckmann
+//
+// This file is part of qFALL-crypto.
+//
+// qFALL-crypto is free software: you can redistribute it and/or modify it under
+// the terms of the Mozilla Public License Version 2.0 as published by the
+// Mozilla Foundation. See <https://mozilla.org/en-US/MPL/2.0/>.
+
+//! This module contains an implementation to generate a short basis from a ring-based
+//! G-Trapdoor and its parity check matrix.
+
 use super::{gadget_parameters::GadgetParametersRing, gadget_ring::find_solution_gadget_ring};
 use qfall_math::{
     integer::{MatPolyOverZ, PolyOverZ, Z},
@@ -7,6 +18,47 @@ use qfall_math::{
     },
 };
 
+/// Generates a short basis according to [\[1\]](<../index.html#:~:text=[1]>).
+/// Also refer to Lemma 5.3 in the eprint version <https://eprint.iacr.org/2011/501.pdf>.
+/// Both interpreted in the ring-setting.
+///
+/// *Note*: At the moment this function does not support tags, this may be added later
+/// (and the signature of this function may change).
+///
+/// The matrix is generated as `[ 1 | 0 | e,  0 | 1 | r, 0 | I ] * [ 0 | I_2, S' | W ]`
+/// where `w` is a solution of `g^tw = -A [ I_2 | 0 ] mod q` and `S'` is a
+/// reordering of `S` (if `base^k=q` then reversed, otherwise the same as before).
+/// This corresponds to an appropriate reordering from
+/// [\[1\]](<../index.html#:~:text=[1]>) and Lemma 3.2 from
+/// [\[2\]](<../index.html#:~:text=[2]>) in the ring-setting.
+///
+/// Parameters:
+/// - `params`: the gadget parameters with which the trapdoor was generated
+/// - `a`: the parity check matrix
+/// - `r`: the first part of the trapdoor for `a`
+/// - `e`: the second part of the trapdoor for `a`
+///
+/// Returns a short basis for the lattice `\Lambda^\perp(a)` using the trapdoor `r,e`
+///
+/// # Examples
+/// ```
+/// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
+/// use qfall_crypto::sample::g_trapdoor::gadget_ring::gen_trapdoor_ring_lwe;
+/// use qfall_crypto::sample::g_trapdoor::short_basis_ring::gen_short_basis_for_trapdoor_ring;
+/// use qfall_math::{
+///     integer::PolyOverZ,
+///     integer_mod_q::{Modulus},
+///     rational::Q,
+///     traits::{GetNumColumns, GetNumRows},
+/// };
+///
+/// let params = GadgetParametersRing::init_default(8, &Modulus::from(16));
+/// let a_bar = PolyOverZ::sample_uniform(&params.n, 0, &params.q).unwrap();
+///
+/// let (a, r, e) = gen_trapdoor_ring_lwe(&params, &a_bar, &Q::from(5)).unwrap();
+///
+/// let short_base = gen_short_basis_for_trapdoor_ring(&params, &a, &r, &e);
+/// ```
 pub fn gen_short_basis_for_trapdoor_ring(
     params: &GadgetParametersRing,
     a: &MatPolynomialRingZq,
@@ -25,6 +77,7 @@ pub fn gen_short_basis_for_trapdoor_ring(
     poly_degrees.tensor_product(&(sa_l * sa_r))
 }
 
+/// Computes [ 1 | 0 | e,  0 | 1 | r, 0 | I ]
 fn gen_sa_l(e: &MatPolyOverZ, r: &MatPolyOverZ) -> MatPolyOverZ {
     let out = e.concat_vertical(r).unwrap();
 
@@ -36,6 +89,7 @@ fn gen_sa_l(e: &MatPolyOverZ, r: &MatPolyOverZ) -> MatPolyOverZ {
     identity_left.concat_horizontal(&out).unwrap()
 }
 
+/// Computes `[0 | I , S' | W]`
 fn gen_sa_r(params: &GadgetParametersRing, a: &MatPolynomialRingZq) -> MatPolyOverZ {
     let ident = MatPolyOverZ::identity(2, 2);
     let right = ident.concat_vertical(&compute_w(params, a)).unwrap();
@@ -50,7 +104,7 @@ fn gen_sa_r(params: &GadgetParametersRing, a: &MatPolynomialRingZq) -> MatPolyOv
     left.concat_horizontal(&right).unwrap()
 }
 
-/// gW = - a[I_2|0]
+/// Computes `w` with `g^tw = - a[I_2|0] mod qR`
 fn compute_w(params: &GadgetParametersRing, a: &MatPolynomialRingZq) -> MatPolyOverZ {
     let minus_one = PolynomialRingZq::from((&PolyOverZ::from(-1), &params.modulus));
     let rhs_1: PolynomialRingZq = a.get_entry(0, 0).unwrap();
@@ -62,6 +116,7 @@ fn compute_w(params: &GadgetParametersRing, a: &MatPolynomialRingZq) -> MatPolyO
     w_1.concat_horizontal(&w_2).unwrap()
 }
 
+/// Computes a short basis for the gadget vector.
 fn compute_s(params: &GadgetParametersRing) -> MatPolyOverZ {
     let id_k = MatPolyOverZ::identity(&params.k, &params.k);
     let mut sk = &params.base * id_k;
