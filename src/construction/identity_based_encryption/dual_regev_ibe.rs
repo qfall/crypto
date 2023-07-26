@@ -102,11 +102,12 @@ impl IBE for DualRegevIBE {
             return value.clone();
         }
 
-        let u = hash_to_mat_zq_sha256(&identity, &self.m, 1, &self.q);
+        let u = hash_to_mat_zq_sha256(&identity, 2, 1, &self.q);
         let secret_key = self.psf.samp_p(&pk, &sk, &u);
 
         // insert secret key in HashMap
         self.storage.insert(identity.clone(), secret_key.clone()); //todo insert for different pk and sk
+        println!("End extract");
         secret_key
     }
 
@@ -138,7 +139,10 @@ impl IBE for DualRegevIBE {
         message: impl Into<Z>,
     ) -> Self::Cipher {
         println!("Begin Enc");
-        let identity_based_pk = hash_to_mat_zq_sha256(&identity, &self.m, 1, &self.q);
+
+        //let identity_based_pk = hash_to_mat_zq_sha256(&identity, &self.m, 1, &self.q);
+        let identity_based_pk = hash_to_mat_zq_sha256(&identity, 2, 1, &self.q);
+        println!("{}\n identibased_pk: {}", pk, identity_based_pk);
         return self
             .dualregev
             .enc(&(pk.clone(), identity_based_pk), message);
@@ -231,12 +235,12 @@ impl DualRegevIBE {
         r: Q,       // gaussian parameter for sampleD
         alpha: Q,   // gaussian parameter for sampleZ
     ) -> Self {
-        let gadget = GadgetParameters::init_default(&m, &q);
+        let gadget = GadgetParameters::init_default(2, &q);
         let psf = PSFGPV {
             gp: gadget,
-            s: Q::from(100),
+            s: Q::from(20),
         }; //todo standard deviation
-        let dualregev = DualRegev::new_from_n(&n).unwrap();
+        let dualregev = DualRegev::default();
         Self {
             n: n,
             m: m,
@@ -260,6 +264,9 @@ mod test_dual_regev_ibe {
     /// for message 0 and small n.
     #[test]
     fn cycle_zero_small_n() {
+        let x = Z::from(5);
+        let mut y: i64 = (&x).try_into().unwrap();
+        y += 1;
         let msg = Z::ZERO;
         let id = String::from("Hello World!");
         let mut cryptosystem = DualRegevIBE::default();
