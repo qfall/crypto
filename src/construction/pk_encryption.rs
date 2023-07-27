@@ -10,9 +10,9 @@
 //! instance of a public key encryption scheme. Furthermore, it contains
 //! cryptographic schemes implementing the `PKEncryption` trait.
 
-mod dual_regev;
+mod dual_regev_discrete_gauss;
 mod regev;
-pub use dual_regev::DualRegev;
+pub use dual_regev_discrete_gauss::DualRegevWithDiscreteGaussianRegularity;
 pub use regev::Regev;
 
 use qfall_math::integer::Z;
