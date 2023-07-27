@@ -13,6 +13,9 @@
 //! In: Pointcheval, D., Johansson, T. (eds) Advances in Cryptology – EUROCRYPT 2012.
 //! EUROCRYPT 2012. Lecture Notes in Computer Science, vol 7237.
 //! Springer, Berlin, Heidelberg. <https://doi.org/10.1007/978-3-642-29011-4_41>
+//! - \[2\] Cash, D., Hofheinz, D., Kiltz, E., & Peikert, C. (2012).
+//! Bonsai trees, or how to delegate a lattice basis. Journal of cryptology, 25, 601-639.
+//! <https://doi.org/10.1007/s00145-011-9105-2>
 
 use self::{gadget_classical::gen_trapdoor, gadget_parameters::GadgetParameters};
 use qfall_math::{
