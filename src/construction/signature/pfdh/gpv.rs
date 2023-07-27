@@ -31,7 +31,7 @@ impl Pfdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq, u32> {
     /// Parameters:
     /// - `n`: The security parameter
     /// - `modulus`: The modulus used for the G-Trapdoors
-    /// - `s`: The standard deviation with which is sampled
+    /// - `s`: The gaussian parameter with which is sampled
     /// - `randomness_length`: bit-length of the randomness concatenated to the message
     ///
     /// Returns an explicit implementation of a PFDH-signature scheme.
@@ -55,8 +55,7 @@ impl Pfdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq, u32> {
     /// let (pk, sk) = pfdh.gen();
     /// let sigma = pfdh.sign(m.to_owned(), &sk, &pk);
     ///
-    /// // TODO: include once all parameters are revised
-    /// // assert!(pfdh.vfy(m.to_owned(), &sigma, &pk))
+    /// assert!(pfdh.vfy(m.to_owned(), &sigma, &pk))
     /// ```
     pub fn init_gpv(n: impl Into<Z>, modulus: &Modulus, s: &Q, randomness_length: u32) -> Self {
         let n = n.into();
@@ -88,24 +87,27 @@ impl Pfdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq, u32> {
 mod text_fdh {
     use super::Pfdh;
     use crate::construction::signature::SignatureScheme;
-    use qfall_math::{integer::Z, integer_mod_q::Modulus, rational::Q};
+    use qfall_math::{integer::Z, integer_mod_q::Modulus, rational::Q, traits::Pow};
 
     /// Ensure that the generated signature is valid
-    #[ignore = "Currently fails, because vectors sometimes a little bit too large: TODO see issue"]
     #[test]
     fn ensure_valid_signature_is_generated() {
-        let s = Q::from(250);
-        let n = Z::from(8);
-        let modulus = Modulus::try_from(&Z::from(113)).unwrap();
+        let n = Z::from(4);
+        let k = Z::from(6);
+        // `s >= ||\tilde short_base|| * omega(\sqrt{\log m})`,
+        // here `\log(2*n*k) = omega(\sqrt{\log m}))` (Theorem 4.1 - GPV08)
+        let s: Q = ((&n * &k).sqrt() + 1) * Q::from(2) * (Z::from(2) * &n * &k).log(2).unwrap();
+        let modulus = Modulus::try_from(&Z::from(2).pow(&k).unwrap()).unwrap();
 
         let mut pfdh = Pfdh::init_gpv(n, &modulus, &s, 128);
-
-        let m = "Hello World!";
-
         let (pk, sk) = pfdh.gen();
-        let sigma = pfdh.sign(m.to_owned(), &sk, &pk);
-        println!("{:?}", sigma);
 
-        assert!(pfdh.vfy(m.to_owned(), &sigma, &pk))
+        for i in 0..10 {
+            let m = format!("Hello World! {}", i);
+
+            let sigma = pfdh.sign(m.to_owned(), &sk, &pk);
+
+            assert!(pfdh.vfy(m.to_owned(), &sigma, &pk))
+        }
     }
 }
