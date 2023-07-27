@@ -9,7 +9,7 @@
 //! This Module contains a general implementation of the [`Pfdh`] scheme.
 //!
 //! Implementation of a [`Pfdh`]-signature scheme are thereby fairly easy,
-//! see [`Pfdh::init_gpv`] that works with every PSF and a corresponding hash function
+//! see [`Pfdh::init_gpv`](crate::construction::signature::pfdh::gpv) that works with every PSF and a corresponding hash function
 
 use super::SignatureScheme;
 use crate::{primitive::hash::HashInto, sample::distribution::psf::PSF};
@@ -18,6 +18,7 @@ use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
 
 pub mod gpv;
+pub mod serialize;
 
 #[derive(Serialize)]
 pub struct Pfdh<
@@ -72,9 +73,7 @@ where
             Z::sample_uniform(0, Z::from(2).pow(self.randomness_length.as_ref()).unwrap()).unwrap();
         let u = (self.hash).hash(&format!(
             "{} {} {}",
-            &m,
-            randomness.to_string(),
-            &self.randomness_length.to_string()
+            &m, randomness, &self.randomness_length
         ));
         let signature_part1 = self.psf.samp_p(pk, sk, &u);
 
@@ -88,12 +87,7 @@ where
             return false;
         }
 
-        let u = (self.hash).hash(&format!(
-            "{} {} {}",
-            &m,
-            sigma.1.to_string(),
-            &self.randomness_length.to_string()
-        ));
+        let u = (self.hash).hash(&format!("{} {} {}", &m, sigma.1, &self.randomness_length));
 
         self.psf.f_a(pk, &sigma.0) == u
     }
