@@ -12,8 +12,10 @@
 
 mod dual_regev_discrete_gauss;
 mod regev;
+mod regev_discrete_gauss;
 pub use dual_regev_discrete_gauss::DualRegevWithDiscreteGaussianRegularity;
 pub use regev::Regev;
+pub use regev_discrete_gauss::RegevWithDiscreteGaussianRegularity;
 
 use qfall_math::integer::Z;
 
