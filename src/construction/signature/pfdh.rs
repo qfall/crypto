@@ -64,7 +64,6 @@ where
         self.psf.trap_gen()
     }
 
-    ///TODO: doc
     /// Firstly generate randomness
     /// It hashes the message and randomness into the domain and then computes a signature using
     /// `samp_p` from the psf with the trapdoor.
