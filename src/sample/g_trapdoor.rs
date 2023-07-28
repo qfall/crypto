@@ -67,9 +67,8 @@ pub fn gen_trapdoor_default(n: impl Into<Z>, modulus: &Modulus) -> (MatZq, MatZ)
 
 #[cfg(test)]
 mod test_gen_trapdoor_default {
-    use crate::sample::g_trapdoor::gadget_classical::gen_gadget_mat;
-
     use super::gen_trapdoor_default;
+    use crate::sample::g_trapdoor::gadget_classical::gen_gadget_mat;
     use qfall_math::{
         integer::{MatZ, Z},
         integer_mod_q::Modulus,
