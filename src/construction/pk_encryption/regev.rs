@@ -9,7 +9,7 @@
 //! This module contains an implementation of the IND-CPA secure
 //! public key Regev encryption scheme.
 
-use super::PKEncryption;
+use super::{PKEncryption, GenericMultiBitEncryption};
 use qfall_math::{
     error::MathError,
     integer::{MatZ, Z},
@@ -450,6 +450,9 @@ impl PKEncryption for Regev {
     }
 }
 
+// adds generic multi-bit encryption to this scheme
+impl GenericMultiBitEncryption for Regev {}
+
 #[cfg(test)]
 mod test_pp_generation {
     use super::Regev;
@@ -586,5 +589,65 @@ mod test_regev {
         let cipher = regev.enc(&pk, &msg);
         let m = regev.dec(&sk, &cipher);
         assert_eq!(msg, m);
+    }
+}
+
+#[cfg(test)]
+mod test_multi_bits {
+    use crate::construction::pk_encryption::PKEncryption;
+
+    use super::GenericMultiBitEncryption;
+    use super::Regev;
+    use qfall_math::integer::Z;
+
+    /// Checks whether the multi-bit encryption cycle works properly
+    /// for small and large positive values.
+    #[test]
+    fn positive() {
+        let values = [3, 13, 23, 230, 501, 1024, i64::MAX];
+
+        for value in values {
+            let msg = Z::from(value);
+            let regev = Regev::default();
+
+            let (pk, sk) = regev.gen();
+            let cipher = regev.enc_multiple_bits(&pk, &msg);
+            let m = regev.dec_multiple_bits(&sk, &cipher);
+
+            assert_eq!(msg, m);
+        }
+    }
+
+    /// Checks whether the multi-bit encryption cycle works properly
+    /// for zero.
+    #[test]
+    fn zero() {
+        let msg = Z::ZERO;
+        let regev = Regev::default();
+
+        let (pk, sk) = regev.gen();
+        let cipher = regev.enc_multiple_bits(&pk, &msg);
+        let m = regev.dec_multiple_bits(&sk, &cipher);
+
+        assert_eq!(msg, m);
+    }
+
+    /// Checks whether the multi-bit encryption cycle works properly
+    /// for small and large negative values, which are not encrypted itself,
+    /// but their absolute value.
+    #[test]
+    fn negative() {
+        let values = [-3, -13, -23, -230, -501, -1024, i64::MIN];
+
+        for value in values {
+            let msg = Z::from(value);
+            let regev = Regev::default();
+
+            let (pk, sk) = regev.gen();
+            let cipher = regev.enc_multiple_bits(&pk, &msg);
+            let m = regev.dec_multiple_bits(&sk, &cipher);
+
+            assert_eq!(msg.abs(), m);
+        }
     }
 }
