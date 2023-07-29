@@ -74,7 +74,9 @@ pub fn gen_short_basis_for_trapdoor_ring(
         x_i.set_coeff(i, 1).unwrap();
         poly_degrees.set_entry(0, i, x_i).unwrap();
     }
-    poly_degrees.tensor_product(&(sa_l * sa_r))
+    let basis = poly_degrees.tensor_product(&(sa_l * sa_r));
+    // the basis has to be reduced by the modulus to remove high-degrees
+    MatPolynomialRingZq::from((&basis, &params.modulus)).get_mat()
 }
 
 /// Computes [ 1 | 0 | e,  0 | 1 | r, 0 | I ]
@@ -156,7 +158,7 @@ mod test_gen_short_basis_for_trapdoor_ring {
         traits::{GetEntry, GetNumColumns},
     };
 
-    /// Ensure that every vector within the returned basis is in `\Lambda^\perp(a)`
+    /// Ensure that every vector within the returned basis is in `\Lambda^\perp(a)`.
     #[test]
     fn is_basis() {
         for n in [5, 10, 12] {
@@ -178,6 +180,24 @@ mod test_gen_short_basis_for_trapdoor_ring {
         }
     }
 
+    /// Ensure that all entries have a degree of at most n-1.
+    #[test]
+    fn basis_is_reduced() {
+        for n in [5, 10, 12] {
+            let params =
+                GadgetParametersRing::init_default(n, &Modulus::try_from(&Z::from(16)).unwrap());
+            let a_bar = PolyOverZ::sample_uniform(&params.n, 0, &params.q).unwrap();
+
+            let (a, r, e) = gen_trapdoor_ring_lwe(&params, &a_bar, &Q::from(5)).unwrap();
+
+            let short_base = gen_short_basis_for_trapdoor_ring(&params, &a, &r, &e);
+            let short_base_reduced =
+                MatPolynomialRingZq::from((&short_base, &params.modulus)).get_mat();
+
+            assert_eq!(short_base_reduced, short_base)
+        }
+    }
+
     #[cfg(test)]
     mod test_gen_sa {
         use crate::sample::g_trapdoor::{
@@ -190,7 +210,7 @@ mod test_gen_short_basis_for_trapdoor_ring {
         };
         use std::str::FromStr;
 
-        /// Returns a fixed trapdoor and a matrix a for a fixed parameter set
+        /// Returns a fixed trapdoor and a matrix a for a fixed parameter set.
         fn get_fixed_trapdoor() -> (
             GadgetParametersRing,
             MatPolynomialRingZq,
@@ -215,7 +235,8 @@ mod test_gen_short_basis_for_trapdoor_ring {
             (params, a, r, e)
         }
 
-        /// Ensure that the left part of the multiplication to get sa is correctly computed
+        /// Ensure that the left part of the multiplication to get sa is correctly
+        /// computed.
         #[test]
         fn working_sa_l() {
             let (_, _, r, e) = get_fixed_trapdoor();
@@ -235,7 +256,8 @@ mod test_gen_short_basis_for_trapdoor_ring {
             assert_eq!(sa_l_cmp, sa_l)
         }
 
-        /// Ensure that the right part of the multiplication to get sa is correctly computed
+        /// Ensure that the right part of the multiplication to get sa is correctly
+        /// computed.
         #[test]
         fn working_sa_r() {
             let (params, a, _, _) = get_fixed_trapdoor();
@@ -267,7 +289,7 @@ mod test_gen_short_basis_for_trapdoor_ring {
             gadget_parameters::GadgetParametersRing, short_basis_ring::compute_s,
         };
 
-        /// Ensure that the matrix s is computed correctly for a power-of-two modulus
+        /// Ensure that the matrix s is computed correctly for a power-of-two modulus.
         #[test]
         fn base_2_power_two() {
             let params = GadgetParametersRing::init_default(8, &Modulus::from(16));
@@ -285,7 +307,7 @@ mod test_gen_short_basis_for_trapdoor_ring {
             assert_eq!(s_cmp, s)
         }
 
-        /// Ensure that the matrix s is computed correctly for an arbitrary modulus
+        /// Ensure that the matrix s is computed correctly for an arbitrary modulus.
         #[test]
         fn base_2_arbitrary() {
             let modulus = Z::from(0b1100110);
@@ -307,7 +329,7 @@ mod test_gen_short_basis_for_trapdoor_ring {
             assert_eq!(s_cmp, s)
         }
 
-        /// Ensure that the matrix s is computed correctly for a power-of-5 modulus
+        /// Ensure that the matrix s is computed correctly for a power-of-5 modulus.
         #[test]
         fn base_5_power_5() {
             let mut params = GadgetParametersRing::init_default(1, &Modulus::from(625));
@@ -328,7 +350,7 @@ mod test_gen_short_basis_for_trapdoor_ring {
         }
 
         /// Ensure that the matrix s is computed correctly for an arbitrary modulus with
-        /// base 5
+        /// base 5.
         #[test]
         fn base_5_arbitrary() {
             let modulus = Z::from_str_b("4123", 5).unwrap();
@@ -364,7 +386,7 @@ mod test_gen_short_basis_for_trapdoor_ring {
             traits::GetNumColumns,
         };
 
-        /// Ensure that `gw = a[I_1|0] mod qR`
+        /// Ensure that `gw = a[I_1|0] mod qR`.
         #[test]
         fn check_w_is_correct_solution() {
             let params = GadgetParametersRing::init_default(8, &Modulus::from(16));
