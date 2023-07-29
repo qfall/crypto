@@ -28,7 +28,7 @@ use std::fmt::Display;
 /// Parameters:
 /// - `params`: all gadget parameters which are required to generate the trapdoor
 /// - `a_bar`: the matrix defining the first part of the G-Trapdoor
-/// - `tag`: the tag which is hidden within the matrix ´A`
+/// - `tag`: the tag which is hidden within the matrix `A`
 ///
 /// Returns a a parity-check matrix `a` derived from `a_bar` and its gadget-trapdoor `r`
 /// under a give tag `h`.
@@ -59,7 +59,7 @@ pub fn gen_trapdoor(
     let r = params
         .distribution
         .sample(&params.m_bar, &(&params.n * &params.k));
-    // set A = [\bar A | HG - \bar A R]
+    // set A = [A_bar | HG - A_bar R]
     let a = a_bar.concat_horizontal(&(tag * g - a_bar * &r))?;
     Ok((a, r))
 }

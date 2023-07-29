@@ -7,7 +7,7 @@
 // Mozilla Foundation. See <https://mozilla.org/en-US/MPL/2.0/>.
 
 //! This module contains all implementation of TrapdoorDistributions from
-//! which the matrix `\bar A` is sampled in the trapdoor generation algorithm.
+//! which the matrix `A_bar` is sampled in the trapdoor generation algorithm.
 
 use qfall_math::{
     integer::{MatPolyOverZ, MatZ, PolyOverZ, Z},

@@ -30,7 +30,7 @@ use std::fmt::Display;
 /// Parameters:
 /// - `params`: all gadget parameters which are required to generate the trapdoor
 /// - `a_bar`: the matrix defining the second part of the G-Trapdoor
-/// - `tag`: the tag which is hidden within the matrix ´A`
+/// - `tag`: the tag which is hidden within the matrix `A`
 /// - `s`: defining the deviation of the distribution from which `r` and `e` is sampled
 ///
 /// Returns a a parity-check matrix `a` derived from `a_bar` and its gadget-trapdoor

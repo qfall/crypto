@@ -31,7 +31,7 @@ use serde::{Deserialize, Serialize};
 /// the distribution to be subgaussian
 /// - `base`: the base with which the gadget-vector and matrix are generated
 /// - `q`: the modulus
-/// - `distribution`: the distribution from which the matrix `\bar A` is sampled
+/// - `distribution`: the distribution from which the matrix `A_bar` is sampled
 ///
 /// # Examples
 /// ```
@@ -63,7 +63,7 @@ pub struct GadgetParameters {
 /// - `base`: the base with which the gadget-vector and matrix are generated
 /// - `q`: the modulus
 /// - `modulus`: the polynomial that is used for reduction
-/// - `distribution`: the distribution from which the matrix `\bar A` is sampled
+/// - `distribution`: the distribution from which the matrix `A_bar` is sampled
 ///
 /// # Examples
 /// ```
@@ -147,7 +147,7 @@ impl GadgetParametersRing {
     /// - `m_bar = 2 + k`: is taken from [\[3\]](<../index.html#:~:text=[3]>)
     /// - the distribution is taken as [`SampleZ`],
     /// as in [\[3\]](<../index.html#:~:text=[3]>)
-    /// - the modulus is defined by `X^n +1 mod q`as in [\[3\]](<../index.html#:~:text=[3]>)
+    /// - the modulus is defined by `X^n +1 mod q` as in [\[3\]](<../index.html#:~:text=[3]>)
     ///
     /// Parameters:
     /// - `n`: the security parameter for the generation
