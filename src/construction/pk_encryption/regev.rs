@@ -215,7 +215,6 @@ impl Regev {
     ///
     /// **WARNING:** Some requirements are missing to ensure overwhelming correctness of the scheme.
     ///
-    ///
     /// Returns an empty result or a [`MathError`] if the instance would
     /// not be correct.
     ///
@@ -387,7 +386,7 @@ impl PKEncryption for Regev {
     /// Then, cipher `c` is output.
     ///
     /// Parameters:
-    /// - `pk`: specifies the public key, which contains two matrices `pk = (A, p)`
+    /// - `pk`: specifies the public key `pk = A`
     /// - `message`: specifies the message that should be encryted
     ///
     /// Returns a cipher `c` of type [`MatZq`].
