@@ -28,8 +28,8 @@ use serde::{Deserialize, Serialize};
 /// and R_n = Z_q^n.
 ///
 /// Attributes
-/// - `gp`: describes the gadget parameters with which the G-Trapdoor is generated
-/// - `s`: the standard deviation with which is sampled
+/// - `gp`: Describes the gadget parameters with which the G-Trapdoor is generated
+/// - `s`: The gaussian parameter with which is sampled
 ///
 /// # Examples
 /// ```
@@ -50,8 +50,7 @@ use serde::{Deserialize, Serialize};
 /// let range_fa = psf.f_a(&a, &domain_sample);
 /// let preimage = psf.samp_p(&a, &r, &range_fa);
 ///
-/// // TODO: include it, once parameters are revised
-/// // assert!(psf.check_domain(&preimage));
+/// assert!(psf.check_domain(&preimage));
 /// ```
 #[derive(Serialize, Deserialize)]
 pub struct PSFGPV {
@@ -108,9 +107,7 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     /// ```
     fn samp_d(&self) -> MatZ {
         let m = &self.gp.n * &self.gp.k + &self.gp.m_bar;
-        let m = i64::try_from(&m).unwrap();
-        let s = &self.s * (Q::from(2) * Q::PI).sqrt();
-        MatZ::sample_d_common(m, &self.gp.n, &s).unwrap()
+        MatZ::sample_d_common(&m, &self.gp.n, &self.s).unwrap()
     }
 
     /// Samples an `e` in the domain using SampleD with a short basis that is generated
@@ -152,9 +149,8 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
         let sol: MatZ = (&a.solve_gaussian_elimination(u).unwrap()).into();
 
         let center = MatQ::from(&(-1 * &sol));
-        let s = &self.s * (Q::from(2) * Q::PI).sqrt();
 
-        sol + MatZ::sample_d(&short_basis, &self.gp.n, &center, &s).unwrap()
+        sol + MatZ::sample_d(&short_basis, &self.gp.n, &center, &self.s).unwrap()
     }
 
     /// Implements the efficiently computable function `fa` which here corresponds to
@@ -202,6 +198,7 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     /// use qfall_math::integer_mod_q::Modulus;
     /// use crate::qfall_crypto::sample::distribution::psf::PSF;
     /// use qfall_math::integer::MatZ;
+    /// use qfall_math::traits::GetNumColumns;
     ///
     /// let modulus = Modulus::from(64);
     /// let psf = PSFGPV {
@@ -210,13 +207,13 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     /// };
     /// let (a, r) = psf.trap_gen();
     ///
-    /// let vector = MatZ::new(8, 1);
+    /// let vector = MatZ::new(a.get_num_columns(), 1);
     ///
     /// assert!(psf.check_domain(&vector));
     /// ```
     fn check_domain(&self, sigma: &MatZ) -> bool {
         let m = &self.gp.n * &self.gp.k + &self.gp.m_bar;
         Q::from(&sigma.norm_eucl_sqrd().unwrap()) <= self.s.pow(2).unwrap() * &m
-            && self.gp.n == Z::from(sigma.get_num_rows())
+            && m == Z::from(sigma.get_num_rows())
     }
 }

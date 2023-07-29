@@ -22,8 +22,12 @@ use qfall_math::{
 /// *Note*: At the moment this function does not support tags other than the identity.
 /// The function will panic right now, if anything else was provided.
 ///
-/// The matrix is generated as `[ I | R, 0 | I ] * [ I | 0, W | S ]`
-/// where `W` is a solution of `GW = -H^{-1}A [ I | 0 ] mod q`
+/// The matrix is generated as `[ I | R, 0 | I ] * [ 0 | I, S' | W ]`
+/// where `W` is a solution of `GW = -H^{-1}A [ I | 0 ] mod q` and `S'` is a
+/// reordering of `S` (if `base^k=q` then reversed, otherwise the same as before).
+/// This corresponds to an appropriate reordering from
+/// [\[1\]](<../index.html#:~:text=[1]>) and Lemma 3.2 from
+/// [\[4\]](<../index.html#:~:text=[4]>).
 ///
 /// Parameters:
 /// - `params`: the gadget parameters with which the trapdoor was generated
@@ -71,21 +75,25 @@ fn gen_sa_l(r: &MatZ) -> MatZ {
     left.concat_horizontal(&right).unwrap()
 }
 
-/// Computes `[ I | 0, W | S ]`
+/// Computes `[ 0 | I, S' | W ]`
 fn gen_sa_r(params: &GadgetParameters, tag: &MatZq, a: &MatZq) -> MatZ {
-    let s = compute_s(params);
+    let mut s = compute_s(params);
+    // if `base^k = q`, then the reverse of `S` has a shorter diagonalization
+    if params.base.pow(&params.k).unwrap() == Z::from(&params.q) {
+        s.reverse_columns();
+    }
     let w = compute_w(params, tag, a);
 
-    let identity_upper = MatZ::identity(
-        w.get_num_columns(),
-        w.get_num_columns() + s.get_num_columns(),
-    );
+    let zero = MatZ::new(w.get_num_columns(), s.get_num_columns());
+    let identity_upper = zero
+        .concat_horizontal(&MatZ::identity(w.get_num_columns(), w.get_num_columns()))
+        .unwrap();
 
-    let ws = w.concat_horizontal(&s).unwrap();
-    identity_upper.concat_vertical(&ws).unwrap()
+    let sw = s.concat_horizontal(&w).unwrap();
+    identity_upper.concat_vertical(&sw).unwrap()
 }
 
-/// Compute S for `[ I | 0, W | S ]`
+/// Compute S for `[ 0 | I, S' | W ]`
 fn compute_s(params: &GadgetParameters) -> MatZ {
     let id_k = MatZ::identity(&params.k, &params.k);
     let mut sk = &params.base * id_k;
@@ -128,10 +136,11 @@ mod test_gen_short_basis_for_trapdoor {
     use crate::sample::g_trapdoor::{gadget_parameters::GadgetParameters, gen_trapdoor_default};
     use qfall_math::{
         integer_mod_q::{MatZq, Modulus},
-        traits::{GetNumColumns, GetNumRows},
+        rational::{MatQ, Q},
+        traits::{GetNumColumns, GetNumRows, Pow},
     };
 
-    /// ensure that every vector within the returned basis is in `\Lambda^\perp(A)`
+    /// Ensure that every vector within the returned basis is in `\Lambda^\perp(A)`
     #[test]
     fn is_basis_not_power_tag_identity() {
         for n in [1, 5, 10, 12] {
@@ -147,6 +156,58 @@ mod test_gen_short_basis_for_trapdoor {
 
             for i in 0..short_basis.get_num_columns() {
                 assert_eq!(zero_vec, &a * short_basis.get_column(i).unwrap())
+            }
+        }
+    }
+
+    /// Ensure that the orthogonalized short base length is upper bounded by
+    /// `(s_1(R)+1)*||\tilde S'||`
+    #[test]
+    fn ensure_orthogonalized_length_perfect_power() {
+        for n in [1, 5, 7] {
+            let modulus = Modulus::from(128);
+            let params = GadgetParameters::init_default(n, &modulus);
+            let (a, r) = gen_trapdoor_default(&params.n, &modulus);
+
+            let tag = MatZq::identity(&params.n, &params.n, &modulus);
+
+            let short_basis = gen_short_basis_for_trapdoor(&params, &tag, &a, &r);
+
+            let orthogonalized_short_basis = MatQ::from(&short_basis).gso();
+
+            let s1_r = params.m_bar.sqrt();
+            let orth_s_length = 2;
+            let upper_bound: Q = (s1_r + 1) * orth_s_length;
+            for i in 0..orthogonalized_short_basis.get_num_columns() {
+                let b_tilde_i = orthogonalized_short_basis.get_column(i).unwrap();
+
+                assert!(b_tilde_i.norm_eucl_sqrd().unwrap() <= upper_bound.pow(2).unwrap())
+            }
+        }
+    }
+
+    /// Ensure that the orthogonalized short base length is upper bounded by
+    /// `(s_1(R)+1)*||\tilde S'||`
+    #[test]
+    fn ensure_orthogonalized_length_not_perfect_power() {
+        for n in [1, 5, 7] {
+            let modulus = Modulus::from(127);
+            let params = GadgetParameters::init_default(n, &modulus);
+            let (a, r) = gen_trapdoor_default(&params.n, &modulus);
+
+            let tag = MatZq::identity(&params.n, &params.n, &modulus);
+
+            let short_basis = gen_short_basis_for_trapdoor(&params, &tag, &a, &r);
+
+            let orthogonalized_short_basis = MatQ::from(&short_basis).gso();
+
+            let s1_r = params.m_bar.sqrt();
+            let orth_s_length = Q::from(5).sqrt();
+            let upper_bound: Q = (s1_r + 1) * orth_s_length;
+            for i in 0..orthogonalized_short_basis.get_num_columns() {
+                let b_tilde_i = orthogonalized_short_basis.get_column(i).unwrap();
+
+                assert!(b_tilde_i.norm_eucl_sqrd().unwrap() <= upper_bound.pow(2).unwrap())
             }
         }
     }
@@ -220,26 +281,24 @@ mod test_gen_sa {
     #[test]
     fn working_sa_r_identity() {
         let (params, a, _) = get_fixed_trapdoor_for_tag_identity();
-        println!("{0}", params.k);
         let tag = MatZq::identity(&params.n, &params.n, &params.q);
         let sa_r = gen_sa_r(&params, &tag, &a);
 
-        println!("{sa_r}");
         let sa_r_cmp = MatZ::from_str(
             "[\
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],\
-            [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],\
-            [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],\
-            [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],\
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],\
-            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],\
             [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],\
-            [0, 0, 0, 1, 1, 0, 1, 2, 0, 0, 0, 0, 0],\
-            [1, 1, 1, 1, 0, 0, 1, -1, 2, 0, 0, 0, 0],\
-            [1, 0, 1, 0, 1, 0, 1, 0, -1, 2, 0, 0, 0],\
-            [0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 2, 0, 0],\
-            [1, 0, 0, 1, 1, 1, 1, 0, 0, 0, -1, 2, 0],\
-            [0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, -1, 2]]",
+            [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],\
+            [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],\
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],\
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],\
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],\
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],\
+            [0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 1, 0, 1],\
+            [0, 0, 0, 0, 2, -1, 1, 1, 1, 1, 0, 0, 1],\
+            [0, 0, 0, 2, -1, 0, 1, 0, 1, 0, 1, 0, 1],\
+            [0, 0, 2, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0],\
+            [0, 2, -1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1],\
+            [2, -1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1]]",
         )
         .unwrap();
         assert_eq!(sa_r_cmp, sa_r);

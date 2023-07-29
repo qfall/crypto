@@ -22,6 +22,9 @@
 //! January. Implementation and evaluation of improved gaussian sampling for lattice
 //!  trapdoors. In Proceedings of the 6th Workshop on Encrypted Computing & Applied
 //! Homomorphic Cryptography (pp. 61-71). <https://dl.acm.org/doi/pdf/10.1145/3267973.3267975>
+//! - \[4\] Cash, D., Hofheinz, D., Kiltz, E., & Peikert, C. (2012).
+//! Bonsai trees, or how to delegate a lattice basis. Journal of cryptology, 25, 601-639.
+//! <https://doi.org/10.1007/s00145-011-9105-2>
 
 use self::{gadget_classical::gen_trapdoor, gadget_parameters::GadgetParameters};
 use crate::sample::g_trapdoor::{
@@ -124,26 +127,53 @@ pub fn gen_trapdoor_ring_default(
 #[cfg(test)]
 mod test_gen_trapdoor_default {
     use super::gen_trapdoor_default;
-    use qfall_math::integer_mod_q::Modulus;
+    use crate::sample::g_trapdoor::gadget_classical::gen_gadget_mat;
+    use qfall_math::{
+        integer::{MatZ, Z},
+        integer_mod_q::Modulus,
+        traits::{Concatenate, GetNumColumns, GetNumRows, Pow},
+    };
 
-    /// Ensure that computing a a trapdoor is working when called with the default
-    /// parameters
+    /// Ensures that the default parameters are used correctly and the expected
+    /// dimensions are returned.
     #[test]
-    fn working() {
-        let (_, _) = gen_trapdoor_default(100, &Modulus::from(32));
+    fn correct_default_dimensions() {
+        for n in [5, 10, 50] {
+            for k in [5, 10] {
+                let q = 2_i64.pow(k);
+
+                let n_log_2_pow_2 = Z::from(n).log_ceil(2).unwrap().pow(2).unwrap();
+                let m_bar = n * k + n_log_2_pow_2;
+                let m = &m_bar + n * k;
+
+                let (a, r) = gen_trapdoor_default(n, &Modulus::from(q));
+
+                assert_eq!(n as i64, a.get_num_rows());
+                assert_eq!(m, Z::from(a.get_num_columns()));
+
+                assert_eq!(m_bar, Z::from(r.get_num_rows()));
+                assert_eq!((n * k) as i64, r.get_num_columns());
+            }
+        }
     }
-}
 
-#[cfg(test)]
-mod test_gen_trapdoor_ring_default {
-    use super::gen_trapdoor_ring_default;
-    use qfall_math::{integer::Z, integer_mod_q::Modulus};
-
-    /// Ensure that computing a a trapdoor is working when called with the default
-    /// parameters
+    /// Ensures that for several parameter choices the generated G-Trapdoor is
+    /// actually a trapdoor.
     #[test]
-    fn working() {
-        let (_, _, _) =
-            gen_trapdoor_ring_default(100, &Modulus::try_from(&Z::from(29)).unwrap(), 10);
+    fn ensure_is_trapdoor() {
+        for n in [5, 10, 25] {
+            for k in [5, 10] {
+                let q = 2_i64.pow(k);
+
+                let (a, r) = gen_trapdoor_default(n, &Modulus::from(q));
+
+                let trapdoor = r.concat_vertical(&MatZ::identity(n * k, n * k)).unwrap();
+
+                assert_eq!(
+                    gen_gadget_mat(n, k, &Z::from(2)).unwrap(),
+                    MatZ::from(&(a * trapdoor))
+                )
+            }
+        }
     }
 }

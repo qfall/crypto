@@ -31,7 +31,7 @@ impl Fdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq> {
     /// Parameters:
     /// - `n`: The security parameter
     /// - `modulus`: The modulus used for the G-Trapdoors
-    /// - `s`: The standard deviation with which is sampled
+    /// - `s`: The gaussian parameter with which is sampled
     ///
     /// Returns an explicit implementation of a FDH-signature scheme.
     ///
@@ -55,8 +55,7 @@ impl Fdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq> {
     /// let sigma = fdh.sign(m.to_owned(), &sk, &pk);
     ///
     /// assert_eq!(&sigma, &fdh.sign(m.to_owned(), &sk, &pk));
-    /// // TODO: include once all parameters are revised
-    /// // assert!(fdh.vfy(m.to_owned(), &sigma, &pk))
+    /// assert!(fdh.vfy(m.to_owned(), &sigma, &pk))
     /// ```
     pub fn init_gpv(n: impl Into<Z>, modulus: &Modulus, s: &Q) -> Self {
         let n = n.into();
@@ -92,26 +91,30 @@ mod text_fdh {
         integer::{MatZ, Z},
         integer_mod_q::{MatZq, Modulus},
         rational::Q,
+        traits::Pow,
     };
 
-    /// Ensure that the generated signature is valid
-    #[ignore = "Currently fails, because vectors sometimes a little bit too large: TODO see issue"]
+    /// Ensure that the generated signature is valid.
     #[test]
     fn ensure_valid_signature_is_generated() {
-        let s = Q::from(250);
-        let n = Z::from(8);
-        let modulus = Modulus::try_from(&Z::from(113)).unwrap();
+        let n = Z::from(4);
+        let k = Z::from(6);
+        // `s >= ||\tilde short_base|| * omega(\sqrt{\log m})`,
+        // here `\log(2*n*k) = omega(\sqrt{\log m}))` (Theorem 4.1 - GPV08)
+        let s: Q = ((&n * &k).sqrt() + 1) * Q::from(2) * (Z::from(2) * &n * &k).log(2).unwrap();
+        let modulus = Modulus::try_from(&Z::from(2).pow(&k).unwrap()).unwrap();
 
         let mut fdh = Fdh::init_gpv(n, &modulus, &s);
-
-        let m = "Hello World!";
-
         let (pk, sk) = fdh.gen();
-        let sigma = fdh.sign(m.to_owned(), &sk, &pk);
-        println!("{}", sigma);
 
-        assert_eq!(&sigma, &fdh.sign(m.to_owned(), &sk, &pk));
-        assert!(fdh.vfy(m.to_owned(), &sigma, &pk))
+        for i in 0..10 {
+            let m = format!("Hello World! {}", i);
+
+            let sigma = fdh.sign(m.to_owned(), &sk, &pk);
+
+            assert_eq!(&sigma, &fdh.sign(m.to_owned(), &sk, &pk));
+            assert!(fdh.vfy(m.to_owned(), &sigma, &pk))
+        }
     }
 
     /// Ensure that an entry is actually added to the local storage

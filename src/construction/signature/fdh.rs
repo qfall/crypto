@@ -58,8 +58,7 @@ pub mod serialize;
 /// let sigma = fdh.sign(m.to_owned(), &sk, &pk);
 ///
 /// assert_eq!(&sigma, &fdh.sign(m.to_owned(), &sk, &pk));
-/// // TODO: include once all parameters are revised
-/// // assert!(fdh.vfy(m.to_owned(), &sigma, &pk))
+/// assert!(fdh.vfy(m.to_owned(), &sigma, &pk))
 /// ```
 #[derive(Serialize)]
 pub struct Fdh<
