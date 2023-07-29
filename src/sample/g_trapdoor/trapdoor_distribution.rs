@@ -67,8 +67,6 @@ impl TrapdoorDistribution for PlusMinusOneZero {
     /// # Examples
     /// ```
     /// use qfall_crypto::sample::g_trapdoor::trapdoor_distribution::{PlusMinusOneZero, TrapdoorDistribution};
-    /// use qfall_math::integer::Z;
-    /// use qfall_math::integer_mod_q::Modulus;
     ///
     /// let mat = PlusMinusOneZero.sample(&42.into(), &24.into());
     /// ```
@@ -92,11 +90,9 @@ impl TrapdoorDistributionRing for SampleZ {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::sample::g_trapdoor::trapdoor_distribution::{PlusMinusOneZero, TrapdoorDistribution};
-    /// use qfall_math::integer::Z;
-    /// use qfall_math::integer_mod_q::Modulus;
+    /// use qfall_crypto::sample::g_trapdoor::trapdoor_distribution::{SampleZ, TrapdoorDistributionRing};
     ///
-    /// let mat = PlusMinusOneZero.sample(&42.into(), &24.into());
+    /// let mat = SampleZ.sample(&42.into(), &24.into(), &3.into());
     /// ```
     /// # Panics...
     /// - if `n`, `nr_rows` or `nr_cols` does not fit into in `i64`
