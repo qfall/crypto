@@ -133,6 +133,9 @@ impl Regev {
     /// # Errors and Failures
     /// - Returns a [`MathError`] of type [`InvalidIntegerInput`](MathError::InvalidIntegerInput)
     /// if `n <= 1`.
+    ///
+    /// Panics...
+    /// - if `n` does not fit into an [`i64`].
     pub fn new_from_n(n: impl Into<Z>) -> Result<Self, MathError> {
         let n = n.into();
         if n <= Z::from(9) {
@@ -173,7 +176,7 @@ impl Regev {
     /// - `n`: specifies the security parameter and number of rows
     ///   of the uniform at random instantiated matrix `A`
     ///
-    /// Returns a set of public parameters `(m, q, r, alpha)` chosen according to
+    /// Returns a set of public parameters `(m, q, alpha)` chosen according to
     /// the provided `n`.
     ///
     /// # Examples
@@ -184,6 +187,9 @@ impl Regev {
     ///
     /// let (m, q, alpha) = Regev::gen_new_public_parameters(&n);
     /// ```
+    ///
+    /// Panics...
+    /// - if `n` does not fit into an [`i64`].
     fn gen_new_public_parameters(n: &Z) -> (Z, Modulus, Q) {
         let n_i64 = i64::try_from(n).unwrap();
         // these powers are chosen according to experience s.t. at least every
@@ -199,7 +205,7 @@ impl Regev {
         let lower_bound = upper_bound.div_ceil(&Z::from(2));
         let q = Z::sample_prime_uniform(&lower_bound, &upper_bound).unwrap();
 
-        // choose m = 1.05 * (n+1) log q
+        // choose m = (n+1) log q
         let m = (n + Z::ONE) * q.log(2).unwrap().ceil();
 
         // alpha = 1/(sqrt(n) * log^2 n)
