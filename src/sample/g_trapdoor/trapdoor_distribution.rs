@@ -35,7 +35,7 @@ pub trait TrapdoorDistribution {
 /// Parameters:
 /// - `n`: the length of the polynomials
 /// - `nr_cols`: the number of polynomials that are sampled
-/// - `s`: the standard deviation with which is sampled
+/// - `s`: the gaussian parameter with which is sampled
 ///
 /// Returns a matrix which is sampled according to the defined distribution
 pub trait TrapdoorDistributionRing {
@@ -86,7 +86,7 @@ impl TrapdoorDistributionRing for SampleZ {
     /// Parameters:
     /// - `n`: degree of the polynomial
     /// - `nr_cols`: number of columns of the matrix
-    /// - `s`: the deviation used for SampleZ
+    /// - `s`: the gaussian parameter used for SampleZ
     ///
     /// # Examples
     /// ```
@@ -100,12 +100,11 @@ impl TrapdoorDistributionRing for SampleZ {
     fn sample(&self, n: &Z, nr_cols: &Z, s: &Q) -> MatPolyOverZ {
         let n = i64::try_from(n).unwrap();
         let nr_cols = i64::try_from(nr_cols).unwrap();
-        let s = s * (Q::from(2) * Q::PI).sqrt();
         let mut out_mat = MatPolyOverZ::new(1, nr_cols);
         for j in 0..nr_cols {
             let mut sample = PolyOverZ::default();
             for k in 0..n {
-                let sample_z = Z::sample_discrete_gauss(n, &Z::ZERO, &s).unwrap();
+                let sample_z = Z::sample_discrete_gauss(n, &Z::ZERO, s).unwrap();
                 sample.set_coeff(k, &sample_z).unwrap();
             }
             out_mat.set_entry(0, j, &sample).unwrap();
@@ -134,6 +133,35 @@ mod test_pm_one_zero {
                         && Z::ONE >= sample.get_entry(i, j).unwrap()
                 );
             }
+        }
+    }
+}
+
+#[cfg(test)]
+mod test_sample_z {
+    use super::{SampleZ, TrapdoorDistributionRing};
+    use qfall_math::{
+        rational::Q,
+        traits::{GetNumRows, Pow},
+    };
+
+    /// Ensure that the distribution samples are in the correct range,
+    #[test]
+    fn correct_range_high_prob() {
+        for _ in 0..20 {
+            let s = 5.into();
+            let sample = SampleZ.sample(&10.into(), &15.into(), &s);
+
+            // it should be the same as sampling a vector with 10*15 entries
+            let coeff_embedding = sample
+                .transpose()
+                .into_coefficient_embedding_from_matrix(10);
+
+            // test for concentration bound
+            assert!(
+                Q::from(coeff_embedding.norm_eucl_sqrd().unwrap())
+                    <= s.pow(2).unwrap() * coeff_embedding.get_num_rows()
+            );
         }
     }
 }
