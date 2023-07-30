@@ -29,9 +29,12 @@
 //! <https://eprint.iacr.org/2010/613.pdf>
 
 mod dual_regev;
+<<<<<<< HEAD
 mod dual_regev_discrete_gauss;
 mod identity_based_encryption;
 mod lpr;
+=======
+>>>>>>> ed0e7ce (removing module)
 mod regev;
 mod regev_discrete_gauss;
 pub use dual_regev::DualRegev;
