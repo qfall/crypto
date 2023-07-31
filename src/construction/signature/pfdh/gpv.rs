@@ -64,7 +64,6 @@ impl Pfdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq> {
         randomness_length: impl Into<Z>,
     ) -> Self {
         let n = n.into();
-        let r: Z = randomness_length.into();
         let psf = PSFGPV {
             gp: GadgetParameters::init_default(&n, modulus),
             s: s.clone(),
@@ -77,7 +76,7 @@ impl Pfdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq> {
                 rows: n,
                 cols: 1,
             }),
-            randomness_length: r,
+            randomness_length: randomness_length.into(),
             _a_type: PhantomData,
             _trapdoor_type: PhantomData,
             _domain_type: PhantomData,
