@@ -65,15 +65,14 @@ impl Pfdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq, u32> {
             s: s.clone(),
         };
         let n = i64::try_from(&n).unwrap();
-        let modulus = modulus.clone();
         Self {
             psf: Box::new(psf),
             hash: Box::new(HashMatZq {
-                modulus,
+                modulus: modulus.clone(),
                 rows: n,
                 cols: 1,
             }),
-            randomness_length: Box::new(r),
+            randomness_length: r,
             _a_type: PhantomData,
             _trapdoor_type: PhantomData,
             _domain_type: PhantomData,

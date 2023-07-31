@@ -57,7 +57,7 @@ where
             Domain: Serialize + for<'a> Deserialize<'a>,
             T: PSF<A, Trapdoor, Domain, Range> + Serialize + for<'a> Deserialize<'a>,
             Hash: HashInto<Range> + Serialize + for<'a> Deserialize<'a>,
-            Randomness: Into<Z> + Clone,
+            Randomness: Into<Z>,
         {
             type Value = Pfdh<A, Trapdoor, Domain, Range, T, Hash, Randomness>;
 
@@ -98,7 +98,7 @@ where
                 Ok(Pfdh {
                     psf: Box::new(psf.unwrap()),
                     hash: Box::new(hash.unwrap()),
-                    randomness_length: Box::new(randomness_length.unwrap()),
+                    randomness_length: randomness_length.unwrap(),
                     _a_type: PhantomData,
                     _trapdoor_type: PhantomData,
                     _range_type: PhantomData,
