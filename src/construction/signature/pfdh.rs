@@ -9,7 +9,7 @@
 //! This Module contains a general implementation of the [`Pfdh`] scheme.
 //!
 //! Implementation of a [`Pfdh`]-signature scheme are thereby fairly easy,
-//! see [`Pfdh::init_gpv`](crate::construction::signature::pfdh::gpv) that works with every PSF and a corresponding hash function
+//! see [`Pfdh::init_gpv`](crate::construction::signature::pfdh::gpv) that works with every PSF and a corresponding hash function.
 
 use super::SignatureScheme;
 use crate::{primitive::hash::HashInto, sample::distribution::psf::PSF};
