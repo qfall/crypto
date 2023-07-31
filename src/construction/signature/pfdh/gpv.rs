@@ -57,11 +57,11 @@ impl Pfdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq> {
     ///
     /// assert!(pfdh.vfy(m.to_owned(), &sigma, &pk))
     /// ```
-    pub fn init_gpv<Integer: Into<Z>>(
+    pub fn init_gpv(
         n: impl Into<Z>,
         modulus: &Modulus,
         s: &Q,
-        randomness_length: Integer,
+        randomness_length: impl Into<Z>,
     ) -> Self {
         let n = n.into();
         let r: Z = randomness_length.into();
