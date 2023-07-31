@@ -22,7 +22,7 @@ use qfall_math::{
 use std::marker::PhantomData;
 
 impl Pfdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq, u32> {
-    /// Initializes an FDH signature scheme from a [`PSFGPV`].
+    /// Initializes an PFDH signature scheme from a [`PSFGPV`].
     ///
     /// This function corresponds to an implementation of an PFDH-signature
     /// scheme with the explicit PSF [`PSFGPV`] which is generated using
