@@ -21,7 +21,7 @@ use qfall_math::{
 };
 use std::marker::PhantomData;
 
-impl Pfdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq, u32> {
+impl<T: Into<Z>> Pfdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq, T> {
     /// Initializes an PFDH signature scheme from a [`PSFGPV`].
     ///
     /// This function corresponds to an implementation of an PFDH-signature
@@ -32,7 +32,7 @@ impl Pfdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq, u32> {
     /// - `n`: The security parameter
     /// - `modulus`: The modulus used for the G-Trapdoors
     /// - `s`: The gaussian parameter with which is sampled
-    /// - `randomness_length`: bit-length of the randomness concatenated to the message
+    /// - `randomness_length`: the number of bits used for the randomness
     ///
     /// Returns an explicit implementation of a PFDH-signature scheme.
     ///
@@ -57,7 +57,7 @@ impl Pfdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq, u32> {
     ///
     /// assert!(pfdh.vfy(m.to_owned(), &sigma, &pk))
     /// ```
-    pub fn init_gpv(n: impl Into<Z>, modulus: &Modulus, s: &Q, randomness_length: u32) -> Self {
+    pub fn init_gpv(n: impl Into<Z>, modulus: &Modulus, s: &Q, randomness_length: T) -> Self {
         let n = n.into();
         let r: Z = randomness_length.into();
         let psf = PSFGPV {
