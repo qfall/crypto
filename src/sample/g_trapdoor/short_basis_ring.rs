@@ -197,215 +197,214 @@ mod test_gen_short_basis_for_trapdoor_ring {
             assert_eq!(short_base_reduced, short_base)
         }
     }
+}
 
-    #[cfg(test)]
-    mod test_gen_sa {
-        use crate::sample::g_trapdoor::{
-            gadget_parameters::GadgetParametersRing,
-            short_basis_ring::{gen_sa_l, gen_sa_r},
-        };
-        use qfall_math::{
-            integer::MatPolyOverZ,
-            integer_mod_q::{MatPolynomialRingZq, Modulus},
-        };
-        use std::str::FromStr;
+#[cfg(test)]
+mod test_gen_sa {
+    use crate::sample::g_trapdoor::{
+        gadget_parameters::GadgetParametersRing,
+        short_basis_ring::{gen_sa_l, gen_sa_r},
+    };
+    use qfall_math::{
+        integer::MatPolyOverZ,
+        integer_mod_q::{MatPolynomialRingZq, Modulus},
+    };
+    use std::str::FromStr;
 
-        /// Returns a fixed trapdoor and a matrix a for a fixed parameter set.
-        fn get_fixed_trapdoor() -> (
-            GadgetParametersRing,
-            MatPolynomialRingZq,
-            MatPolyOverZ,
-            MatPolyOverZ,
-        ) {
-            let params = GadgetParametersRing::init_default(4, &Modulus::from(16));
+    /// Returns a fixed trapdoor and a matrix a for a fixed parameter set.
+    fn get_fixed_trapdoor() -> (
+        GadgetParametersRing,
+        MatPolynomialRingZq,
+        MatPolyOverZ,
+        MatPolyOverZ,
+    ) {
+        let params = GadgetParametersRing::init_default(4, &Modulus::from(16));
 
-            let a = MatPolyOverZ::from_str(
-                "[[1  1, 4  2 8 8 12, 4  11 10 7 13, 4  9 6 6 12, 4  6 11 1 6, 4  3 10 2 9]]",
-            )
+        let a = MatPolyOverZ::from_str(
+            "[[1  1, 4  2 8 8 12, 4  11 10 7 13, 4  9 6 6 12, 4  6 11 1 6, 4  3 10 2 9]]",
+        )
+        .unwrap();
+        let a = MatPolynomialRingZq::from((&a, &params.modulus));
+
+        let r = MatPolyOverZ::from_str("[[4  -1 7 6 -8, 3  0 -2 4, 4  0 3 -4 1, 4  6 4 -1 3]]")
             .unwrap();
-            let a = MatPolynomialRingZq::from((&a, &params.modulus));
-
-            let r = MatPolyOverZ::from_str("[[4  -1 7 6 -8, 3  0 -2 4, 4  0 3 -4 1, 4  6 4 -1 3]]")
+        let e =
+            MatPolyOverZ::from_str("[[4  -4 8 -3 7, 4  1 -2 2 4, 3  -6 7 -5, 4  -7 10 -12 -15]]")
                 .unwrap();
-            let e = MatPolyOverZ::from_str(
-                "[[4  -4 8 -3 7, 4  1 -2 2 4, 3  -6 7 -5, 4  -7 10 -12 -15]]",
-            )
-            .unwrap();
 
-            (params, a, r, e)
-        }
+        (params, a, r, e)
+    }
 
-        /// Ensure that the left part of the multiplication to get sa is correctly
-        /// computed.
-        #[test]
-        fn working_sa_l() {
-            let (_, _, r, e) = get_fixed_trapdoor();
-            let sa_l = gen_sa_l(&r, &e);
+    /// Ensure that the left part of the multiplication to get sa is correctly
+    /// computed.
+    #[test]
+    fn working_sa_l() {
+        let (_, _, r, e) = get_fixed_trapdoor();
+        let sa_l = gen_sa_l(&r, &e);
 
-            let sa_l_cmp = MatPolyOverZ::from_str(
-                "[\
+        let sa_l_cmp = MatPolyOverZ::from_str(
+            "[\
                 [1  1, 0, 4  -1 7 6 -8, 3  0 -2 4, 4  0 3 -4 1, 4  6 4 -1 3],\
                 [0, 1  1, 4  -4 8 -3 7, 4  1 -2 2 4, 3  -6 7 -5, 4  -7 10 -12 -15],\
                 [0, 0, 1  1, 0, 0, 0],\
                 [0, 0, 0, 1  1, 0, 0],\
                 [0, 0, 0, 0, 1  1, 0],\
                 [0, 0, 0, 0, 0, 1  1]]",
-            )
-            .unwrap();
+        )
+        .unwrap();
 
-            assert_eq!(sa_l_cmp, sa_l)
-        }
+        assert_eq!(sa_l_cmp, sa_l)
+    }
 
-        /// Ensure that the right part of the multiplication to get sa is correctly
-        /// computed.
-        #[test]
-        fn working_sa_r() {
-            let (params, a, _, _) = get_fixed_trapdoor();
-            let sa_r = gen_sa_r(&params, &a);
+    /// Ensure that the right part of the multiplication to get sa is correctly
+    /// computed.
+    #[test]
+    fn working_sa_r() {
+        let (params, a, _, _) = get_fixed_trapdoor();
+        let sa_r = gen_sa_r(&params, &a);
 
-            let sa_r_cmp = MatPolyOverZ::from_str(
-                "[\
+        let sa_r_cmp = MatPolyOverZ::from_str(
+            "[\
                 [0, 0, 0, 0, 1  1, 0],\
                 [0, 0, 0, 0, 0, 1  1],\
                 [0, 0, 0, 1  2, 1  1, 0],\
                 [0, 0, 1  2, 1  -1, 1  1, 1  1],\
                 [0, 1  2, 1  -1, 0, 1  1, 4  1 0 0 1],\
                 [1  2, 1  -1, 0, 0, 1  1, 3  1 1 1]]",
-            )
-            .unwrap();
-            assert_eq!(sa_r_cmp, sa_r);
-        }
+        )
+        .unwrap();
+        assert_eq!(sa_r_cmp, sa_r);
     }
+}
 
-    #[cfg(test)]
-    mod test_compute_s {
-        use qfall_math::{
-            integer::{MatPolyOverZ, Z},
-            integer_mod_q::Modulus,
-        };
-        use std::str::FromStr;
+#[cfg(test)]
+mod test_compute_s {
+    use qfall_math::{
+        integer::{MatPolyOverZ, Z},
+        integer_mod_q::Modulus,
+    };
+    use std::str::FromStr;
 
-        use crate::sample::g_trapdoor::{
-            gadget_parameters::GadgetParametersRing, short_basis_ring::compute_s,
-        };
+    use crate::sample::g_trapdoor::{
+        gadget_parameters::GadgetParametersRing, short_basis_ring::compute_s,
+    };
 
-        /// Ensure that the matrix s is computed correctly for a power-of-two modulus.
-        #[test]
-        fn base_2_power_two() {
-            let params = GadgetParametersRing::init_default(8, &Modulus::from(16));
+    /// Ensure that the matrix s is computed correctly for a power-of-two modulus.
+    #[test]
+    fn base_2_power_two() {
+        let params = GadgetParametersRing::init_default(8, &Modulus::from(16));
 
-            let s = compute_s(&params);
+        let s = compute_s(&params);
 
-            let s_cmp = MatPolyOverZ::from_str(
-                "[[1  2, 0, 0, 0],\
+        let s_cmp = MatPolyOverZ::from_str(
+            "[[1  2, 0, 0, 0],\
                 [1  -1, 1  2, 0, 0],\
                 [0, 1  -1, 1  2, 0],\
                 [0, 0, 1  -1, 1  2]]",
-            )
-            .unwrap();
+        )
+        .unwrap();
 
-            assert_eq!(s_cmp, s)
-        }
+        assert_eq!(s_cmp, s)
+    }
 
-        /// Ensure that the matrix s is computed correctly for an arbitrary modulus.
-        #[test]
-        fn base_2_arbitrary() {
-            let modulus = Z::from(0b1100110);
-            let params = GadgetParametersRing::init_default(1, &Modulus::from(&modulus));
+    /// Ensure that the matrix s is computed correctly for an arbitrary modulus.
+    #[test]
+    fn base_2_arbitrary() {
+        let modulus = Z::from(0b1100110);
+        let params = GadgetParametersRing::init_default(1, &Modulus::from(&modulus));
 
-            let s = compute_s(&params);
+        let s = compute_s(&params);
 
-            let s_cmp = MatPolyOverZ::from_str(
-                "[[1  2, 0, 0, 0, 0, 0, 0],\
+        let s_cmp = MatPolyOverZ::from_str(
+            "[[1  2, 0, 0, 0, 0, 0, 0],\
                 [1  -1, 1  2, 0, 0, 0, 0, 1  1],\
                 [0, 1  -1, 1  2, 0, 0, 0, 1  1],\
                 [0, 0, 1  -1, 1  2, 0, 0, 0],\
                 [0, 0, 0, 1  -1, 1  2, 0, 0],\
                 [0, 0, 0, 0, 1  -1, 1  2, 1  1],\
                 [0, 0, 0, 0, 0, 1  -1, 1  1]]",
-            )
-            .unwrap();
+        )
+        .unwrap();
 
-            assert_eq!(s_cmp, s)
-        }
+        assert_eq!(s_cmp, s)
+    }
 
-        /// Ensure that the matrix s is computed correctly for a power-of-5 modulus.
-        #[test]
-        fn base_5_power_5() {
-            let mut params = GadgetParametersRing::init_default(1, &Modulus::from(625));
-            params.k = Z::from(4);
-            params.base = Z::from(5);
+    /// Ensure that the matrix s is computed correctly for a power-of-5 modulus.
+    #[test]
+    fn base_5_power_5() {
+        let mut params = GadgetParametersRing::init_default(1, &Modulus::from(625));
+        params.k = Z::from(4);
+        params.base = Z::from(5);
 
-            let s = compute_s(&params);
+        let s = compute_s(&params);
 
-            let s_cmp = MatPolyOverZ::from_str(
-                "[[1  5, 0, 0, 0],\
+        let s_cmp = MatPolyOverZ::from_str(
+            "[[1  5, 0, 0, 0],\
                 [1  -1, 1  5, 0, 0],\
                 [0, 1  -1, 1  5, 0],\
                 [0, 0, 1  -1, 1  5]]",
-            )
-            .unwrap();
+        )
+        .unwrap();
 
-            assert_eq!(s_cmp, s)
-        }
+        assert_eq!(s_cmp, s)
+    }
 
-        /// Ensure that the matrix s is computed correctly for an arbitrary modulus with
-        /// base 5.
-        #[test]
-        fn base_5_arbitrary() {
-            let modulus = Z::from_str_b("4123", 5).unwrap();
-            let mut params = GadgetParametersRing::init_default(1, &Modulus::from(&modulus));
-            params.k = Z::from(4);
-            params.base = Z::from(5);
+    /// Ensure that the matrix s is computed correctly for an arbitrary modulus with
+    /// base 5.
+    #[test]
+    fn base_5_arbitrary() {
+        let modulus = Z::from_str_b("4123", 5).unwrap();
+        let mut params = GadgetParametersRing::init_default(1, &Modulus::from(&modulus));
+        params.k = Z::from(4);
+        params.base = Z::from(5);
 
-            let s = compute_s(&params);
+        let s = compute_s(&params);
 
-            let s_cmp = MatPolyOverZ::from_str(
-                "[[1  5, 0, 0, 1  3],\
+        let s_cmp = MatPolyOverZ::from_str(
+            "[[1  5, 0, 0, 1  3],\
                 [1  -1, 1  5, 0, 1  2],\
                 [0, 1  -1, 1  5, 1  1],\
                 [0, 0, 1  -1, 1  4]]",
-            )
-            .unwrap();
+        )
+        .unwrap();
 
-            assert_eq!(s_cmp, s)
-        }
+        assert_eq!(s_cmp, s)
     }
+}
 
-    #[cfg(test)]
-    mod test_compute_w {
-        use crate::sample::g_trapdoor::{
-            gadget_parameters::GadgetParametersRing,
-            gadget_ring::{gen_gadget_ring, gen_trapdoor_ring_lwe},
-            short_basis_ring::compute_w,
-        };
-        use qfall_math::{
-            integer::{MatPolyOverZ, PolyOverZ},
-            integer_mod_q::{MatPolynomialRingZq, Modulus},
-            rational::Q,
-            traits::GetNumColumns,
-        };
+#[cfg(test)]
+mod test_compute_w {
+    use crate::sample::g_trapdoor::{
+        gadget_parameters::GadgetParametersRing,
+        gadget_ring::{gen_gadget_ring, gen_trapdoor_ring_lwe},
+        short_basis_ring::compute_w,
+    };
+    use qfall_math::{
+        integer::{MatPolyOverZ, PolyOverZ},
+        integer_mod_q::{MatPolynomialRingZq, Modulus},
+        rational::Q,
+        traits::GetNumColumns,
+    };
 
-        /// Ensure that `gw = a[I_1|0] mod qR`.
-        #[test]
-        fn check_w_is_correct_solution() {
-            let params = GadgetParametersRing::init_default(8, &Modulus::from(16));
-            let a_bar = PolyOverZ::sample_uniform(&params.n, 0, &params.q).unwrap();
+    /// Ensure that `gw = a[I_1|0] mod qR`.
+    #[test]
+    fn check_w_is_correct_solution() {
+        let params = GadgetParametersRing::init_default(8, &Modulus::from(16));
+        let a_bar = PolyOverZ::sample_uniform(&params.n, 0, &params.q).unwrap();
 
-            let (a, _, _) = gen_trapdoor_ring_lwe(&params, &a_bar, &Q::from(5)).unwrap();
+        let (a, _, _) = gen_trapdoor_ring_lwe(&params, &a_bar, &Q::from(5)).unwrap();
 
-            let w = compute_w(&params, &a);
-            let w = MatPolynomialRingZq::from((&w, &params.modulus));
+        let w = compute_w(&params, &a);
+        let w = MatPolynomialRingZq::from((&w, &params.modulus));
 
-            let gadget = gen_gadget_ring(&params.k, &params.base).unwrap();
-            let gadget = MatPolynomialRingZq::from((&gadget, &params.modulus));
+        let gadget = gen_gadget_ring(&params.k, &params.base).unwrap();
+        let gadget = MatPolynomialRingZq::from((&gadget, &params.modulus));
 
-            let gw = gadget.transpose() * w;
-            let i0 = -1 * MatPolyOverZ::identity(a.get_num_columns(), 2);
-            let i0 = MatPolynomialRingZq::from((&i0, &params.modulus));
-            let rhs = a * i0;
+        let gw = gadget.transpose() * w;
+        let i0 = -1 * MatPolyOverZ::identity(a.get_num_columns(), 2);
+        let i0 = MatPolynomialRingZq::from((&i0, &params.modulus));
+        let rhs = a * i0;
 
-            assert_eq!(gw, rhs)
-        }
+        assert_eq!(gw, rhs)
     }
 }
