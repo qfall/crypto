@@ -21,7 +21,7 @@ use qfall_math::{
 };
 use std::marker::PhantomData;
 
-impl<T: Into<Z>> Pfdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq, T> {
+impl Pfdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq> {
     /// Initializes an PFDH signature scheme from a [`PSFGPV`].
     ///
     /// This function corresponds to an implementation of an PFDH-signature
@@ -57,7 +57,12 @@ impl<T: Into<Z>> Pfdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq, T> {
     ///
     /// assert!(pfdh.vfy(m.to_owned(), &sigma, &pk))
     /// ```
-    pub fn init_gpv(n: impl Into<Z>, modulus: &Modulus, s: &Q, randomness_length: T) -> Self {
+    pub fn init_gpv<Integer: Into<Z>>(
+        n: impl Into<Z>,
+        modulus: &Modulus,
+        s: &Q,
+        randomness_length: Integer,
+    ) -> Self {
         let n = n.into();
         let r: Z = randomness_length.into();
         let psf = PSFGPV {
@@ -77,7 +82,6 @@ impl<T: Into<Z>> Pfdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq, T> {
             _trapdoor_type: PhantomData,
             _domain_type: PhantomData,
             _range_type: PhantomData,
-            _randomness_length: PhantomData,
         }
     }
 }

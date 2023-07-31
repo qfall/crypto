@@ -8,22 +8,20 @@
 
 //! Allows to Deserialize an arbitrary [`Pfdh`] instantiation
 
+use super::Pfdh;
 use crate::{primitive::hash::HashInto, sample::distribution::psf::PSF};
-use qfall_math::integer::Z;
 use serde::{
     de::{Error, MapAccess, Visitor},
     Deserialize, Serialize,
 };
 use std::{fmt, marker::PhantomData};
 
-use super::Pfdh;
-impl<'de, A, Trapdoor, Domain, Range, T, Hash, Randomness> Deserialize<'de>
-    for Pfdh<A, Trapdoor, Domain, Range, T, Hash, Randomness>
+impl<'de, A, Trapdoor, Domain, Range, T, Hash> Deserialize<'de>
+    for Pfdh<A, Trapdoor, Domain, Range, T, Hash>
 where
     Domain: Serialize + for<'a> Deserialize<'a>,
     T: PSF<A, Trapdoor, Domain, Range> + Serialize + for<'a> Deserialize<'a>,
     Hash: HashInto<Range> + Serialize + for<'a> Deserialize<'a>,
-    Randomness: Into<Z> + Clone,
 {
     #[allow(non_camel_case_types)]
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -42,24 +40,22 @@ where
 
         /// This visitor iterates over the strings content and collects all possible fields.
         /// It sets the corresponding values of the struct based on the values found.
-        struct StructVisitor<A, Trapdoor, Domain, Range, T, Hash, Randomness> {
+        struct StructVisitor<A, Trapdoor, Domain, Range, T, Hash> {
             a: PhantomData<A>,
             trapdoor: PhantomData<Trapdoor>,
             domain: PhantomData<Domain>,
             range: PhantomData<Range>,
             t: PhantomData<T>,
             hash: PhantomData<Hash>,
-            randomness_length: PhantomData<Randomness>,
         }
-        impl<'de, A, Trapdoor, Domain, Range, T, Hash, Randomness> Visitor<'de>
-            for StructVisitor<A, Trapdoor, Domain, Range, T, Hash, Randomness>
+        impl<'de, A, Trapdoor, Domain, Range, T, Hash> Visitor<'de>
+            for StructVisitor<A, Trapdoor, Domain, Range, T, Hash>
         where
             Domain: Serialize + for<'a> Deserialize<'a>,
             T: PSF<A, Trapdoor, Domain, Range> + Serialize + for<'a> Deserialize<'a>,
             Hash: HashInto<Range> + Serialize + for<'a> Deserialize<'a>,
-            Randomness: Into<Z>,
         {
-            type Value = Pfdh<A, Trapdoor, Domain, Range, T, Hash, Randomness>;
+            type Value = Pfdh<A, Trapdoor, Domain, Range, T, Hash>;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                 formatter.write_str("struct $type")
@@ -103,21 +99,18 @@ where
                     _trapdoor_type: PhantomData,
                     _range_type: PhantomData,
                     _domain_type: PhantomData,
-                    _randomness_length: PhantomData,
                 })
             }
         }
 
-        let struct_visitor: StructVisitor<A, Trapdoor, Domain, Range, T, Hash, Randomness> =
-            StructVisitor {
-                a: PhantomData,
-                trapdoor: PhantomData,
-                domain: PhantomData,
-                range: PhantomData,
-                t: PhantomData,
-                hash: PhantomData,
-                randomness_length: PhantomData,
-            };
+        let struct_visitor: StructVisitor<A, Trapdoor, Domain, Range, T, Hash> = StructVisitor {
+            a: PhantomData,
+            trapdoor: PhantomData,
+            domain: PhantomData,
+            range: PhantomData,
+            t: PhantomData,
+            hash: PhantomData,
+        };
         deserializer.deserialize_struct("Pfdh", FIELDS, struct_visitor)
     }
 }
@@ -149,7 +142,7 @@ mod test_deserialization {
         let signature = pfdh.sign(m.to_owned(), &sk, &pk);
 
         let pfdh_string = serde_json::to_string(&pfdh).expect("Unable to create a json object");
-        let pfdh_2: Result<Pfdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq, u32>, _> =
+        let pfdh_2: Result<Pfdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq>, _> =
             serde_json::from_str(&pfdh_string);
 
         assert!(pfdh_2.is_ok());

@@ -29,7 +29,6 @@ pub struct Pfdh<
     Range,
     T: PSF<A, Trapdoor, Domain, Range> + Serialize + for<'a> Deserialize<'a>,
     Hash: HashInto<Range> + Serialize + for<'a> Deserialize<'a>,
-    Randomness: Into<Z>,
 > {
     pub psf: Box<T>,
     pub hash: Box<Hash>,
@@ -44,18 +43,15 @@ pub struct Pfdh<
     pub _domain_type: PhantomData<Domain>,
     #[serde(skip_serializing)]
     pub _range_type: PhantomData<Range>,
-    #[serde(skip_serializing)]
-    pub _randomness_length: PhantomData<Randomness>,
 }
 
-impl<A, Trapdoor, Domain, Range, T, Hash, Randomness> SignatureScheme
-    for Pfdh<A, Trapdoor, Domain, Range, T, Hash, Randomness>
+impl<A, Trapdoor, Domain, Range, T, Hash> SignatureScheme
+    for Pfdh<A, Trapdoor, Domain, Range, T, Hash>
 where
     Domain: Clone + Serialize + for<'a> Deserialize<'a>,
     Range: PartialEq<Range>,
     T: PSF<A, Trapdoor, Domain, Range> + Serialize + for<'a> Deserialize<'a>,
     Hash: HashInto<Range> + Serialize + for<'a> Deserialize<'a>,
-    Randomness: Into<Z> + Clone,
 {
     type SecretKey = Trapdoor;
     type PublicKey = A;
