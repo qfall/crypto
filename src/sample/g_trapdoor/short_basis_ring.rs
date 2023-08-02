@@ -147,15 +147,18 @@ fn compute_s(params: &GadgetParametersRing) -> MatPolyOverZ {
 
 #[cfg(test)]
 mod test_gen_short_basis_for_trapdoor_ring {
+    use std::{cmp::max, vec};
+
     use super::gen_short_basis_for_trapdoor_ring;
     use crate::sample::g_trapdoor::{
         gadget_parameters::GadgetParametersRing, gadget_ring::gen_trapdoor_ring_lwe,
+        gen_trapdoor_ring_default,
     };
     use qfall_math::{
         integer::{PolyOverZ, Z},
         integer_mod_q::{MatPolynomialRingZq, Modulus},
-        rational::Q,
-        traits::{GetEntry, GetNumColumns},
+        rational::{MatQ, Q},
+        traits::{GetEntry, GetNumColumns, Pow},
     };
 
     /// Ensure that every vector within the returned basis is in `\Lambda^\perp(a)`.
@@ -195,6 +198,106 @@ mod test_gen_short_basis_for_trapdoor_ring {
                 MatPolynomialRingZq::from((&short_base, &params.modulus)).get_mat();
 
             assert_eq!(short_base_reduced, short_base)
+        }
+    }
+
+    /// Ensure that the orthogonalized short base length is upper bounded by
+    /// `(s_1(r) + s_1(e) + 1)*||\tilde S'||`.
+    #[test]
+    fn ensure_orthogonalized_length_perfect_power() {
+        for n in 4..8 {
+            let params =
+                GadgetParametersRing::init_default(n, &Modulus::try_from(&Z::from(32)).unwrap());
+            let a_bar = PolyOverZ::sample_uniform(&params.n, 0, &params.q).unwrap();
+
+            let (a, r, e) = gen_trapdoor_ring_lwe(&params, &a_bar, &Q::from(5)).unwrap();
+
+            let short_base = gen_short_basis_for_trapdoor_ring(&params, &a, &r, &e);
+
+            let short_base_embedded = short_base.into_coefficient_embedding_from_matrix(n);
+
+            let orthogonalized_short_basis = MatQ::from(&short_base_embedded).gso();
+
+            let s1_r = {
+                let mut r_max = Z::ZERO;
+                let r_embedded = e.into_coefficient_embedding_from_matrix(n);
+                for i in 0..r_embedded.get_num_columns() {
+                    let r_new = r_embedded.get_column(i).unwrap().norm_eucl_sqrd().unwrap();
+                    if r_new > r_max {
+                        r_max = r_new
+                    }
+                }
+                r_max.sqrt()
+            };
+            let s1_e = {
+                let mut e_max = Z::ZERO;
+                let e_embedded = e.into_coefficient_embedding_from_matrix(n);
+                for i in 0..e_embedded.get_num_columns() {
+                    let e_new = e_embedded.get_column(i).unwrap().norm_eucl_sqrd().unwrap();
+                    if e_new > e_max {
+                        e_max = e_new
+                    }
+                }
+                e_max.sqrt()
+            };
+
+            let orth_s_length = 2;
+            let upper_bound: Q = (s1_r + s1_e + 1) * orth_s_length;
+            for i in 0..orthogonalized_short_basis.get_num_columns() {
+                let b_tilde_i = orthogonalized_short_basis.get_column(i).unwrap();
+
+                assert!(b_tilde_i.norm_eucl_sqrd().unwrap() <= upper_bound.pow(2).unwrap())
+            }
+        }
+    }
+
+    /// Ensure that the orthogonalized short base length is upper bounded by
+    /// `(s_1(r) + s_1(e) + 1)*||\tilde S'||`.
+    #[test]
+    fn ensure_orthogonalized_length_not_perfect_power() {
+        for n in 4..8 {
+            let params =
+                GadgetParametersRing::init_default(n, &Modulus::try_from(&Z::from(42)).unwrap());
+            let a_bar = PolyOverZ::sample_uniform(&params.n, 0, &params.q).unwrap();
+
+            let (a, r, e) = gen_trapdoor_ring_lwe(&params, &a_bar, &Q::from(5)).unwrap();
+
+            let short_base = gen_short_basis_for_trapdoor_ring(&params, &a, &r, &e);
+
+            let short_base_embedded = short_base.into_coefficient_embedding_from_matrix(n);
+
+            let orthogonalized_short_basis = MatQ::from(&short_base_embedded).gso();
+
+            let s1_r = {
+                let mut r_max = Z::ZERO;
+                let r_embedded = e.into_coefficient_embedding_from_matrix(n);
+                for i in 0..r_embedded.get_num_columns() {
+                    let r_new = r_embedded.get_column(i).unwrap().norm_eucl_sqrd().unwrap();
+                    if r_new > r_max {
+                        r_max = r_new
+                    }
+                }
+                r_max.sqrt()
+            };
+            let s1_e = {
+                let mut e_max = Z::ZERO;
+                let e_embedded = e.into_coefficient_embedding_from_matrix(n);
+                for i in 0..e_embedded.get_num_columns() {
+                    let e_new = e_embedded.get_column(i).unwrap().norm_eucl_sqrd().unwrap();
+                    if e_new > e_max {
+                        e_max = e_new
+                    }
+                }
+                e_max.sqrt()
+            };
+
+            let orth_s_length = Q::from(5).sqrt();
+            let upper_bound: Q = (s1_r + s1_e + 1) * orth_s_length;
+            for i in 0..orthogonalized_short_basis.get_num_columns() {
+                let b_tilde_i = orthogonalized_short_basis.get_column(i).unwrap();
+
+                assert!(b_tilde_i.norm_eucl_sqrd().unwrap() <= upper_bound.pow(2).unwrap())
+            }
         }
     }
 }
