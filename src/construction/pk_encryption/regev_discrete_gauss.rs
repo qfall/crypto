@@ -9,12 +9,6 @@
 //! This module contains an implementation of the IND-CPA secure
 //! public key Regev encryption scheme with an instantiation of the regularity lemma
 //! via a discrete Gaussian distribution.
-//!
-//! The main references are listed in the following:
-//! - \[1\] Gentry, Craig and Peikert, Chris and Vaikuntanathan, Vinod (2008).
-//! Trapdoors for hard lattices and new cryptographic constructions.
-//! In: Proceedings of the fortieth annual ACM symposium on Theory of computing.
-//! <https://dl.acm.org/doi/pdf/10.1145/1374376.1374407>
 
 use super::PKEncryption;
 use qfall_math::{
@@ -67,7 +61,7 @@ pub struct RegevWithDiscreteGaussianRegularity {
 
 impl RegevWithDiscreteGaussianRegularity {
     /// Instantiates a [`RegevWithDiscreteGaussianRegularity`] PK encryption instance with the
-    /// specified parameters if they ensure a secure and correct instance.
+    /// specified parameters.
     ///
     /// **WARNING:** The given parameters are not checked for security nor
     /// correctness of the scheme.
@@ -87,8 +81,7 @@ impl RegevWithDiscreteGaussianRegularity {
     ///   sampling from χ, i.e. for multiple discrete Gaussian samples used
     ///   for key generation
     ///
-    /// Returns a correct and secure [`RegevWithDiscreteGaussianRegularity`] PK encryption instance or
-    /// a [`MathError`] if the instance would not be correct or secure.
+    /// Returns a [`RegevWithDiscreteGaussianRegularity`] PK encryption instance.
     ///
     /// # Examples
     /// ```
@@ -225,11 +218,16 @@ impl RegevWithDiscreteGaussianRegularity {
         (m, q, r, alpha)
     }
 
-    /// Checks a provided set of public parameters according to their validity
-    /// regarding correctness and completeness according to
-    /// Lemma 8.2 of [\[1\]](<index.html#:~:text=[1]>).
+    /// Checks the public parameters for correctness according to
+    /// Lemma 8.2 of [\[2\]](<index.html#:~:text=[2]>).
     ///
-    /// Returns an empty result or a [`MathError`] if the instance would
+    /// The required properties are:
+    /// - n >= 1
+    /// - q >= 5 * r * m
+    /// - α <= 1/(r * sqrt(m) * ω(sqrt(log n))
+    ///
+    /// Returns an empty result if the public parameters guarantee correctness
+    /// with overwhelming probability or a [`MathError`] if the instance would
     /// not be correct.
     ///
     /// # Examples
@@ -252,11 +250,6 @@ impl RegevWithDiscreteGaussianRegularity {
                 "n must be chosen bigger than 1.",
             )));
         }
-        if !q.is_prime() {
-            return Err(MathError::InvalidIntegerInput(String::from(
-                "q must be prime.",
-            )));
-        }
 
         // Completeness requirements
         // q >= 5 * r * m
@@ -275,12 +268,16 @@ impl RegevWithDiscreteGaussianRegularity {
         Ok(())
     }
 
-    /// Checks a provided set of public parameters according to their validity
-    /// regarding security according to
-    /// Lemma 8.4 of [\[1\]](<index.html#:~:text=[1]>).
+    /// Checks the public parameters for security according to
+    /// Lemma 8.4 of [\[2\]](<index.html#:~:text=[2]>).
     ///
-    /// Returns an empty result or a [`MathError`] if the instance would
-    /// not be secure.
+    /// The required properties are:
+    /// - q * α >= n
+    /// - m >= 2(n + 1) lg (q)
+    /// - r >= ω( sqrt( log m ) )
+    ///
+    /// Returns an empty result if the public parameters guarantee security w.r.t. `n`
+    /// or a [`MathError`] if the instance would not be secure.
     ///
     /// # Examples
     /// ```
@@ -362,8 +359,9 @@ impl PKEncryption for RegevWithDiscreteGaussianRegularity {
     /// - A <- Z_q^{n x m}
     /// - x <- χ^m
     /// - p = A^t * s + x
+    /// where χ is discrete Gaussian distributed with center 0 and Gaussian parameter q * α.
     ///
-    /// Then, `pk = (A, p)` and `sk = s` is output.
+    /// Then, `pk = (A, p)` and `sk = s` are returned.
     ///
     /// # Examples
     /// ```
@@ -400,7 +398,7 @@ impl PKEncryption for RegevWithDiscreteGaussianRegularity {
     /// - u = A * e
     /// - c = p^t * e + message *  ⌊q/2⌋
     ///
-    /// Then, `cipher = (u, c)` is output.
+    /// Then, `cipher = (u, c)` is returned.
     ///
     /// Parameters:
     /// - `pk`: specifies the public key, which contains two matrices `pk = (A, p)`
@@ -418,8 +416,7 @@ impl PKEncryption for RegevWithDiscreteGaussianRegularity {
     /// ```
     fn enc(&self, pk: &Self::PublicKey, message: impl Into<Z>) -> Self::Cipher {
         // generate message = message mod 2
-        let message: Z = message.into();
-        let message = Zq::from((&message, 2));
+        let message = Zq::from((message, 2));
         let message = message.get_value();
 
         // e <- SampleD over lattice Z^m, center 0 with gaussian parameter r
