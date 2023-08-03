@@ -8,23 +8,14 @@
 
 //! This module contains an implementation of the IND-CPA secure
 //! public key LPR encryption scheme.
-//!
-//! The main references are listed in the following:
-//! - \[1\] Lindner, R., and C. Peikert (2011).
-//! Better key sizes (and attacks) for LWE-based encryption.
-//! In: Topics in Cryptology -  RSA Conference 2011, Springer.
-//! <https://eprint.iacr.org/2010/613.pdf>
-//! - \[2\] Peikert, Chris (2016).
-//! A decade of lattice cryptography.
-//! In: Theoretical Computer Science 10.4.
-//! <https://web.eecs.umich.edu/~cpeikert/pubs/lattice-survey.pdf>
+
 use super::PKEncryption;
 use qfall_math::{
     error::MathError,
     integer::Z,
     integer_mod_q::{MatZq, Modulus, Zq},
     rational::Q,
-    traits::{Concatenate, Distance, GetEntry, GetNumRows, Pow, SetEntry},
+    traits::{Concatenate, Distance, GetEntry, Pow, SetEntry},
 };
 use serde::{Deserialize, Serialize};
 
@@ -35,8 +26,7 @@ use serde::{Deserialize, Serialize};
 /// - `n`: specifies the security parameter, which is not equal to the bit-security level
 /// - `q`: specifies the modulus over which the encryption is computed
 /// - `alpha`: specifies the gaussian parameter used for independent
-///   sampling from χ, i.e. for multiple discrete Gaussian samples used
-///   for key generation
+/// sampling from the discrete Gaussian distribution
 ///
 /// # Examples
 /// ```
@@ -64,7 +54,7 @@ pub struct LPR {
 
 impl LPR {
     /// Instantiates a [`LPR`] PK encryption instance with the
-    /// specified parameters if they ensure a secure and correct instance.
+    /// specified parameters.
     ///
     /// **WARNING:** The given parameters are not checked for security nor
     /// correctness of the scheme.
@@ -78,8 +68,7 @@ impl LPR {
     ///   of the uniform at random instantiated matrix `A`
     /// - `q`: specifies the modulus
     /// - `alpha`: specifies the gaussian parameter used for independent
-    ///   sampling from chi, i.e. for multiple discrete Gaussian samples used
-    ///   for key generation
+    /// sampling from the discrete Gaussian distribution
     ///
     /// Returns a correct and secure [`LPR`] PK encryption instance or
     /// a [`MathError`] if the instance would not be correct or secure.
@@ -88,19 +77,17 @@ impl LPR {
     /// ```
     /// use qfall_crypto::construction::pk_encryption::LPR;
     ///
-    /// let lpr = LPR::new(3, 13, 2).unwrap();
+    /// let lpr = LPR::new(3, 13, 2);
     /// ```
     ///
     /// # Panics ...
     /// - if the given modulus `q <= 1`.
-    pub fn new(n: impl Into<Z>, q: impl Into<Z>, alpha: impl Into<Q>) -> Result<Self, MathError> {
+    pub fn new(n: impl Into<Z>, q: impl Into<Modulus>, alpha: impl Into<Q>) -> Self {
         let n: Z = n.into();
-        let q: Z = q.into();
+        let q: Modulus = q.into();
         let alpha: Q = alpha.into();
 
-        let q = Modulus::from(&q);
-
-        Ok(Self { n, q, alpha })
+        Self { n, q, alpha }
     }
 
     /// Generates a new [`LPR`] instance, i.e. a new set of suitable
@@ -118,22 +105,18 @@ impl LPR {
     /// ```
     /// use qfall_crypto::construction::pk_encryption::LPR;
     ///
-    /// let lpr = LPR::new_from_n(15).unwrap();
+    /// let lpr = LPR::new_from_n(15);
     /// ```
     ///
-    /// # Errors and Failures
-    /// - Returns a [`MathError`] of type [`InvalidIntegerInput`](MathError::InvalidIntegerInput)
-    /// if `n <= 1`.
-    ///
     /// Panics...
+    /// - if `n < 10`
     /// - if `n` does not fit into an [`i64`].
-    pub fn new_from_n(n: impl Into<Z>) -> Result<Self, MathError> {
+    pub fn new_from_n(n: impl Into<Z>) -> Self {
         let n = n.into();
-        if n <= Z::from(9) {
-            return Err(MathError::InvalidIntegerInput(String::from(
-                "Choose n >= 10 as this function does not return parameters ensuring proper correctness of the scheme otherwise.",
-            )));
-        }
+        assert!(
+            n >= Z::from(10),
+            "Choose n >= 10 as this function does not return parameters ensuring proper correctness of the scheme otherwise."
+        );
 
         let mut q: Modulus;
         let mut alpha: Q;
@@ -152,7 +135,7 @@ impl LPR {
             };
         }
 
-        Ok(out)
+        out
     }
 
     /// Generates new public parameters, which must not be secure or correct
@@ -180,43 +163,42 @@ impl LPR {
     /// - if `n` does not fit into an [`i64`].
     fn gen_new_public_parameters(n: &Z) -> (Modulus, Q) {
         let n_i64 = i64::try_from(n).unwrap();
-        // these powers are chosen according to experience s.t. at least every
-        // fifth generation of public parameters outputs a valid pair
-        let power = match n_i64 {
-            2..=4 => 5,
-            5 => 4,
-            _ => 3,
-        };
 
-        // generate prime q in [n^power / 2, n^power]
-        let upper_bound: Z = n.pow(power).unwrap();
+        // generate prime q in [n^3 / 2, n^3]
+        let upper_bound: Z = n.pow(3).unwrap();
         let lower_bound = upper_bound.div_ceil(&Z::from(2));
         let q = Z::sample_prime_uniform(&lower_bound, &upper_bound).unwrap();
 
-        // found out by experience
+        // Found out by experience as the bound is not tight enough to ensure correctness for large n.
+        // Hence, a small factor roughly of max(log n - 4, 1) has to be applied.
+        // Checked for 100 parameter sets with 10 cyles each and no mismatching decryptions occurred.
         let factor = match n_i64 {
-            1..=30 => 4,
-            31..=60 => 8,
-            61..=100 => 16,
-            101..=200 => 32,
-            201..=400 => 64,
-            401..=800 => 128,
-            _ => 256,
+            1..=20 => 1,
+            21..=40 => 2,
+            41..=80 => 3,
+            81..=160 => 4,
+            _ => 5,
         };
-        // alpha = 1/(sqrt(n) * log^2 n)
-        let alpha = 1 / (factor * n.sqrt() * n.log(2).unwrap().pow(2).unwrap());
+        // α = 1/(sqrt(n) * log^2 n)
+        let alpha = 1 / (factor * n.sqrt() * n.log(2).unwrap().pow(3).unwrap());
 
         let q = Modulus::from(q);
 
         (q, alpha)
     }
 
-    /// Checks a provided set of public parameters according to their
-    /// completeness according to Lemma 3.1 of [\[1\]](<index.html#:~:text=[1]>).
+    /// Checks the public parameters for
+    /// correctness according to Lemma 3.1 of [\[4\]](<index.html#:~:text=[4]>).
     ///
-    /// **WARNING:** Some requirements are missing to ensure overwhelming correctness of the scheme.
+    /// The required properties are:
+    /// - α = o (1 / (sqrt(n) * log^3 n))
     ///
-    /// Returns an empty result or a [`MathError`] if the instance would
+    /// **WARNING**: This bound is not tight. Hence, we added a small factor
+    /// loosely corresponding to max(log n - 4, 1) below to ensure correctness
+    /// with overwhelming proability.
+    ///
+    /// Returns an empty result if the public parameters guarantee correctness
+    /// with overwhelming probability or a [`MathError`] if the instance would
     /// not be correct.
     ///
     /// # Examples
@@ -235,52 +217,41 @@ impl LPR {
     /// if the value does not fit into an [`i64`]
     pub fn check_correctness(&self) -> Result<(), MathError> {
         let n_i64 = i64::try_from(&self.n)?;
-        let q = Z::from(&self.q);
-        let m = ((&self.n + Z::ONE) * Z::from(&self.q).log(2).unwrap()).ceil();
 
         if self.n <= Z::ONE {
             return Err(MathError::InvalidIntegerInput(String::from(
                 "n must be chosen bigger than 1.",
             )));
         }
-        if !q.is_prime() {
-            return Err(MathError::InvalidIntegerInput(String::from(
-                "q must be prime.",
-            )));
-        }
 
-        // Correctness requirements
-        // found out by experience
+        // Found out by experience as the bound is not tight enough to ensure correctness for large n.
+        // Hence, a small factor roughly of max(log n - 4, 1) has to be applied.
+        // Checked for 100 parameter sets with 10 cyles each and no mismatching decryptions occurred.
         let factor = match n_i64 {
-            1..=30 => 4,
-            31..=60 => 8,
-            61..=100 => 16,
-            101..=200 => 32,
-            201..=400 => 64,
-            401..=800 => 128,
-            _ => 256,
+            1..=20 => 1,
+            21..=40 => 2,
+            41..=80 => 3,
+            81..=160 => 4,
+            _ => 5,
         };
-        // α = o (1 / (2 * sqrt(n) * log n ) )
-        if self.alpha > 1 / (factor * self.n.sqrt() * self.n.log(2).unwrap()) {
+        // α = o (1 / sqrt(n) * log^3 n ))
+        if self.alpha > 1 / (factor * self.n.sqrt() * self.n.log(2).unwrap().pow(3).unwrap()) {
             return Err(MathError::InvalidIntegerInput(String::from(
-                "Completeness is not guaranteed as α >= 1 / (sqrt(n) * log n), but α < 1 / (sqrt(n) * log n) is required."
-            )));
-        }
-
-        if 20 * m.sqrt() * &self.alpha > Q::from(q) {
-            return Err(MathError::InvalidIntegerInput(String::from(
-                "Completeness is not guaranteed as 5 * sqrt(m) * α > q/4, but 5 * sqrt(m) * α <= q/4 is required."
+                "Correctness is not guaranteed as α >= 1 / (sqrt(n) * log^3 n), but α < 1 / (sqrt(n) * log^3 n) is required. Please check the documentation!"
             )));
         }
 
         Ok(())
     }
 
-    /// Checks a provided set of public parameters according to their validity
-    /// regarding security according to Theorem 1.1
-    /// and Lemma 3.2 of [\[1\]](<index.html#:~:text=[1]>).
+    /// Checks the public parameters for security according to Section 2.2
+    /// and Lemma 3.2 of [\[4\]](<index.html#:~:text=[4]>).
     ///
-    /// Returns an empty result or a [`MathError`] if the instance would
+    /// The required properties are:
+    /// - q * α >= 2 sqrt(n)
+    ///
+    /// Returns an empty result if the public parameters guarantee security
+    /// w.r.t. `n` or a [`MathError`] if the instance would
     /// not be secure.
     ///
     /// # Examples
@@ -302,7 +273,7 @@ impl LPR {
         // q * α >= 2 sqrt(n)
         if &q * &self.alpha < 2 * self.n.sqrt() {
             return Err(MathError::InvalidIntegerInput(String::from(
-                "Security is not guaranteed as q * α < 2 sqrt(n), but q * α >= 2 sqrt(n) is required.",
+                "Security is not guaranteed as q * α < 2 * sqrt(n), but q * α >= 2 * sqrt(n) is required.",
             )));
         }
 
@@ -314,7 +285,7 @@ impl LPR {
     /// The public parameters used for this scheme were generated via `LPR::new_from_n(350)`
     /// and its bit-security determined via the [lattice estimator](https://github.com/malb/lattice-estimator).
     pub fn secure128() -> Self {
-        Self::new(500, 76859609, 0.000005).unwrap()
+        Self::new(500, 76859609, 0.000005)
     }
 }
 
@@ -350,8 +321,9 @@ impl PKEncryption for LPR {
     /// - e <- χ^n
     /// - b^t = s^t * A + e^t
     /// - A = [A^t | b]^t
+    /// where χ is discrete Gaussian distributed with center 0 and Gaussian parameter q * α.
     ///
-    /// Then, `pk = A` and `sk = s` is output.
+    /// Then, `pk = A` and `sk = s` are returned.
     ///
     /// # Examples
     /// ```
@@ -398,8 +370,9 @@ impl PKEncryption for LPR {
     /// - r <- χ^n
     /// - e <- χ^{n+1}
     /// - c = A * r + e + [0^{1 x n} | msg *  ⌊q/2⌋]^t
+    /// where χ is discrete Gaussian distributed with center 0 and Gaussian parameter q * α.
     ///
-    /// Then, cipher `c` is output.
+    /// Then, cipher `c` as a vector of type [`MatZq`] is returned.
     ///
     /// Parameters:
     /// - `pk`: specifies the public key `pk = A`
@@ -417,7 +390,6 @@ impl PKEncryption for LPR {
     /// ```
     fn enc(&self, pk: &Self::PublicKey, message: impl Into<Z>) -> Self::Cipher {
         // generate message = message mod 2
-        let message: Z = message.into();
         let message = Zq::from((message, 2));
         let message = message.get_value();
 
@@ -449,9 +421,8 @@ impl PKEncryption for LPR {
         // compute msg * ⌊q/2⌋
         let msg_q_half = message * Z::from(&self.q).div_floor(&Z::from(2));
         // set last entry of c = last_entry + msg * ⌊q/2⌋
-        let last_entry: Zq = c.get_entry(c.get_num_rows() - 1, 0).unwrap();
-        c.set_entry(c.get_num_rows() - 1, 0, last_entry + msg_q_half)
-            .unwrap();
+        let last_entry: Zq = c.get_entry(-1, 0).unwrap();
+        c.set_entry(-1, 0, last_entry + msg_q_half).unwrap();
 
         c
     }
@@ -479,7 +450,7 @@ impl PKEncryption for LPR {
     /// assert_eq!(Z::ONE, m);
     /// ```
     fn dec(&self, sk: &Self::SecretKey, cipher: &Self::Cipher) -> Z {
-        let result = (-1i8 * sk.transpose())
+        let result = (Z::MINUS_ONE * sk.transpose())
             .concat_horizontal(&MatZq::identity(1, 1, &self.q))
             .unwrap()
             .dot_product(cipher)
@@ -517,7 +488,7 @@ mod test_pp_generation {
         ];
 
         for n in n_choices {
-            assert!(LPR::new_from_n(n).is_ok());
+            let _ = LPR::new_from_n(n);
         }
     }
 
@@ -537,7 +508,8 @@ mod test_pp_generation {
         let n_choices = [10, 14, 25, 50, 125, 300, 600, 1200, 4000, 6000];
 
         for n in n_choices {
-            let lpr = LPR::new_from_n(n).unwrap();
+            let lpr = LPR::new_from_n(n);
+
             assert!(lpr.check_correctness().is_ok());
             assert!(lpr.check_security().is_ok());
         }
@@ -560,10 +532,9 @@ mod test_pp_generation {
 
     /// Checks whether `new_from_n` returns an error for invalid input n.
     #[test]
+    #[should_panic]
     fn invalid_n() {
-        assert!(LPR::new_from_n(1).is_err());
-        assert!(LPR::new_from_n(0).is_err());
-        assert!(LPR::new_from_n(-1).is_err());
+        LPR::new_from_n(9);
     }
 
     /// Checks whether `secure128` outputs a new instance with correct and secure parameters.
@@ -592,6 +563,7 @@ mod test_lpr {
         let (pk, sk) = lpr.gen();
         let cipher = lpr.enc(&pk, &msg);
         let m = lpr.dec(&sk, &cipher);
+
         assert_eq!(msg, m);
     }
 
@@ -605,6 +577,7 @@ mod test_lpr {
         let (pk, sk) = lpr.gen();
         let cipher = lpr.enc(&pk, &msg);
         let m = lpr.dec(&sk, &cipher);
+
         assert_eq!(msg, m);
     }
 
@@ -613,11 +586,12 @@ mod test_lpr {
     #[test]
     fn cycle_zero_large_n() {
         let msg = Z::ZERO;
-        let lpr = LPR::new_from_n(50).unwrap();
+        let lpr = LPR::new_from_n(50);
 
         let (pk, sk) = lpr.gen();
         let cipher = lpr.enc(&pk, &msg);
         let m = lpr.dec(&sk, &cipher);
+
         assert_eq!(msg, m);
     }
 
@@ -626,11 +600,29 @@ mod test_lpr {
     #[test]
     fn cycle_one_large_n() {
         let msg = Z::ONE;
-        let lpr = LPR::new_from_n(50).unwrap();
+        let lpr = LPR::new_from_n(50);
 
         let (pk, sk) = lpr.gen();
         let cipher = lpr.enc(&pk, &msg);
         let m = lpr.dec(&sk, &cipher);
+
         assert_eq!(msg, m);
+    }
+
+    /// Checks that modulus 2 is applied correctly.
+    #[test]
+    fn modulus_application() {
+        let messages = [2, 3, i64::MAX, i64::MIN];
+        let dr = LPR::default();
+        let (pk, sk) = dr.gen();
+
+        for msg in messages {
+            let msg_mod = Z::from(msg.rem_euclid(2));
+
+            let cipher = dr.enc(&pk, &msg);
+            let m = dr.dec(&sk, &cipher);
+
+            assert_eq!(msg_mod, m);
+        }
     }
 }

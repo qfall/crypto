@@ -9,6 +9,11 @@
 //! This module provides the trait a struct should implement if it is an
 //! instance of a public key encryption scheme. Furthermore, it contains
 //! cryptographic schemes implementing the `PKEncryption` trait.
+//!
+//! \[4\] Lindner, R., and C. Peikert (2011).
+//! Better key sizes (and attacks) for LWE-based encryption.
+//! In: Topics in Cryptology -  RSA Conference 2011, Springer.
+//! <https://eprint.iacr.org/2010/613.pdf>
 
 mod dual_regev;
 mod lpr;
