@@ -34,7 +34,7 @@ Cons:
 ## Flamegraph
 You can also run the benchmarks using the profiler flamegraph. Details can be found here:
 - [Flamegraph GitHub](https://github.com/flamegraph-rs/flamegraph).
-This provides insights on the where execution time is spent.
+This provides insights on the execution time of the executed functions and their subroutines.
 
 Note: Flamegraph does not work in WSL
 
