@@ -30,8 +30,7 @@ use serde::{Deserialize, Serialize};
 /// - `r`: specifies the gaussian parameter used for SampleD,
 ///   i.e. used for encryption
 /// - `alpha`: specifies the gaussian parameter used for independent
-///   sampling from χ, i.e. for multiple discrete Gaussian samples used
-///   for key generation
+/// sampling from the discrete Gaussian distribution
 ///
 /// # Examples
 /// ```
@@ -78,8 +77,7 @@ impl DualRegevWithDiscreteGaussianRegularity {
     /// - `r`: specifies the gaussian parameter used for SampleD,
     ///   i.e. used for encryption
     /// - `alpha`: specifies the gaussian parameter used for independent
-    ///   sampling from χ, i.e. for multiple discrete Gaussian samples used
-    ///   for key generation
+    /// sampling from the discrete Gaussian distribution
     ///
     /// Returns a [`DualRegevWithDiscreteGaussianRegularity`] PK encryption instance.
     ///
@@ -95,17 +93,15 @@ impl DualRegevWithDiscreteGaussianRegularity {
     pub fn new(
         n: impl Into<Z>,
         m: impl Into<Z>,
-        q: impl Into<Z>,
+        q: impl Into<Modulus>,
         r: impl Into<Q>,
         alpha: impl Into<Q>,
     ) -> Self {
         let n: Z = n.into();
         let m: Z = m.into();
-        let q: Z = q.into();
+        let q: Modulus = q.into();
         let r: Q = r.into();
         let alpha: Q = alpha.into();
-
-        let q = Modulus::from(&q);
 
         Self { n, m, q, r, alpha }
     }
@@ -125,18 +121,15 @@ impl DualRegevWithDiscreteGaussianRegularity {
     /// ```
     /// use qfall_crypto::construction::pk_encryption::DualRegevWithDiscreteGaussianRegularity;
     ///
-    /// let dual_regev = DualRegevWithDiscreteGaussianRegularity::new_from_n(2).unwrap();
+    /// let dual_regev = DualRegevWithDiscreteGaussianRegularity::new_from_n(2);
     /// ```
     ///
-    /// # Errors and Failures
-    /// - Returns a [`MathError`] of type [`InvalidIntegerInput`](MathError::InvalidIntegerInput)
-    /// if `n <= 1`.
-    pub fn new_from_n(n: impl Into<Z>) -> Result<Self, MathError> {
+    /// # Panics ...
+    /// - if `n <= 1`.
+    pub fn new_from_n(n: impl Into<Z>) -> Self {
         let n = n.into();
         if n <= Z::ONE {
-            return Err(MathError::InvalidIntegerInput(String::from(
-                "n must be chosen bigger than 1.",
-            )));
+            panic!("n must be chosen bigger than 1.");
         }
 
         let mut m: Z;
@@ -162,7 +155,7 @@ impl DualRegevWithDiscreteGaussianRegularity {
             };
         }
 
-        Ok(out)
+        out
     }
 
     /// Generates new public parameters, which must not be secure or correct
@@ -251,17 +244,17 @@ impl DualRegevWithDiscreteGaussianRegularity {
             )));
         }
 
-        // Completeness requirements
+        // Correctness requirements
         // q >= 5 * r * (m+1)
         if Q::from(q) < 5 * &self.r * (&self.m + Z::ONE) {
             return Err(MathError::InvalidIntegerInput(String::from(
-                "Completeness is not guaranteed as q < 5rm, but q >= 5rm is required.",
+                "Correctness is not guaranteed as q < 5rm, but q >= 5rm is required.",
             )));
         }
         // α <= 1/(r * sqrt(m+1) * ω(sqrt(log n))
         if self.alpha > 1 / (&self.r * (&self.m + Z::ONE).sqrt() * self.n.log(2).unwrap().sqrt()) {
             return Err(MathError::InvalidIntegerInput(String::from(
-                "Completeness is not guaranteed as α > 1/(r*sqrt(m)*ω(sqrt(log n)), but α <= 1/(r*sqrt(m)*ω(sqrt(log n)) is required.",
+                "Correctness is not guaranteed as α > 1/(r*sqrt(m)*ω(sqrt(log n)), but α <= 1/(r*sqrt(m)*ω(sqrt(log n)) is required.",
             )));
         }
 
@@ -494,7 +487,7 @@ mod test_pp_generation {
         ];
 
         for n in n_choices {
-            assert!(DualRegevWithDiscreteGaussianRegularity::new_from_n(n).is_ok());
+            let _ = DualRegevWithDiscreteGaussianRegularity::new_from_n(n);
         }
     }
 
@@ -517,7 +510,8 @@ mod test_pp_generation {
         ];
 
         for n in n_choices {
-            let dr = DualRegevWithDiscreteGaussianRegularity::new_from_n(n).unwrap();
+            let dr = DualRegevWithDiscreteGaussianRegularity::new_from_n(n);
+
             assert!(dr.check_correctness().is_ok());
             assert!(dr.check_security().is_ok());
         }
@@ -540,10 +534,9 @@ mod test_pp_generation {
 
     /// Checks whether `new_from_n` returns an error for invalid input n.
     #[test]
+    #[should_panic]
     fn invalid_n() {
-        assert!(DualRegevWithDiscreteGaussianRegularity::new_from_n(1).is_err());
-        assert!(DualRegevWithDiscreteGaussianRegularity::new_from_n(0).is_err());
-        assert!(DualRegevWithDiscreteGaussianRegularity::new_from_n(-1).is_err());
+        DualRegevWithDiscreteGaussianRegularity::new_from_n(1);
     }
 
     /// Checks whether `secure128` outputs a new instance with correct and secure parameters.
@@ -572,6 +565,7 @@ mod test_dual_regev {
         let (pk, sk) = dr.gen();
         let cipher = dr.enc(&pk, &msg);
         let m = dr.dec(&sk, &cipher);
+
         assert_eq!(msg, m);
     }
 
@@ -585,6 +579,7 @@ mod test_dual_regev {
         let (pk, sk) = dr.gen();
         let cipher = dr.enc(&pk, &msg);
         let m = dr.dec(&sk, &cipher);
+
         assert_eq!(msg, m);
     }
 
@@ -593,11 +588,12 @@ mod test_dual_regev {
     #[test]
     fn cycle_zero_large_n() {
         let msg = Z::ZERO;
-        let dr = DualRegevWithDiscreteGaussianRegularity::new_from_n(30).unwrap();
+        let dr = DualRegevWithDiscreteGaussianRegularity::new_from_n(30);
 
         let (pk, sk) = dr.gen();
         let cipher = dr.enc(&pk, &msg);
         let m = dr.dec(&sk, &cipher);
+
         assert_eq!(msg, m);
     }
 
@@ -606,11 +602,29 @@ mod test_dual_regev {
     #[test]
     fn cycle_one_large_n() {
         let msg = Z::ONE;
-        let dr = DualRegevWithDiscreteGaussianRegularity::new_from_n(30).unwrap();
+        let dr = DualRegevWithDiscreteGaussianRegularity::new_from_n(30);
 
         let (pk, sk) = dr.gen();
         let cipher = dr.enc(&pk, &msg);
         let m = dr.dec(&sk, &cipher);
+
         assert_eq!(msg, m);
+    }
+
+    /// Checks that modulus 2 is applied correctly.
+    #[test]
+    fn modulus_application() {
+        let messages = [2, 3, i64::MAX, i64::MIN];
+        let dr = DualRegevWithDiscreteGaussianRegularity::default();
+        let (pk, sk) = dr.gen();
+
+        for msg in messages {
+            let msg_mod = Z::from(msg.rem_euclid(2));
+
+            let cipher = dr.enc(&pk, &msg);
+            let m = dr.dec(&sk, &cipher);
+
+            assert_eq!(msg_mod, m);
+        }
     }
 }
