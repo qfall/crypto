@@ -9,6 +9,15 @@
 //! This module provides the trait a struct should implement if it is an
 //! instance of a public key encryption scheme. Furthermore, it contains
 //! cryptographic schemes implementing the `PKEncryption` trait.
+//!
+//! - \[1\] Peikert, Chris (2016).
+//! A decade of lattice cryptography.
+//! In: Theoretical Computer Science 10.4.
+//! <https://web.eecs.umich.edu/~cpeikert/pubs/lattice-survey.pdf>
+//! - \[3\] Regev, Oded (2009).
+//! On lattices, learning with errors, random linear codes, and cryptography.
+//! In: Journal of the ACM 6.
+//! <https://dl.acm.org/doi/pdf/10.1145/1568318.1568324>
 
 mod dual_regev;
 mod regev;
