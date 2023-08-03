@@ -590,6 +590,23 @@ mod test_regev {
         let m = regev.dec(&sk, &cipher);
         assert_eq!(msg, m);
     }
+
+    /// Checks that modulus 2 is applied correctly.
+    #[test]
+    fn modulus_application() {
+        let messages = [2, 3, i64::MAX, i64::MIN];
+        let regev = Regev::default();
+        let (pk, sk) = regev.gen();
+
+        for msg in messages {
+            let msg_mod = Z::from(msg.rem_euclid(2));
+
+            let cipher = regev.enc(&pk, &msg);
+            let m = regev.dec(&sk, &cipher);
+
+            assert_eq!(msg_mod, m);
+        }
+    }
 }
 
 #[cfg(test)]
