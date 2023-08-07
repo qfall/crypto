@@ -14,7 +14,7 @@ use qfall_math::integer::Z;
 /// Performs a full-cycle of gen, enc, dec with regev.
 fn regev_cycle(n: i64) {
     let msg = Z::ONE;
-    let regev = Regev::new_from_n(n).unwrap();
+    let regev = Regev::new_from_n(n);
 
     let (pk, sk) = regev.gen();
     let cipher = regev.enc(&pk, &msg);
