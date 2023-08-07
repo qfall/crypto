@@ -64,7 +64,7 @@ pub struct DualRegevIBE {
 }
 
 impl IBE for DualRegevIBE {
-    type Cipher = (MatZq, Zq);
+    type Cipher = MatZq;
     type MasterPublicKey = MatZq;
     type MasterSecretKey = MatZ;
     type SecretKey = MatZ;
@@ -143,9 +143,7 @@ impl IBE for DualRegevIBE {
         //let identity_based_pk = hash_to_mat_zq_sha256(&identity, &self.m, 1, &self.q);
         let identity_based_pk = hash_to_mat_zq_sha256(&identity, 2, 1, &self.q);
         println!("{}\n identibased_pk: {}", pk, identity_based_pk);
-        return self
-            .dualregev
-            .enc(&(pk.clone(), identity_based_pk), message);
+        return self.dualregev.enc(&pk, message);
 
         // generate message = message mod 2
         let message: Z = message.into();
@@ -161,7 +159,7 @@ impl IBE for DualRegevIBE {
         let q_half = Z::from(&self.q).div_floor(&Z::from(2));
         let c = identity_based_pk.dot_product(&vec_e).unwrap() + message * q_half;
 
-        (vec_u, c)
+        vec_u //(vec_u, c)
     }
 
     /// Decrypts the provided `cipher` using the secret key `sk` by following these steps:
@@ -191,17 +189,7 @@ impl IBE for DualRegevIBE {
 
         let sk_mat_zq = MatZq::from_mat_z_modulus(&sk, &self.q);
 
-        return self.dualregev.dec(&sk_mat_zq, cipher);
-
-        let result = &cipher.1 - sk_mat_zq.dot_product(&cipher.0).unwrap();
-
-        let q_half = Z::from(&self.q).div_floor(&Z::from(2));
-
-        if result.distance(Z::ZERO) > result.distance(q_half) {
-            Z::ONE
-        } else {
-            Z::ZERO
-        }
+        return self.dualregev.dec(&sk, cipher);
     }
 }
 
