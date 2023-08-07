@@ -67,16 +67,11 @@ pub fn gen_short_basis_for_trapdoor_ring(
 ) -> MatPolyOverZ {
     let sa_l = gen_sa_l(e, r);
     let sa_r = gen_sa_r(params, a);
-    let n = PolyOverZq::from(&params.modulus).get_degree();
-    let mut poly_degrees = MatPolyOverZ::new(1, n);
-    for i in 0..n {
-        let mut x_i = PolyOverZ::default();
-        x_i.set_coeff(i, 1).unwrap();
-        poly_degrees.set_entry(0, i, x_i).unwrap();
-    }
-    let basis = poly_degrees.tensor_product(&(sa_l * sa_r));
+    let mut basis = sa_l * sa_r;
     // the basis has to be reduced by the modulus to remove high-degrees
-    MatPolynomialRingZq::from((&basis, &params.modulus)).get_mat()
+    let ctx_poly = PolyOverZ::from(&PolyOverZq::from(&params.modulus));
+    basis.reduce_by_poly(&ctx_poly);
+    basis
 }
 
 /// Computes [ 1 | 0 | e,  0 | 1 | r, 0 | I ]
@@ -93,13 +88,22 @@ fn gen_sa_l(e: &MatPolyOverZ, r: &MatPolyOverZ) -> MatPolyOverZ {
 
 /// Computes `[0 | I , S' | W]`
 fn gen_sa_r(params: &GadgetParametersRing, a: &MatPolynomialRingZq) -> MatPolyOverZ {
+    let n = PolyOverZq::from(&params.modulus).get_degree();
+    let mut poly_degrees = MatPolyOverZ::new(1, n);
+    for i in 0..n {
+        let mut x_i = PolyOverZ::default();
+        x_i.set_coeff(i, 1).unwrap();
+        poly_degrees.set_entry(0, i, x_i).unwrap();
+    }
+
     let ident = MatPolyOverZ::identity(2, 2);
-    let right = ident.concat_vertical(&compute_w(params, a)).unwrap();
+    let right = poly_degrees.tensor_product(&ident.concat_vertical(&compute_w(params, a)).unwrap());
 
     let mut s = compute_s(params);
     if params.base.pow(&params.k).unwrap() == Z::from(&params.q) {
         s.reverse_columns();
     }
+    let s = poly_degrees.tensor_product(&s);
     let zero = MatPolyOverZ::new(2, s.get_num_columns());
     let left = zero.concat_vertical(&s).unwrap();
 
@@ -147,18 +151,16 @@ fn compute_s(params: &GadgetParametersRing) -> MatPolyOverZ {
 
 #[cfg(test)]
 mod test_gen_short_basis_for_trapdoor_ring {
-    use std::{cmp::max, vec};
 
     use super::gen_short_basis_for_trapdoor_ring;
     use crate::sample::g_trapdoor::{
         gadget_parameters::GadgetParametersRing, gadget_ring::gen_trapdoor_ring_lwe,
-        gen_trapdoor_ring_default,
     };
     use qfall_math::{
         integer::{PolyOverZ, Z},
         integer_mod_q::{MatPolynomialRingZq, Modulus},
         rational::{MatQ, Q},
-        traits::{GetEntry, GetNumColumns, Pow},
+        traits::{GetEntry, GetNumColumns, GetNumRows, Pow},
     };
 
     /// Ensure that every vector within the returned basis is in `\Lambda^\perp(a)`.
@@ -194,10 +196,12 @@ mod test_gen_short_basis_for_trapdoor_ring {
             let (a, r, e) = gen_trapdoor_ring_lwe(&params, &a_bar, &Q::from(5)).unwrap();
 
             let short_base = gen_short_basis_for_trapdoor_ring(&params, &a, &r, &e);
-            let short_base_reduced =
-                MatPolynomialRingZq::from((&short_base, &params.modulus)).get_mat();
-
-            assert_eq!(short_base_reduced, short_base)
+            for i in 0..short_base.get_num_rows() {
+                for j in 0..short_base.get_num_columns() {
+                    let entry = short_base.get_entry(i, j).unwrap();
+                    assert!(entry.get_degree() < n)
+                }
+            }
         }
     }
 
@@ -219,26 +223,36 @@ mod test_gen_short_basis_for_trapdoor_ring {
             let orthogonalized_short_basis = MatQ::from(&short_base_embedded).gso();
 
             let s1_r = {
-                let mut r_max = Z::ZERO;
-                let r_embedded = e.into_coefficient_embedding_from_matrix(n);
+                let mut r_max = Q::ZERO;
+                let r_embedded = r.into_coefficient_embedding_from_matrix(n);
                 for i in 0..r_embedded.get_num_columns() {
-                    let r_new = r_embedded.get_column(i).unwrap().norm_eucl_sqrd().unwrap();
+                    let r_new = r_embedded
+                        .get_column(i)
+                        .unwrap()
+                        .norm_eucl_sqrd()
+                        .unwrap()
+                        .sqrt();
                     if r_new > r_max {
                         r_max = r_new
                     }
                 }
-                r_max.sqrt()
+                r_max
             };
             let s1_e = {
-                let mut e_max = Z::ZERO;
+                let mut e_max = Q::ZERO;
                 let e_embedded = e.into_coefficient_embedding_from_matrix(n);
                 for i in 0..e_embedded.get_num_columns() {
-                    let e_new = e_embedded.get_column(i).unwrap().norm_eucl_sqrd().unwrap();
+                    let e_new = e_embedded
+                        .get_column(i)
+                        .unwrap()
+                        .norm_eucl_sqrd()
+                        .unwrap()
+                        .sqrt();
                     if e_new > e_max {
                         e_max = e_new
                     }
                 }
-                e_max.sqrt()
+                e_max
             };
 
             let orth_s_length = 2;
@@ -269,26 +283,36 @@ mod test_gen_short_basis_for_trapdoor_ring {
             let orthogonalized_short_basis = MatQ::from(&short_base_embedded).gso();
 
             let s1_r = {
-                let mut r_max = Z::ZERO;
-                let r_embedded = e.into_coefficient_embedding_from_matrix(n);
+                let mut r_max = Q::ZERO;
+                let r_embedded = r.into_coefficient_embedding_from_matrix(n);
                 for i in 0..r_embedded.get_num_columns() {
-                    let r_new = r_embedded.get_column(i).unwrap().norm_eucl_sqrd().unwrap();
+                    let r_new = r_embedded
+                        .get_column(i)
+                        .unwrap()
+                        .norm_eucl_sqrd()
+                        .unwrap()
+                        .sqrt();
                     if r_new > r_max {
                         r_max = r_new
                     }
                 }
-                r_max.sqrt()
+                r_max
             };
             let s1_e = {
-                let mut e_max = Z::ZERO;
+                let mut e_max = Q::ZERO;
                 let e_embedded = e.into_coefficient_embedding_from_matrix(n);
                 for i in 0..e_embedded.get_num_columns() {
-                    let e_new = e_embedded.get_column(i).unwrap().norm_eucl_sqrd().unwrap();
+                    let e_new = e_embedded
+                        .get_column(i)
+                        .unwrap()
+                        .norm_eucl_sqrd()
+                        .unwrap()
+                        .sqrt();
                     if e_new > e_max {
                         e_max = e_new
                     }
                 }
-                e_max.sqrt()
+                e_max
             };
 
             let orth_s_length = Q::from(5).sqrt();
