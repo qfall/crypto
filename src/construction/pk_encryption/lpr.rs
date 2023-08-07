@@ -167,6 +167,9 @@ impl LPR {
         // generate prime q in [n^3 / 2, n^3]
         let upper_bound: Z = n.pow(3).unwrap();
         let lower_bound = upper_bound.div_ceil(&Z::from(2));
+        // prime used due to guide from GPV08 after Proposition 8.1
+        // on how to choose appropriate parameters, but prime is not
+        // necessarily needed for this scheme to be correct or secure
         let q = Z::sample_prime_uniform(&lower_bound, &upper_bound).unwrap();
 
         // Found out by experience as the bound is not tight enough to ensure correctness for large n.
