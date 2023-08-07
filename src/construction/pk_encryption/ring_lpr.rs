@@ -172,6 +172,9 @@ impl RingLPR {
         // generate prime q in [n^3 / 2, n^3]
         let upper_bound: Z = n.pow(3).unwrap();
         let lower_bound = upper_bound.div_ceil(&Z::from(2));
+        // prime used due to guide from GPV08 after Proposition 8.1
+        // on how to choose appropriate parameters, but prime is not
+        // necessarily needed for this scheme to be correct or secure
         let q = Z::sample_prime_uniform(&lower_bound, &upper_bound).unwrap();
 
         // Found out by experience as the bound is not tight enough to ensure correctness for large n.
@@ -303,14 +306,12 @@ impl RingLPR {
     ) -> PolynomialRingZq {
         let x = MatZ::sample_discrete_gauss(n, 1, n, 0, alpha * q.get_q()).unwrap();
         let y = PolyOverZ::from_coefficient_embedding(&x);
-        let z = PolynomialRingZq::from((&y, q));
-        z
+        PolynomialRingZq::from((&y, q))
     }
 
     fn sample_poly_uniform(n: &Z, q: &ModulusPolynomialRingZq) -> PolynomialRingZq {
         let y = PolyOverZ::sample_uniform(n, 0, q.get_q()).unwrap();
-        let z = PolynomialRingZq::from((&y, q));
-        z
+        PolynomialRingZq::from((&y, q))
     }
 
     fn z_to_bits(value: &Z) -> Vec<u8> {
@@ -425,9 +426,9 @@ impl PKEncryption for RingLPR {
         // set mu_q_half to polynomial with n {0,1} coefficients
         let bits = Self::z_to_bits(&mu);
         let mut mu_q_half = PolynomialRingZq::from((&PolyOverZ::default(), &self.q));
-        let q_half = Z::from(self.q.get_q()).div_floor(&Z::from(2));
-        for i in 0..bits.len() {
-            if bits[i] == 1 {
+        let q_half = self.q.get_q().div_floor(&Z::from(2));
+        for (i, bit) in bits.iter().enumerate() {
+            if bit == &1u8 {
                 mu_q_half.set_coeff(i, &q_half).unwrap();
             }
         }
@@ -478,7 +479,7 @@ impl PKEncryption for RingLPR {
         // res = v - s * u
         let result = &cipher.1 - sk * &cipher.0;
 
-        let q_half = Z::from(self.q.get_q()).div_floor(&Z::from(2));
+        let q_half = self.q.get_q().div_floor(&Z::from(2));
 
         // check for each coefficient whether it's closer to 0 or q/2
         // if closer to q/2 -> add 2^i to result
