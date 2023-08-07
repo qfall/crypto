@@ -7,7 +7,7 @@
 // Mozilla Foundation. See <https://mozilla.org/en-US/MPL/2.0/>.
 
 //! This module contains an implementation of the IND-CPA secure
-//! public key Regev encryption scheme.
+//! public key Dual Regev encryption scheme.
 
 use super::PKEncryption;
 use qfall_math::{
@@ -19,7 +19,7 @@ use qfall_math::{
 };
 use serde::{Deserialize, Serialize};
 
-/// This struct manages and stores the public parameters of a [`Regev`]
+/// This struct manages and stores the public parameters of a [`DualRegev`]
 /// public key encryption instance.
 ///
 /// Attributes:
@@ -31,39 +31,39 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::construction::pk_encryption::{Regev, PKEncryption};
+/// use qfall_crypto::construction::pk_encryption::{DualRegev, PKEncryption};
 /// use qfall_math::integer::Z;
 /// // setup public parameters and key pair
-/// let regev = Regev::default();
-/// let (pk, sk) = regev.gen();
+/// let dual_regev = DualRegev::default();
+/// let (pk, sk) = dual_regev.gen();
 ///
 /// // encrypt a bit
 /// let msg = Z::ZERO; // must be a bit, i.e. msg = 0 or 1
-/// let cipher = regev.enc(&pk, &msg);
+/// let cipher = dual_regev.enc(&pk, &msg);
 ///
 /// // decrypt
-/// let m = regev.dec(&sk, &cipher);
+/// let m = dual_regev.dec(&sk, &cipher);
 ///
 /// assert_eq!(msg, m);
 /// ```
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Regev {
+pub struct DualRegev {
     n: Z,       // security parameter
     m: Z,       // number of rows of matrix A
     q: Modulus, // modulus
     alpha: Q,   // gaussian parameter for sampleZ
 }
 
-impl Regev {
-    /// Instantiates a [`Regev`] PK encryption instance with the
+impl DualRegev {
+    /// Instantiates a [`DualRegev`] PK encryption instance with the
     /// specified parameters.
     ///
     /// **WARNING:** The given parameters are not checked for security nor
     /// correctness of the scheme.
     /// If you want to check your parameters for provable security and correctness,
-    /// use [`Regev::check_correctness`] and [`Regev::check_security`].
-    /// Or use [`Regev::new_from_n`] for generating secure and correct
-    /// public parameters for [`Regev`] according to your choice of `n`.
+    /// use [`DualRegev::check_correctness`] and [`DualRegev::check_security`].
+    /// Or use [`DualRegev::new_from_n`] for generating secure and correct
+    /// public parameters for [`DualRegev`] according to your choice of `n`.
     ///
     /// Parameters:
     /// - `n`: specifies the security parameter and number of rows
@@ -73,13 +73,13 @@ impl Regev {
     /// - `alpha`:  specifies the gaussian parameter used for independent
     /// sampling from the discrete Gaussian distribution
     ///
-    /// Returns a [`Regev`] PK encryption instance.
+    /// Returns [`DualRegev`] PK encryption instance.
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::Regev;
+    /// use qfall_crypto::construction::pk_encryption::DualRegev;
     ///
-    /// let regev = Regev::new(3, 16, 13, 2);
+    /// let dual_regev = DualRegev::new(3, 16, 13, 2);
     /// ```
     ///
     /// # Panics ...
@@ -98,7 +98,7 @@ impl Regev {
         Self { n, m, q, alpha }
     }
 
-    /// Generates a new [`Regev`] instance, i.e. a new set of suitable
+    /// Generates a new [`DualRegev`] instance, i.e. a new set of suitable
     /// (provably secure and correct) public parameters,
     /// given the security parameter `n` for `n >= 10`.
     ///
@@ -106,14 +106,14 @@ impl Regev {
     /// - `n`: specifies the security parameter and number of rows
     ///   of the uniform at random instantiated matrix `A`
     ///
-    /// Returns a correct and secure [`Regev`] PK encryption instance or
+    /// Returns a correct and secure [`DualRegev`] PK encryption instance or
     /// a [`MathError`] if the given `n < 10`.
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::Regev;
+    /// use qfall_crypto::construction::pk_encryption::DualRegev;
     ///
-    /// let regev = Regev::new_from_n(15);
+    /// let dual_regev = DualRegev::new_from_n(15);
     /// ```
     ///
     /// Panics...
@@ -162,11 +162,11 @@ impl Regev {
     ///
     /// # Examples
     /// ```compile_fail
-    /// use qfall_crypto::construction::pk_encryption::Regev;
+    /// use qfall_crypto::construction::pk_encryption::DualRegev;
     /// use qfall_math::integer::Z;
     /// let n = Z::from(2);
     ///
-    /// let (m, q, alpha) = Regev::gen_new_public_parameters(&n);
+    /// let (m, q, alpha) = DualRegev::gen_new_public_parameters(&n);
     /// ```
     ///
     /// Panics...
@@ -184,6 +184,9 @@ impl Regev {
         // generate prime q in [n^power / 2, n^power]
         let upper_bound: Z = n.pow(power).unwrap();
         let lower_bound = upper_bound.div_ceil(&Z::from(2));
+        // prime used due to guide from GPV08 after Proposition 8.1
+        // on how to choose appropriate parameters, but prime is not
+        // necessarily needed for this scheme to be correct or secure
         let q = Z::sample_prime_uniform(&lower_bound, &upper_bound).unwrap();
 
         // choose m = (n+1) log q
@@ -204,25 +207,24 @@ impl Regev {
     /// - α = o (1 / ( sqrt(n) * log n ) )
     /// - concentration bound with r=5: r * sqrt(m) * α > q/4
     ///
-    /// **WARNING:** Some requirements are missing to ensure
-    /// overwhelming correctness of the scheme for small `n`.
+    /// **WARNING:** Some requirements are missing to ensure overwhelming correctness of the scheme.
     ///
-    /// Returns an empty resultif the public parameters guarantee correctness
+    /// Returns an empty result if the public parameters guarantee correctness
     /// with overwhelming probability or a [`MathError`] if the instance would
     /// not be correct.
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::Regev;
-    /// let regev = Regev::default();
+    /// use qfall_crypto::construction::pk_encryption::DualRegev;
+    /// let dual_regev = DualRegev::default();
     ///
-    /// let is_valid = regev.check_correctness().is_ok();
+    /// let is_valid = dual_regev.check_correctness().is_ok();
     /// ```
     ///
     /// # Errors and Failures
     /// - Returns a [`MathError`] of type [`InvalidIntegerInput`](MathError::InvalidIntegerInput)
     /// if at least one parameter was not chosen appropriately for a
-    /// correct Regev public key encryption instance.
+    /// correct Dual Regev public key encryption instance.
     pub fn check_correctness(&self) -> Result<(), MathError> {
         let q = Z::from(&self.q);
 
@@ -261,16 +263,16 @@ impl Regev {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::Regev;
-    /// let regev = Regev::default();
+    /// use qfall_crypto::construction::pk_encryption::DualRegev;
+    /// let dual_regev = DualRegev::default();
     ///
-    /// let is_valid = regev.check_security().is_ok();
+    /// let is_valid = dual_regev.check_security().is_ok();
     /// ```
     ///
     /// # Errors and Failures
     /// - Returns a [`MathError`] of type [`InvalidIntegerInput`](MathError::InvalidIntegerInput)
     /// if at least one parameter was not chosen appropriately for a
-    /// secure Regev public key encryption instance.
+    /// secure Dual Regev public key encryption instance.
     pub fn check_security(&self) -> Result<(), MathError> {
         let q = Z::from(&self.q);
 
@@ -291,25 +293,25 @@ impl Regev {
         Ok(())
     }
 
-    /// This function instantiates a 128-bit secure [`Regev`] scheme.
+    /// This function instantiates a 128-bit secure [`DualRegev`] scheme.
     ///
-    /// The public parameters used for this scheme were generated via `Regev::new_from_n(350)`
+    /// The public parameters used for this scheme were generated via `DualRegev::new_from_n(350)`
     /// and its bit-security determined via the [lattice estimator](https://github.com/malb/lattice-estimator).
     pub fn secure128() -> Self {
         Self::new(230, 5313, 7764299, 0.0011)
     }
 }
 
-impl Default for Regev {
-    /// Initializes a [`Regev`] struct with parameters generated by `Regev::new_from_n(3)`.
+impl Default for DualRegev {
+    /// Initializes a [`DualRegev`] struct with parameters generated by `DualRegev::new_from_n(3)`.
     /// This parameter choice is not secure as the dimension of the lattice is too small,
     /// but it provides an efficient working example.
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::Regev;
+    /// use qfall_crypto::construction::pk_encryption::DualRegev;
     ///
-    /// let regev = Regev::default();
+    /// let dual_regev = DualRegev::default();
     /// ```
     fn default() -> Self {
         let n = Z::from(13);
@@ -321,58 +323,48 @@ impl Default for Regev {
     }
 }
 
-impl PKEncryption for Regev {
+impl PKEncryption for DualRegev {
     type Cipher = MatZq;
     type PublicKey = MatZq;
-    type SecretKey = MatZq;
+    type SecretKey = MatZ;
 
-    /// Generates a (pk, sk) pair for the Regev public key encryption scheme
+    /// Generates a (pk, sk) pair for the Dual Regev public key encryption scheme
     /// by following these steps:
     /// - A <- Z_q^{n x m}
-    /// - s <- Z_q^n
-    /// - e^t <- χ^m
-    /// - b^t = s^t * A + e^t
-    /// - A = [A^t | b]^t
-    /// where χ is discrete Gaussian distributed with center 0 and Gaussian parameter q * α.
+    /// - x <- {0,1}^m
+    /// - u = A * x
+    /// - A = [A | u]
     ///
-    /// Then, `pk = A` and `sk = s` of type [`MatZq`] are returned.
+    /// Then, `pk = A` and `sk = x` of type [`MatZq`] are returned.
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, Regev};
-    /// let regev = Regev::default();
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, DualRegev};
+    /// let dual_regev = DualRegev::default();
     ///
-    /// let (pk, sk) = regev.gen();
+    /// let (pk, sk) = dual_regev.gen();
     /// ```
     fn gen(&self) -> (Self::PublicKey, Self::SecretKey) {
         // A <- Z_q^{n x m}
         let mat_a = MatZq::sample_uniform(&self.n, &self.m, &self.q);
-        // s <- Z_q^n
-        let vec_s = MatZq::sample_uniform(&self.n, 1, &self.q);
-        // e^t <- χ^m
-        let vec_e_t = MatZq::sample_discrete_gauss(
-            1,
-            &self.m,
-            &self.q,
-            &self.n,
-            0,
-            &self.alpha * Z::from(&self.q),
-        )
-        .unwrap();
+        // x <- Z_2^m
+        let vec_x = MatZ::sample_uniform(&self.m, 1, 0, 2).unwrap();
 
-        // b^t = s^t * A + e^t
-        let vec_b_t = vec_s.transpose() * &mat_a + vec_e_t;
+        // u = A * x
+        let vec_u = &mat_a * &vec_x;
 
-        // A = [A^t | b]^t
-        let mat_a = mat_a.concat_vertical(&vec_b_t).unwrap();
+        // A = [A | u]
+        let mat_a = mat_a.concat_horizontal(&vec_u).unwrap();
 
-        // pk = A, sk = s
-        (mat_a, vec_s)
+        // pk = A, sk = x
+        (mat_a, vec_x)
     }
 
     /// Generates an encryption of `message mod 2` for the provided public key by following these steps:
-    /// - x <- Z_2^m
-    /// - c = A * x + [0^{1 x n} | msg *  ⌊q/2⌋]^t
+    /// - s <- Z_q^n
+    /// - e <- χ^(m+1)
+    /// - c^t = s^t * A + e^t + [0^{1xn} | msg *  ⌊q/2⌋]
+    /// where χ is discrete Gaussian distributed with center 0 and Gaussian parameter q * α.
     ///
     /// Then, the ciphertext `c` is returned as a vector of type [`MatZq`].
     ///
@@ -384,22 +376,32 @@ impl PKEncryption for Regev {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, Regev};
-    /// let regev = Regev::default();
-    /// let (pk, sk) = regev.gen();
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, DualRegev};
+    /// let dual_regev = DualRegev::default();
+    /// let (pk, sk) = dual_regev.gen();
     ///
-    /// let cipher = regev.enc(&pk, 1);
+    /// let cipher = dual_regev.enc(&pk, 1);
     /// ```
     fn enc(&self, pk: &Self::PublicKey, message: impl Into<Z>) -> Self::Cipher {
         // generate message = message mod 2
         let message = Zq::from((message, 2));
         let message = message.get_value();
 
-        // x <- Z_2^m
-        let vec_x = MatZ::sample_uniform(&self.m, 1, 0, 2).unwrap();
+        // s <- Z_q^n
+        let vec_s_t = MatZq::sample_uniform(1, &self.n, &self.q);
+        // e <- χ^(m+1)
+        let vec_e_t = MatZq::sample_discrete_gauss(
+            1,
+            &(&self.m + 1),
+            &self.q,
+            &self.n,
+            0,
+            &self.alpha * Z::from(&self.q),
+        )
+        .unwrap();
 
-        // c = A * x + [0^{1xn} | msg *  ⌊q/2⌋]^t
-        let mut c = pk * vec_x;
+        // c^t = s^t * A + e^t + [0^{1xn} | msg *  ⌊q/2⌋]
+        let mut c = (vec_s_t * pk + vec_e_t).transpose();
 
         // hide message in last entry
         // compute msg * ⌊q/2⌋
@@ -412,33 +414,32 @@ impl PKEncryption for Regev {
     }
 
     /// Decrypts the provided `cipher` using the secret key `sk` by following these steps:
-    /// - x = [-sk^t | 1] * c
+    /// - x = c^t * [-sk^t | 1]^t
     /// - if x mod q is closer to ⌊q/2⌋ than to 0, output 1. Otherwise, output 0.
     ///
     /// Parameters:
-    /// - `sk`: specifies the secret key `sk = s`
+    /// - `sk`: specifies the secret key `sk = x`
     /// - `cipher`: specifies the cipher containing `cipher = c`
     ///
     /// Returns the decryption of `cipher` as a [`Z`] instance.
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, Regev};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, DualRegev};
     /// use qfall_math::integer::Z;
-    /// let regev = Regev::default();
-    /// let (pk, sk) = regev.gen();
-    /// let cipher = regev.enc(&pk, 1);
+    /// let dual_regev = DualRegev::default();
+    /// let (pk, sk) = dual_regev.gen();
+    /// let cipher = dual_regev.enc(&pk, 1);
     ///
-    /// let m = regev.dec(&sk, &cipher);
+    /// let m = dual_regev.dec(&sk, &cipher);
     ///
     /// assert_eq!(Z::ONE, m);
     /// ```
     fn dec(&self, sk: &Self::SecretKey, cipher: &Self::Cipher) -> Z {
-        let result = (Z::MINUS_ONE * sk)
-            .concat_vertical(&MatZq::identity(1, 1, &self.q))
-            .unwrap()
-            .dot_product(cipher)
+        let tmp = (Z::MINUS_ONE * sk)
+            .concat_vertical(&MatZ::identity(1, 1))
             .unwrap();
+        let result: Zq = (cipher.transpose() * tmp).get_entry(0, 0).unwrap();
 
         let q_half = Z::from(&self.q).div_floor(&Z::from(2));
 
@@ -452,16 +453,16 @@ impl PKEncryption for Regev {
 
 #[cfg(test)]
 mod test_pp_generation {
-    use super::Regev;
+    use super::DualRegev;
     use super::Z;
 
     /// Checks whether `new` is available for types implementing [`Into<Z>`].
     #[test]
     fn new_availability() {
-        let _ = Regev::new(2u8, 2u16, 2u32, 2u64);
-        let _ = Regev::new(2u16, 2u64, 2i32, 2i64);
-        let _ = Regev::new(2i16, 2i64, 2u32, 2u8);
-        let _ = Regev::new(Z::from(2), &Z::from(2), 2u8, 2i8);
+        let _ = DualRegev::new(2u8, 2u16, 2u32, 2u64);
+        let _ = DualRegev::new(2u16, 2u64, 2i32, 2i64);
+        let _ = DualRegev::new(2i16, 2i64, 2u32, 2u8);
+        let _ = DualRegev::new(Z::from(2), &Z::from(2), 2u8, 2i8);
     }
 
     /// Checks whether `new_from_n` works properly for different choices of n.
@@ -472,17 +473,17 @@ mod test_pp_generation {
         ];
 
         for n in n_choices {
-            let _ = Regev::new_from_n(n);
+            let _ = DualRegev::new_from_n(n);
         }
     }
 
     /// Checks whether the [`Default`] parameter choice is suitable.
     #[test]
     fn default_suitable() {
-        let regev = Regev::default();
+        let dr = DualRegev::default();
 
-        assert!(regev.check_correctness().is_ok());
-        assert!(regev.check_security().is_ok());
+        assert!(dr.check_correctness().is_ok());
+        assert!(dr.check_security().is_ok());
     }
 
     /// Checks whether the generated public parameters from `new_from_n` are
@@ -492,47 +493,47 @@ mod test_pp_generation {
         let n_choices = [10, 14, 25, 50, 125, 300, 600, 1200, 4000, 6000];
 
         for n in n_choices {
-            let regev = Regev::new_from_n(n);
-            assert!(regev.check_correctness().is_ok());
-            assert!(regev.check_security().is_ok());
+            let dr = DualRegev::new_from_n(n);
+            assert!(dr.check_correctness().is_ok());
+            assert!(dr.check_security().is_ok());
         }
     }
 
     /// Ensures that `new_from_n` is available for types implementing [`Into<Z>`].
     #[test]
     fn availability() {
-        let _ = Regev::new_from_n(10u8);
-        let _ = Regev::new_from_n(10u16);
-        let _ = Regev::new_from_n(10u32);
-        let _ = Regev::new_from_n(10u64);
-        let _ = Regev::new_from_n(10i8);
-        let _ = Regev::new_from_n(10i16);
-        let _ = Regev::new_from_n(10i32);
-        let _ = Regev::new_from_n(10i64);
-        let _ = Regev::new_from_n(Z::from(10));
-        let _ = Regev::new_from_n(&Z::from(10));
+        let _ = DualRegev::new_from_n(10u8);
+        let _ = DualRegev::new_from_n(10u16);
+        let _ = DualRegev::new_from_n(10u32);
+        let _ = DualRegev::new_from_n(10u64);
+        let _ = DualRegev::new_from_n(10i8);
+        let _ = DualRegev::new_from_n(10i16);
+        let _ = DualRegev::new_from_n(10i32);
+        let _ = DualRegev::new_from_n(10i64);
+        let _ = DualRegev::new_from_n(Z::from(10));
+        let _ = DualRegev::new_from_n(&Z::from(10));
     }
 
     /// Checks whether `new_from_n` returns an error for invalid input n.
     #[test]
     #[should_panic]
     fn invalid_n() {
-        Regev::new_from_n(9);
+        DualRegev::new_from_n(9);
     }
 
     /// Checks whether `secure128` outputs a new instance with correct and secure parameters.
     #[test]
     fn secure128_validity() {
-        let regev = Regev::secure128();
+        let dr = DualRegev::secure128();
 
-        assert!(regev.check_correctness().is_ok());
-        assert!(regev.check_security().is_ok());
+        assert!(dr.check_correctness().is_ok());
+        assert!(dr.check_security().is_ok());
     }
 }
 
 #[cfg(test)]
-mod test_regev {
-    use super::Regev;
+mod test_dual_regev {
+    use super::DualRegev;
     use crate::construction::pk_encryption::PKEncryption;
     use qfall_math::integer::Z;
 
@@ -541,11 +542,11 @@ mod test_regev {
     #[test]
     fn cycle_zero_small_n() {
         let msg = Z::ZERO;
-        let regev = Regev::default();
+        let dr = DualRegev::default();
 
-        let (pk, sk) = regev.gen();
-        let cipher = regev.enc(&pk, &msg);
-        let m = regev.dec(&sk, &cipher);
+        let (pk, sk) = dr.gen();
+        let cipher = dr.enc(&pk, &msg);
+        let m = dr.dec(&sk, &cipher);
         assert_eq!(msg, m);
     }
 
@@ -554,11 +555,11 @@ mod test_regev {
     #[test]
     fn cycle_one_small_n() {
         let msg = Z::ONE;
-        let regev = Regev::default();
+        let dr = DualRegev::default();
 
-        let (pk, sk) = regev.gen();
-        let cipher = regev.enc(&pk, &msg);
-        let m = regev.dec(&sk, &cipher);
+        let (pk, sk) = dr.gen();
+        let cipher = dr.enc(&pk, &msg);
+        let m = dr.dec(&sk, &cipher);
         assert_eq!(msg, m);
     }
 
@@ -567,11 +568,11 @@ mod test_regev {
     #[test]
     fn cycle_zero_large_n() {
         let msg = Z::ZERO;
-        let regev = Regev::new_from_n(50);
+        let dr = DualRegev::new_from_n(50);
 
-        let (pk, sk) = regev.gen();
-        let cipher = regev.enc(&pk, &msg);
-        let m = regev.dec(&sk, &cipher);
+        let (pk, sk) = dr.gen();
+        let cipher = dr.enc(&pk, &msg);
+        let m = dr.dec(&sk, &cipher);
         assert_eq!(msg, m);
     }
 
@@ -580,11 +581,28 @@ mod test_regev {
     #[test]
     fn cycle_one_large_n() {
         let msg = Z::ONE;
-        let regev = Regev::new_from_n(50);
+        let dr = DualRegev::new_from_n(50);
 
-        let (pk, sk) = regev.gen();
-        let cipher = regev.enc(&pk, &msg);
-        let m = regev.dec(&sk, &cipher);
+        let (pk, sk) = dr.gen();
+        let cipher = dr.enc(&pk, &msg);
+        let m = dr.dec(&sk, &cipher);
         assert_eq!(msg, m);
+    }
+
+    /// Checks that modulus 2 is applied correctly.
+    #[test]
+    fn modulus_application() {
+        let messages = [2, 3, i64::MAX, i64::MIN];
+        let dr = DualRegev::default();
+        let (pk, sk) = dr.gen();
+
+        for msg in messages {
+            let msg_mod = Z::from(msg.rem_euclid(2));
+
+            let cipher = dr.enc(&pk, &msg);
+            let m = dr.dec(&sk, &cipher);
+
+            assert_eq!(msg_mod, m);
+        }
     }
 }

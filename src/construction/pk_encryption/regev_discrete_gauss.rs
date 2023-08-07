@@ -613,14 +613,14 @@ mod test_regev {
     #[test]
     fn modulus_application() {
         let messages = [2, 3, i64::MAX, i64::MIN];
-        let dr = RegevWithDiscreteGaussianRegularity::default();
-        let (pk, sk) = dr.gen();
+        let regev = RegevWithDiscreteGaussianRegularity::default();
+        let (pk, sk) = regev.gen();
 
         for msg in messages {
             let msg_mod = Z::from(msg.rem_euclid(2));
 
-            let cipher = dr.enc(&pk, &msg);
-            let m = dr.dec(&sk, &cipher);
+            let cipher = regev.enc(&pk, &msg);
+            let m = regev.dec(&sk, &cipher);
 
             assert_eq!(msg_mod, m);
         }
