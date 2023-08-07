@@ -9,7 +9,7 @@
 //! This module contains an implementation of the IND-CPA secure
 //! public key Dual Regev encryption scheme.
 
-use super::PKEncryption;
+use super::{GenericMultiBitEncryption, PKEncryption};
 use qfall_math::{
     error::MathError,
     integer::{MatZ, Z},
@@ -451,6 +451,9 @@ impl PKEncryption for DualRegev {
     }
 }
 
+// adds generic multi-bit encryption to this scheme
+impl GenericMultiBitEncryption for DualRegev {}
+
 #[cfg(test)]
 mod test_pp_generation {
     use super::DualRegev;
@@ -603,6 +606,63 @@ mod test_dual_regev {
             let m = dr.dec(&sk, &cipher);
 
             assert_eq!(msg_mod, m);
+        }
+    }
+}
+
+#[cfg(test)]
+mod test_multi_bits {
+    use super::{DualRegev, GenericMultiBitEncryption, PKEncryption};
+    use qfall_math::integer::Z;
+
+    /// Checks whether the multi-bit encryption cycle works properly
+    /// for small and large positive values.
+    #[test]
+    fn positive() {
+        let values = [3, 13, 23, 230, 501, 1024, i64::MAX];
+
+        for value in values {
+            let msg = Z::from(value);
+            let scheme = DualRegev::default();
+
+            let (pk, sk) = scheme.gen();
+            let cipher = scheme.enc_multiple_bits(&pk, &msg);
+            let m = scheme.dec_multiple_bits(&sk, &cipher);
+
+            assert_eq!(msg, m);
+        }
+    }
+
+    /// Checks whether the multi-bit encryption cycle works properly
+    /// for zero.
+    #[test]
+    fn zero() {
+        let msg = Z::ZERO;
+        let scheme = DualRegev::default();
+
+        let (pk, sk) = scheme.gen();
+        let cipher = scheme.enc_multiple_bits(&pk, &msg);
+        let m = scheme.dec_multiple_bits(&sk, &cipher);
+
+        assert_eq!(msg, m);
+    }
+
+    /// Checks whether the multi-bit encryption cycle works properly
+    /// for small and large negative values, which are not encrypted itself,
+    /// but their absolute value.
+    #[test]
+    fn negative() {
+        let values = [-3, -13, -23, -230, -501, -1024, i64::MIN];
+
+        for value in values {
+            let msg = Z::from(value);
+            let scheme = DualRegev::default();
+
+            let (pk, sk) = scheme.gen();
+            let cipher = scheme.enc_multiple_bits(&pk, &msg);
+            let m = scheme.dec_multiple_bits(&sk, &cipher);
+
+            assert_eq!(msg.abs(), m);
         }
     }
 }

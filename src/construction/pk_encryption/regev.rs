@@ -9,7 +9,7 @@
 //! This module contains an implementation of the IND-CPA secure
 //! public key Regev encryption scheme.
 
-use super::{PKEncryption, GenericMultiBitEncryption};
+use super::{GenericMultiBitEncryption, PKEncryption};
 use qfall_math::{
     error::MathError,
     integer::{MatZ, Z},
@@ -614,10 +614,7 @@ mod test_regev {
 
 #[cfg(test)]
 mod test_multi_bits {
-    use crate::construction::pk_encryption::PKEncryption;
-
-    use super::GenericMultiBitEncryption;
-    use super::Regev;
+    use super::{GenericMultiBitEncryption, PKEncryption, Regev};
     use qfall_math::integer::Z;
 
     /// Checks whether the multi-bit encryption cycle works properly
@@ -628,11 +625,11 @@ mod test_multi_bits {
 
         for value in values {
             let msg = Z::from(value);
-            let regev = Regev::default();
+            let scheme = Regev::default();
 
-            let (pk, sk) = regev.gen();
-            let cipher = regev.enc_multiple_bits(&pk, &msg);
-            let m = regev.dec_multiple_bits(&sk, &cipher);
+            let (pk, sk) = scheme.gen();
+            let cipher = scheme.enc_multiple_bits(&pk, &msg);
+            let m = scheme.dec_multiple_bits(&sk, &cipher);
 
             assert_eq!(msg, m);
         }
@@ -643,11 +640,11 @@ mod test_multi_bits {
     #[test]
     fn zero() {
         let msg = Z::ZERO;
-        let regev = Regev::default();
+        let scheme = Regev::default();
 
-        let (pk, sk) = regev.gen();
-        let cipher = regev.enc_multiple_bits(&pk, &msg);
-        let m = regev.dec_multiple_bits(&sk, &cipher);
+        let (pk, sk) = scheme.gen();
+        let cipher = scheme.enc_multiple_bits(&pk, &msg);
+        let m = scheme.dec_multiple_bits(&sk, &cipher);
 
         assert_eq!(msg, m);
     }
@@ -661,11 +658,11 @@ mod test_multi_bits {
 
         for value in values {
             let msg = Z::from(value);
-            let regev = Regev::default();
+            let scheme = Regev::default();
 
-            let (pk, sk) = regev.gen();
-            let cipher = regev.enc_multiple_bits(&pk, &msg);
-            let m = regev.dec_multiple_bits(&sk, &cipher);
+            let (pk, sk) = scheme.gen();
+            let cipher = scheme.enc_multiple_bits(&pk, &msg);
+            let m = scheme.dec_multiple_bits(&sk, &cipher);
 
             assert_eq!(msg.abs(), m);
         }
