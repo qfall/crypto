@@ -27,7 +27,7 @@ use qfall_math::{
 /// reordering of `S` (if `base^k=q` then reversed, otherwise the same as before).
 /// This corresponds to an appropriate reordering from
 /// [\[1\]](<../index.html#:~:text=[1]>) and Lemma 3.2 from
-/// [\[2\]](<../index.html#:~:text=[2]>).
+/// [\[4\]](<../index.html#:~:text=[4]>).
 ///
 /// Parameters:
 /// - `params`: the gadget parameters with which the trapdoor was generated
