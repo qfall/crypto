@@ -8,23 +8,14 @@
 
 //! This module contains an implementation of the IND-CPA secure
 //! public key Regev encryption scheme.
-//!
-//! The main references are listed in the following:
-//! - \[1\] Regev, Oded (2009).
-//! On lattices, learning with errors, random linear codes, and cryptography.
-//! In: Journal of the ACM 6.
-//! <https://dl.acm.org/doi/pdf/10.1145/1568318.1568324>
-//! - \[2\] Peikert, Chris (2016).
-//! A decade of lattice cryptography.
-//! In: Theoretical Computer Science 10.4.
-//! <https://web.eecs.umich.edu/~cpeikert/pubs/lattice-survey.pdf>
+
 use super::PKEncryption;
 use qfall_math::{
     error::MathError,
     integer::{MatZ, Z},
     integer_mod_q::{MatZq, Modulus, Zq},
     rational::Q,
-    traits::{Concatenate, Distance, GetEntry, GetNumRows, Pow, SetEntry},
+    traits::{Concatenate, Distance, GetEntry, Pow, SetEntry},
 };
 use serde::{Deserialize, Serialize};
 
@@ -35,9 +26,8 @@ use serde::{Deserialize, Serialize};
 /// - `n`: specifies the security parameter, which is not equal to the bit-security level
 /// - `m`: defines the dimension of the underlying lattice
 /// - `q`: specifies the modulus over which the encryption is computed
-/// - `alpha`: specifies the gaussian parameter used for independent
-///   sampling from χ, i.e. for multiple discrete Gaussian samples used
-///   for key generation
+/// - `alpha`:  specifies the gaussian parameter used for independent
+/// sampling from the discrete Gaussian distribution
 ///
 /// # Examples
 /// ```
@@ -66,7 +56,7 @@ pub struct Regev {
 
 impl Regev {
     /// Instantiates a [`Regev`] PK encryption instance with the
-    /// specified parameters if they ensure a secure and correct instance.
+    /// specified parameters.
     ///
     /// **WARNING:** The given parameters are not checked for security nor
     /// correctness of the scheme.
@@ -80,18 +70,16 @@ impl Regev {
     ///   of the uniform at random instantiated matrix `A`
     /// - `m`: specifies the number of columns of matrix `A`
     /// - `q`: specifies the modulus
-    /// - `alpha`: specifies the gaussian parameter used for independent
-    ///   sampling from chi, i.e. for multiple discrete Gaussian samples used
-    ///   for key generation
+    /// - `alpha`:  specifies the gaussian parameter used for independent
+    /// sampling from the discrete Gaussian distribution
     ///
-    /// Returns a correct and secure [`Regev`] PK encryption instance or
-    /// a [`MathError`] if the instance would not be correct or secure.
+    /// Returns a [`Regev`] PK encryption instance.
     ///
     /// # Examples
     /// ```
     /// use qfall_crypto::construction::pk_encryption::Regev;
     ///
-    /// let regev = Regev::new(3, 16, 13, 2).unwrap();
+    /// let regev = Regev::new(3, 16, 13, 2);
     /// ```
     ///
     /// # Panics ...
@@ -99,17 +87,15 @@ impl Regev {
     pub fn new(
         n: impl Into<Z>,
         m: impl Into<Z>,
-        q: impl Into<Z>,
+        q: impl Into<Modulus>,
         alpha: impl Into<Q>,
-    ) -> Result<Self, MathError> {
+    ) -> Self {
         let n: Z = n.into();
         let m: Z = m.into();
-        let q: Z = q.into();
+        let q: Modulus = q.into();
         let alpha: Q = alpha.into();
 
-        let q = Modulus::from(&q);
-
-        Ok(Self { n, m, q, alpha })
+        Self { n, m, q, alpha }
     }
 
     /// Generates a new [`Regev`] instance, i.e. a new set of suitable
@@ -127,18 +113,16 @@ impl Regev {
     /// ```
     /// use qfall_crypto::construction::pk_encryption::Regev;
     ///
-    /// let regev = Regev::new_from_n(15).unwrap();
+    /// let regev = Regev::new_from_n(15);
     /// ```
     ///
-    /// # Errors and Failures
-    /// - Returns a [`MathError`] of type [`InvalidIntegerInput`](MathError::InvalidIntegerInput)
-    /// if `n <= 1`.
-    pub fn new_from_n(n: impl Into<Z>) -> Result<Self, MathError> {
+    /// Panics...
+    /// - if `n < 10`.
+    /// - if `n` does not fit into an [`i64`].
+    pub fn new_from_n(n: impl Into<Z>) -> Self {
         let n = n.into();
-        if n <= Z::from(9) {
-            return Err(MathError::InvalidIntegerInput(String::from(
-                "Choose n >= 10 as this function does not return parameters ensuring proper correctness of the scheme otherwise.",
-            )));
+        if n < Z::from(10) {
+            panic!("Choose n >= 10 as this function does not return parameters ensuring proper correctness of the scheme otherwise.");
         }
 
         let mut m: Z;
@@ -161,7 +145,7 @@ impl Regev {
             };
         }
 
-        Ok(out)
+        out
     }
 
     /// Generates new public parameters, which must not be secure or correct
@@ -173,7 +157,7 @@ impl Regev {
     /// - `n`: specifies the security parameter and number of rows
     ///   of the uniform at random instantiated matrix `A`
     ///
-    /// Returns a set of public parameters `(m, q, r, alpha)` chosen according to
+    /// Returns a set of public parameters `(m, q, alpha)` chosen according to
     /// the provided `n`.
     ///
     /// # Examples
@@ -184,6 +168,9 @@ impl Regev {
     ///
     /// let (m, q, alpha) = Regev::gen_new_public_parameters(&n);
     /// ```
+    ///
+    /// Panics...
+    /// - if `n` does not fit into an [`i64`].
     fn gen_new_public_parameters(n: &Z) -> (Z, Modulus, Q) {
         let n_i64 = i64::try_from(n).unwrap();
         // these powers are chosen according to experience s.t. at least every
@@ -199,10 +186,10 @@ impl Regev {
         let lower_bound = upper_bound.div_ceil(&Z::from(2));
         let q = Z::sample_prime_uniform(&lower_bound, &upper_bound).unwrap();
 
-        // choose m = 1.05 * (n+1) log q
+        // choose m = (n+1) log q
         let m = (n + Z::ONE) * q.log(2).unwrap().ceil();
 
-        // alpha = 1/(sqrt(n) * log^2 n)
+        // α = 1/(sqrt(n) * log^2 n)
         let alpha = 1 / (n.sqrt() * n.log(2).unwrap().pow(2).unwrap());
 
         let q = Modulus::from(q);
@@ -210,13 +197,18 @@ impl Regev {
         (m, q, alpha)
     }
 
-    /// Checks a provided set of public parameters according to their
-    /// completeness according to Lemma 5.1 of [\[1\]](<index.html#:~:text=[1]>).
+    /// Checks the public parameters for
+    /// correctness according to Lemma 5.1 of [\[3\]](<index.html#:~:text=[3]>).
     ///
-    /// **WARNING:** Some requirements are missing to ensure overwhelming correctness of the scheme.
+    /// The required properties are:
+    /// - α = o (1 / ( sqrt(n) * log n ) )
+    /// - concentration bound with r=5: r * sqrt(m) * α > q/4
     ///
+    /// **WARNING:** Some requirements are missing to ensure
+    /// overwhelming correctness of the scheme for small `n`.
     ///
-    /// Returns an empty result or a [`MathError`] if the instance would
+    /// Returns an empty resultif the public parameters guarantee correctness
+    /// with overwhelming probability or a [`MathError`] if the instance would
     /// not be correct.
     ///
     /// # Examples
@@ -239,35 +231,33 @@ impl Regev {
                 "n must be chosen bigger than 1.",
             )));
         }
-        if !q.is_prime() {
-            return Err(MathError::InvalidIntegerInput(String::from(
-                "q must be prime.",
-            )));
-        }
 
         // Correctness requirements
         // α = o (1 / ( sqrt(n) * log n ) )
         if self.alpha > 1 / (self.n.sqrt() * self.n.log(2).unwrap()) {
             return Err(MathError::InvalidIntegerInput(String::from(
-                "Completeness is not guaranteed as α >= 1 / (sqrt(n) * log n), but α < 1 / (sqrt(n) * log n) is required."
+                "Correctness is not guaranteed as α >= 1 / (sqrt(n) * log n), but α < 1 / (sqrt(n) * log n) is required."
             )));
         }
-
+        // concentration bound with r=5 -> r * sqrt(m) * α > q/4
         if 20 * self.m.sqrt() * &self.alpha > Q::from(q) {
             return Err(MathError::InvalidIntegerInput(String::from(
-                "Completeness is not guaranteed as 5 * sqrt(m) * α > q/4, but 5 * sqrt(m) * α <= q/4 is required."
+                "Correctness is not guaranteed as 5 * sqrt(m) * α > q/4, but 5 * sqrt(m) * α <= q/4 is required."
             )));
         }
 
         Ok(())
     }
 
-    /// Checks a provided set of public parameters according to their validity
-    /// regarding security according to Theorem 1.1
-    /// and Lemma 5.4 of [\[1\]](<index.html#:~:text=[1]>).
+    /// Checks the public parameters for security according to Theorem 1.1
+    /// and Lemma 5.4 of [\[3\]](<index.html#:~:text=[3]>).
     ///
-    /// Returns an empty result or a [`MathError`] if the instance would
-    /// not be secure.
+    /// The required properties are:
+    /// - q * α >= 2 sqrt(n)
+    /// - m > (n + 1) log q
+    ///
+    /// Returns an empty result if the public parameters guarantees security w.r.t. `n`
+    /// or a [`MathError`] if the instance would not be secure.
     ///
     /// # Examples
     /// ```
@@ -288,14 +278,13 @@ impl Regev {
         // q * α >= 2 sqrt(n)
         if &q * &self.alpha < 2 * self.n.sqrt() {
             return Err(MathError::InvalidIntegerInput(String::from(
-                "Security is not guaranteed as q * α < 2 sqrt(n), but q * α >= 2 sqrt(n) is required.",
+                "Security is not guaranteed as q * α < 2 * sqrt(n), but q * α >= 2 * sqrt(n) is required.",
             )));
         }
         // m > (n + 1) log q
         if self.m <= ((&self.n + Z::ONE) * q.log(2).unwrap()).ceil() {
             return Err(MathError::InvalidIntegerInput(String::from(
-                "Security is not guaranteed as m <= (n + 1) log q,
-                but m > (n + 1) log q is required.",
+                "Security is not guaranteed as m <= (n + 1) log q, but m > (n + 1) log q is required.",
             )));
         }
 
@@ -307,7 +296,7 @@ impl Regev {
     /// The public parameters used for this scheme were generated via `Regev::new_from_n(350)`
     /// and its bit-security determined via the [lattice estimator](https://github.com/malb/lattice-estimator).
     pub fn secure128() -> Self {
-        Self::new(230, 5313, 7764299, 0.0011).unwrap()
+        Self::new(230, 5313, 7764299, 0.0011)
     }
 }
 
@@ -344,8 +333,9 @@ impl PKEncryption for Regev {
     /// - e^t <- χ^m
     /// - b^t = s^t * A + e^t
     /// - A = [A^t | b]^t
+    /// where χ is discrete Gaussian distributed with center 0 and Gaussian parameter q * α.
     ///
-    /// Then, `pk = A` and `sk = s` is output.
+    /// Then, `pk = A` and `sk = s` of type [`MatZq`] are returned.
     ///
     /// # Examples
     /// ```
@@ -384,10 +374,10 @@ impl PKEncryption for Regev {
     /// - x <- Z_2^m
     /// - c = A * x + [0^{1 x n} | msg *  ⌊q/2⌋]^t
     ///
-    /// Then, cipher `c` is output.
+    /// Then, the ciphertext `c` is returned as a vector of type [`MatZq`].
     ///
     /// Parameters:
-    /// - `pk`: specifies the public key, which contains two matrices `pk = (A, p)`
+    /// - `pk`: specifies the public key `pk = A`
     /// - `message`: specifies the message that should be encryted
     ///
     /// Returns a cipher `c` of type [`MatZq`].
@@ -402,7 +392,6 @@ impl PKEncryption for Regev {
     /// ```
     fn enc(&self, pk: &Self::PublicKey, message: impl Into<Z>) -> Self::Cipher {
         // generate message = message mod 2
-        let message: Z = message.into();
         let message = Zq::from((message, 2));
         let message = message.get_value();
 
@@ -416,9 +405,8 @@ impl PKEncryption for Regev {
         // compute msg * ⌊q/2⌋
         let msg_q_half = message * Z::from(&self.q).div_floor(&Z::from(2));
         // set last entry of c = last_entry + msg * ⌊q/2⌋
-        let last_entry: Zq = c.get_entry(c.get_num_rows() - 1, 0).unwrap();
-        c.set_entry(c.get_num_rows() - 1, 0, last_entry + msg_q_half)
-            .unwrap();
+        let last_entry: Zq = c.get_entry(-1, 0).unwrap();
+        c.set_entry(-1, 0, last_entry + msg_q_half).unwrap();
 
         c
     }
@@ -446,7 +434,7 @@ impl PKEncryption for Regev {
     /// assert_eq!(Z::ONE, m);
     /// ```
     fn dec(&self, sk: &Self::SecretKey, cipher: &Self::Cipher) -> Z {
-        let result = (-1i8 * sk)
+        let result = (Z::MINUS_ONE * sk)
             .concat_vertical(&MatZq::identity(1, 1, &self.q))
             .unwrap()
             .dot_product(cipher)
@@ -484,7 +472,7 @@ mod test_pp_generation {
         ];
 
         for n in n_choices {
-            assert!(Regev::new_from_n(n).is_ok());
+            let _ = Regev::new_from_n(n);
         }
     }
 
@@ -504,7 +492,7 @@ mod test_pp_generation {
         let n_choices = [10, 14, 25, 50, 125, 300, 600, 1200, 4000, 6000];
 
         for n in n_choices {
-            let regev = Regev::new_from_n(n).unwrap();
+            let regev = Regev::new_from_n(n);
             assert!(regev.check_correctness().is_ok());
             assert!(regev.check_security().is_ok());
         }
@@ -527,10 +515,9 @@ mod test_pp_generation {
 
     /// Checks whether `new_from_n` returns an error for invalid input n.
     #[test]
+    #[should_panic]
     fn invalid_n() {
-        assert!(Regev::new_from_n(1).is_err());
-        assert!(Regev::new_from_n(0).is_err());
-        assert!(Regev::new_from_n(-1).is_err());
+        Regev::new_from_n(9);
     }
 
     /// Checks whether `secure128` outputs a new instance with correct and secure parameters.
@@ -580,7 +567,7 @@ mod test_regev {
     #[test]
     fn cycle_zero_large_n() {
         let msg = Z::ZERO;
-        let regev = Regev::new_from_n(50).unwrap();
+        let regev = Regev::new_from_n(50);
 
         let (pk, sk) = regev.gen();
         let cipher = regev.enc(&pk, &msg);
@@ -593,7 +580,7 @@ mod test_regev {
     #[test]
     fn cycle_one_large_n() {
         let msg = Z::ONE;
-        let regev = Regev::new_from_n(50).unwrap();
+        let regev = Regev::new_from_n(50);
 
         let (pk, sk) = regev.gen();
         let cipher = regev.enc(&pk, &msg);

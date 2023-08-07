@@ -10,6 +10,14 @@
 //! instance of a public key encryption scheme. Furthermore, it contains
 //! cryptographic schemes implementing the `PKEncryption` trait.
 //!
+//! - \[1\] Peikert, Chris (2016).
+//! A decade of lattice cryptography.
+//! In: Theoretical Computer Science 10.4.
+//! <https://web.eecs.umich.edu/~cpeikert/pubs/lattice-survey.pdf>
+//! - \[3\] Regev, Oded (2009).
+//! On lattices, learning with errors, random linear codes, and cryptography.
+//! In: Journal of the ACM 6.
+//! <https://dl.acm.org/doi/pdf/10.1145/1568318.1568324>
 //! \[4\] Lindner, R., and C. Peikert (2011).
 //! Better key sizes (and attacks) for LWE-based encryption.
 //! In: Topics in Cryptology -  RSA Conference 2011, Springer.
