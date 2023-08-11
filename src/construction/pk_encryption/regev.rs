@@ -395,8 +395,7 @@ impl PKEncryption for Regev {
     /// ```
     fn enc(&self, pk: &Self::PublicKey, message: impl Into<Z>) -> Self::Cipher {
         // generate message = message mod 2
-        let message = Zq::from((message, 2));
-        let message = message.get_value();
+        let message: Z = message.into().modulo(2);
 
         // x <- Z_2^m
         let vec_x = MatZ::sample_uniform(&self.m, 1, 0, 2).unwrap();

@@ -393,8 +393,7 @@ impl PKEncryption for LPR {
     /// ```
     fn enc(&self, pk: &Self::PublicKey, message: impl Into<Z>) -> Self::Cipher {
         // generate message = message mod 2
-        let message = Zq::from((message, 2));
-        let message = message.get_value();
+        let message: Z = message.into().modulo(2);
 
         // x <- χ^n
         let vec_r = MatZq::sample_discrete_gauss(

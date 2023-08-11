@@ -403,8 +403,7 @@ impl PKEncryption for DualRegevWithDiscreteGaussianRegularity {
     /// ```
     fn enc(&self, pk: &Self::PublicKey, message: impl Into<Z>) -> Self::Cipher {
         // generate message = message mod 2
-        let message = Zq::from((message, 2));
-        let message = message.get_value();
+        let message: Z = message.into().modulo(2);
 
         // s <- Z_q^n
         let vec_s = MatZq::sample_uniform(&self.n, 1, &self.q);

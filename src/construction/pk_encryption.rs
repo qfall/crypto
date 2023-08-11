@@ -39,7 +39,7 @@ pub use lpr::LPR;
 pub use regev::Regev;
 pub use regev_discrete_gauss::RegevWithDiscreteGaussianRegularity;
 
-use qfall_math::{integer::Z, integer_mod_q::Zq};
+use qfall_math::integer::Z;
 
 /// This trait should be implemented by every public key encryption scheme.
 /// It offers a simple interface to use and implement PKEs.
@@ -88,30 +88,19 @@ pub trait GenericMultiBitEncryption: PKEncryption {
     ///
     /// Returns a cipher of type [`Vec`] containing [`PKEncryption::Cipher`].
     fn enc_multiple_bits(&self, pk: &Self::PublicKey, message: impl Into<Z>) -> Vec<Self::Cipher> {
-        let mut message: Z = message.into().abs();
+        let message: Z = message.into().abs();
 
-        let mut power_of_two = Z::from(2);
-        let mut cipher = vec![];
-        for _i in 0..message.bits() {
-            // get message mod 2^_i
-            let c_i = Zq::from((&message, &power_of_two)).get_value();
-
-            // if message mod 2^_i == 0 -> encrypt zero and append to ciphertext
-            // otherwise encrypt one and append to ciphertext
-            if c_i == Z::ZERO {
-                cipher.push(self.enc(pk, Z::ZERO));
+        let bits = message.to_bits();
+        let mut out = vec![];
+        for bit in bits {
+            if bit {
+                out.push(self.enc(pk, Z::ONE));
             } else {
-                cipher.push(self.enc(pk, Z::ONE));
+                out.push(self.enc(pk, Z::ZERO));
             }
-
-            // update values for next loop
-            // remove encrypted bit from message
-            message = message - c_i;
-            // compute next power of two
-            power_of_two = power_of_two * 2;
         }
 
-        cipher
+        out
     }
 
     /// Decrypts a multiple bit ciphertext.
@@ -123,16 +112,16 @@ pub trait GenericMultiBitEncryption: PKEncryption {
     ///
     /// Returns the decryption of `cipher` as a [`Z`] instance.
     fn dec_multiple_bits(&self, sk: &Self::SecretKey, cipher: &[Self::Cipher]) -> Z {
-        let mut message = Z::ZERO;
-        let mut power_of_two = Z::ONE;
+        let mut bits = vec![];
 
         for item in cipher {
-            let msg_i = self.dec(sk, item);
-            message = message + msg_i * &power_of_two;
-
-            power_of_two = power_of_two * 2;
+            if self.dec(sk, item) == Z::ZERO {
+                bits.push(false);
+            } else {
+                bits.push(true);
+            }
         }
 
-        message
+        Z::from_bits(&bits)
     }
 }

@@ -412,8 +412,7 @@ impl PKEncryption for RegevWithDiscreteGaussianRegularity {
     /// ```
     fn enc(&self, pk: &Self::PublicKey, message: impl Into<Z>) -> Self::Cipher {
         // generate message = message mod 2
-        let message = Zq::from((message, 2));
-        let message = message.get_value();
+        let message: Z = message.into().modulo(2);
 
         // e <- SampleD over lattice Z^m, center 0 with gaussian parameter r
         let vec_e = MatZq::sample_d_common(&self.m, &self.q, &self.n, &self.r).unwrap();
