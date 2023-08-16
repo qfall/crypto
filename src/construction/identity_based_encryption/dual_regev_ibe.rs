@@ -29,7 +29,7 @@ use qfall_math::{
     integer::{MatZ, Z},
     integer_mod_q::{MatZq, Modulus, Zq},
     rational::Q,
-    traits::Distance,
+    traits::{Concatenate, Distance, GetEntry, GetNumColumns, GetNumRows, SetEntry},
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -58,8 +58,6 @@ pub struct DualRegevIBE {
     r: Q,       // gaussian parameter for sampleD
     alpha: Q,   // gaussian parameter for sampleZ
     psf: PSFGPV,
-    dualregev: DualRegev,
-
     storage: HashMap<String, MatZ>,
 }
 
@@ -90,10 +88,32 @@ impl IBE for DualRegevIBE {
         self.psf.trap_gen()
     }
 
+    /// Given an identity it extracts a corresponding secret key by using samp_p
+    /// of the given [`PSF`].
+    ///
+    /// Parameters:
+    /// - `master_pk`: The master public key for the encryption scheme
+    /// - `master_sk`: Zhe master secret key of the encryption scheme, namely
+    /// the trapdoor for the [`PSF`]
+    /// - `identity`: The identity, for which the corresponding secret key
+    ///  should be returned
+    ///
+    /// Returns the corresponding secret key of `identity` under public key
+    /// `master_pk`.
+    ///
+    /// # Examples
+    /// ```
+    /// use qfall_crypto::construction::identity_based_encryption::{IBE, DualRegevIBE};
+    /// let mut ibe = DualRegevIBE::default();
+    /// let (master_pk, master_sk) = ibe.gen();
+    /// let id = String::from("Hello World!");
+    ///
+    /// let sk = ibe.extract(&master_pk, &master_sk, &id);
+    /// ```
     fn extract(
         &mut self,
-        pk: &Self::MasterPublicKey,
-        sk: &Self::MasterSecretKey,
+        master_pk: &Self::MasterPublicKey,
+        master_sk: &Self::MasterSecretKey,
         identity: &Self::Identity,
     ) -> Self::SecretKey {
         println!("Begin Extract");
@@ -102,8 +122,8 @@ impl IBE for DualRegevIBE {
             return value.clone();
         }
 
-        let u = hash_to_mat_zq_sha256(&identity, 2, 1, &self.q);
-        let secret_key = self.psf.samp_p(&pk, &sk, &u);
+        let u = hash_to_mat_zq_sha256(&identity, &self.n, 1, &self.q);
+        let secret_key = self.psf.samp_p(&master_pk, &master_sk, &u);
 
         // insert secret key in HashMap
         self.storage.insert(identity.clone(), secret_key.clone()); //todo insert for different pk and sk
@@ -134,32 +154,50 @@ impl IBE for DualRegevIBE {
     /// ```
     fn enc(
         &self,
-        pk: &Self::MasterPublicKey,
+        master_pk: &Self::MasterPublicKey,
         identity: &Self::Identity,
         message: impl Into<Z>,
     ) -> Self::Cipher {
         println!("Begin Enc");
 
-        //let identity_based_pk = hash_to_mat_zq_sha256(&identity, &self.m, 1, &self.q);
-        let identity_based_pk = hash_to_mat_zq_sha256(&identity, 2, 1, &self.q);
-        println!("{}\n identibased_pk: {}", pk, identity_based_pk);
-        return self.dualregev.enc(&pk, message);
+        let identity_based_pk = hash_to_mat_zq_sha256(&identity, &self.n, 1, &self.q);
+        println!("{}\n identibased_pk: {}", master_pk, identity_based_pk);
 
-        // generate message = message mod 2
-        let message: Z = message.into();
-        let message = Zq::from((&message, 2));
+        let message = Zq::from((message, 2));
         let message = message.get_value();
 
-        // e <- SampleD over lattice Z^m, center 0 with gaussian parameter r
-        let vec_e = MatZq::sample_d_common(&self.m, &self.q, &self.n, &self.r).unwrap();
+        // s <- Z_q^n
+        let vec_s_t = MatZq::sample_uniform(1, &self.n, &self.q);
+        // e <- χ^(m+1)
+        let vec_e_t = MatZq::sample_discrete_gauss(
+            1,
+            (master_pk.get_num_columns() + 1),
+            &self.q,
+            &self.n,
+            0,
+            &self.alpha * Z::from(&self.q),
+        )
+        .unwrap();
+        println!("\n{vec_e_t}\n\n");
+        let mut msg_q_half = MatZq::identity(1, 1, &self.q);
+        msg_q_half
+            .set_entry(0, 0, message * Z::from(&self.q).div_floor(&Z::from(2)))
+            .unwrap();
+        let message_entry = (&vec_s_t * identity_based_pk + msg_q_half);
 
-        // u = A * e
-        let vec_u = pk * &vec_e;
-        // c = p^t * e + msg *  ⌊q/2⌋
-        let q_half = Z::from(&self.q).div_floor(&Z::from(2));
-        let c = identity_based_pk.dot_product(&vec_e).unwrap() + message * q_half;
+        // c^t = s^t * A + e^t + [0^{1xn} | msg *  ⌊q/2⌋]
+        let mut c = ((vec_s_t * master_pk)
+            .concat_horizontal(&message_entry)
+            .unwrap()
+            + vec_e_t)
+            .transpose();
+        println!("\nmatrix done\n\n");
+        // hide message in last entry
+        // compute msg * ⌊q/2⌋
 
-        vec_u //(vec_u, c)
+        // set last entry of c = last_entry + msg * ⌊q/2⌋
+
+        c
     }
 
     /// Decrypts the provided `cipher` using the secret key `sk` by following these steps:
@@ -187,9 +225,18 @@ impl IBE for DualRegevIBE {
     fn dec(&self, sk: &Self::SecretKey, cipher: &Self::Cipher) -> Z {
         println!("Begin Dec");
 
-        let sk_mat_zq = MatZq::from_mat_z_modulus(&sk, &self.q);
+        let tmp = (Z::MINUS_ONE * sk)
+            .concat_vertical(&MatZ::identity(1, 1))
+            .unwrap();
+        let result: Zq = (cipher.transpose() * tmp).get_entry(0, 0).unwrap();
 
-        return self.dualregev.dec(&sk, cipher);
+        let q_half = Z::from(&self.q).div_floor(&Z::from(2));
+
+        if result.distance(Z::ZERO) > result.distance(q_half) {
+            Z::ONE
+        } else {
+            Z::ZERO
+        }
     }
 }
 
@@ -223,19 +270,18 @@ impl DualRegevIBE {
         r: Q,       // gaussian parameter for sampleD
         alpha: Q,   // gaussian parameter for sampleZ
     ) -> Self {
-        let gadget = GadgetParameters::init_default(2, &q);
+        let gadget = GadgetParameters::init_default(&n, &q);
         let psf = PSFGPV {
             gp: gadget,
             s: Q::from(20),
         }; //todo standard deviation
-        let dualregev = DualRegev::default();
+        let gadget = GadgetParameters::init_default(&n, &q);
         Self {
             n: n,
-            m: m,
+            m: gadget.m_bar,
             q: q,
             r: r,
             alpha: alpha,
-            dualregev: dualregev,
             psf: psf,
             storage: HashMap::new(),
         }
@@ -252,11 +298,22 @@ mod test_dual_regev_ibe {
     /// for message 0 and small n.
     #[test]
     fn cycle_zero_small_n() {
-        let x = Z::from(5);
-        let mut y: i64 = (&x).try_into().unwrap();
-        y += 1;
         let msg = Z::ZERO;
         let id = String::from("Hello World!");
+        let mut cryptosystem = DualRegevIBE::default();
+
+        let (pk, sk) = cryptosystem.gen();
+        let id_sk = cryptosystem.extract(&pk, &sk, &id);
+        let cipher = cryptosystem.enc(&pk, &id, &msg);
+        let m = cryptosystem.dec(&id_sk, &cipher);
+        assert_eq!(msg, m);
+    }
+
+    /// for message 0 and small n.
+    #[test]
+    fn cycle_zero_small_n12() {
+        let msg = Z::ZERO;
+        let id = String::from("Hel213lo World!");
         let mut cryptosystem = DualRegevIBE::default();
 
         let (pk, sk) = cryptosystem.gen();
