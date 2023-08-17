@@ -39,7 +39,7 @@ use serde::{Deserialize, Serialize};
 /// use qfall_math::integer::Z;
 /// use qfall_math::integer_mod_q::Modulus;
 ///
-/// let params = GadgetParameters::init_default(42, &Modulus::from(42));
+/// let params = GadgetParameters::init_default(42, 42);
 /// ```
 #[derive(Serialize, Deserialize)]
 pub struct GadgetParameters {
@@ -109,19 +109,20 @@ impl GadgetParameters {
     /// use qfall_math::integer::Z;
     /// use qfall_math::integer_mod_q::Modulus;
     ///
-    /// let params = GadgetParameters::init_default(42, &Modulus::from(42));
+    /// let params = GadgetParameters::init_default(42, 42);
     /// ```
     ///
     /// # Panics ...
     /// - if the security parameter `n` is not in `[1, i64::MAX]`.
-    pub fn init_default(n: impl Into<Z>, modulus: &Modulus) -> Self {
+    pub fn init_default(n: impl Into<Z>, modulus: impl Into<Modulus>) -> Self {
         // panic if n < 1 (security parameter must be positive) and not larger than
         // [`i64`] because downstream matrices can be at most that size
+        let modulus = modulus.into();
         let n = n.into();
         assert!(n >= Z::ONE && n <= Z::from(i64::MAX));
 
         let base = Z::from(2);
-        let log_q = Z::from(modulus).log_ceil(&base).unwrap();
+        let log_q = Z::from(&modulus).log_ceil(&base).unwrap();
         let n_log_q = &n * &log_q;
         let log_n = n.log_ceil(&base).unwrap();
         let m_bar = &n_log_q + &log_n.pow(2).unwrap();
@@ -130,7 +131,7 @@ impl GadgetParameters {
             k: log_q,
             m_bar,
             base,
-            q: modulus.clone(),
+            q: modulus,
             distribution: Box::new(PlusMinusOneZero),
         }
     }
@@ -161,20 +162,21 @@ impl GadgetParametersRing {
     /// use qfall_math::integer::Z;
     /// use qfall_math::integer_mod_q::Modulus;
     ///
-    /// let params = GadgetParametersRing::init_default(42, &Modulus::from(42));
+    /// let params = GadgetParametersRing::init_default(42, 42);
     /// ```
     ///
     /// # Panics ...
     /// - if the security parameter `n` is not in `[1, i64::MAX]`.
-    pub fn init_default(n: impl Into<Z>, modulus: &Modulus) -> Self {
+    pub fn init_default(n: impl Into<Z>, modulus: impl Into<Modulus>) -> Self {
         // panic if n < 1 (security parameter must be positive) and not larger than
         // [`i64`] because downstream matrices can be at most that size
+        let modulus = modulus.into();
         let n = n.into();
         assert!(n >= Z::ONE && n <= Z::from(i64::MAX));
 
         let base = Z::from(2);
-        let log_q = Z::from(modulus).log_ceil(&base).unwrap();
-        let mut cycl_poly = PolyOverZq::from(modulus);
+        let log_q = Z::from(&modulus).log_ceil(&base).unwrap();
+        let mut cycl_poly = PolyOverZq::from(&modulus);
         cycl_poly.set_coeff(0, 1).unwrap();
         cycl_poly.set_coeff(&n, 1).unwrap();
 
@@ -184,7 +186,7 @@ impl GadgetParametersRing {
             m_bar: log_q + 2,
             base,
             modulus: ModulusPolynomialRingZq::try_from(&cycl_poly).unwrap(),
-            q: modulus.clone(),
+            q: modulus,
             distribution: Box::new(SampleZ),
         }
     }

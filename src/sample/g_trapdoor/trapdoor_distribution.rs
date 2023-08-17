@@ -12,7 +12,7 @@
 use qfall_math::{
     integer::{MatPolyOverZ, MatZ, PolyOverZ, Z},
     rational::Q,
-    traits::{SetCoefficient, SetEntry},
+    traits::SetEntry,
 };
 use serde::{Deserialize, Serialize};
 
@@ -102,11 +102,7 @@ impl TrapdoorDistributionRing for SampleZ {
         let nr_cols = i64::try_from(nr_cols).unwrap();
         let mut out_mat = MatPolyOverZ::new(1, nr_cols);
         for j in 0..nr_cols {
-            let mut sample = PolyOverZ::default();
-            for k in 0..n {
-                let sample_z = Z::sample_discrete_gauss(n, &Z::ZERO, s).unwrap();
-                sample.set_coeff(k, &sample_z).unwrap();
-            }
+            let sample = PolyOverZ::sample_discrete_gauss(n, n, 0, s).unwrap();
             out_mat.set_entry(0, j, &sample).unwrap();
         }
 
@@ -155,7 +151,7 @@ mod test_sample_z {
             // it should be the same as sampling a vector with 10*15 entries
             let coeff_embedding = sample
                 .transpose()
-                .into_coefficient_embedding_from_matrix(10);
+                .into_coefficient_embedding_from_matrix(11);
 
             // test for concentration bound
             assert!(

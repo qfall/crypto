@@ -36,12 +36,10 @@ use serde::{Deserialize, Serialize};
 /// use qfall_crypto::sample::distribution::psf::gpv::PSFGPV;
 /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
 /// use qfall_math::rational::Q;
-/// use qfall_math::integer_mod_q::Modulus;
 /// use crate::qfall_crypto::sample::distribution::psf::PSF;
 ///
-/// let modulus = Modulus::from(64);
 /// let psf = PSFGPV {
-///     gp: GadgetParameters::init_default(8, &modulus),
+///     gp: GadgetParameters::init_default(8, 64),
 ///     s: Q::from(12),
 /// };
 ///
@@ -67,12 +65,10 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     /// use qfall_crypto::sample::distribution::psf::gpv::PSFGPV;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     /// use qfall_math::rational::Q;
-    /// use qfall_math::integer_mod_q::Modulus;
     /// use crate::qfall_crypto::sample::distribution::psf::PSF;
     ///
-    /// let modulus = Modulus::from(64);
     /// let psf = PSFGPV {
-    ///     gp: GadgetParameters::init_default(8, &modulus),
+    ///     gp: GadgetParameters::init_default(8, 64),
     ///     s: Q::from(12),
     /// };
     ///
@@ -93,12 +89,10 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     /// use qfall_crypto::sample::distribution::psf::gpv::PSFGPV;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     /// use qfall_math::rational::Q;
-    /// use qfall_math::integer_mod_q::Modulus;
     /// use crate::qfall_crypto::sample::distribution::psf::PSF;
     ///
-    /// let modulus = Modulus::from(64);
     /// let psf = PSFGPV {
-    ///     gp: GadgetParameters::init_default(8, &modulus),
+    ///     gp: GadgetParameters::init_default(8, 64),
     ///     s: Q::from(12),
     /// };
     /// let (a, r) = psf.trap_gen();
@@ -127,12 +121,10 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     /// use qfall_crypto::sample::distribution::psf::gpv::PSFGPV;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     /// use qfall_math::rational::Q;
-    /// use qfall_math::integer_mod_q::Modulus;
     /// use crate::qfall_crypto::sample::distribution::psf::PSF;
     ///
-    /// let modulus = Modulus::from(64);
     /// let psf = PSFGPV {
-    ///     gp: GadgetParameters::init_default(8, &modulus),
+    ///     gp: GadgetParameters::init_default(8, 64),
     ///     s: Q::from(12),
     /// };
     /// let (a, r) = psf.trap_gen();
@@ -167,12 +159,10 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     /// use qfall_crypto::sample::distribution::psf::gpv::PSFGPV;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     /// use qfall_math::rational::Q;
-    /// use qfall_math::integer_mod_q::Modulus;
     /// use crate::qfall_crypto::sample::distribution::psf::PSF;
     ///
-    /// let modulus = Modulus::from(64);
     /// let psf = PSFGPV {
-    ///     gp: GadgetParameters::init_default(8, &modulus),
+    ///     gp: GadgetParameters::init_default(8, 64),
     ///     s: Q::from(12),
     /// };
     /// let (a, r) = psf.trap_gen();
@@ -195,14 +185,12 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     /// use qfall_crypto::sample::distribution::psf::gpv::PSFGPV;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     /// use qfall_math::rational::Q;
-    /// use qfall_math::integer_mod_q::Modulus;
     /// use crate::qfall_crypto::sample::distribution::psf::PSF;
     /// use qfall_math::integer::MatZ;
     /// use qfall_math::traits::GetNumColumns;
     ///
-    /// let modulus = Modulus::from(64);
     /// let psf = PSFGPV {
-    ///     gp: GadgetParameters::init_default(8, &modulus),
+    ///     gp: GadgetParameters::init_default(8, 64),
     ///     s: Q::from(12),
     /// };
     /// let (a, r) = psf.trap_gen();

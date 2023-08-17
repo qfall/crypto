@@ -39,16 +39,9 @@ impl Pfdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq> {
     /// # Example
     /// ```
     /// use qfall_crypto::construction::signature::pfdh::Pfdh;
-    /// use qfall_math::integer::Z;
-    /// use qfall_math::integer_mod_q::Modulus;
-    /// use qfall_math::rational::Q;
     /// use crate::qfall_crypto::construction::signature::SignatureScheme;
     ///
-    /// let s = Q::from(17);
-    /// let n = Z::from(4);
-    /// let modulus = Modulus::try_from(&Z::from(113)).unwrap();
-    ///
-    /// let mut pfdh = Pfdh::init_gpv(n, &modulus, &s, 128);
+    /// let mut pfdh = Pfdh::init_gpv(4, 113, 17, 128);
     ///
     /// let m = "Hello World!";
     ///
@@ -59,20 +52,22 @@ impl Pfdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq> {
     /// ```
     pub fn init_gpv(
         n: impl Into<Z>,
-        modulus: &Modulus,
-        s: &Q,
+        modulus: impl Into<Modulus>,
+        s: impl Into<Q>,
         randomness_length: impl Into<Z>,
     ) -> Self {
+        let modulus = modulus.into();
         let n = n.into();
+        let s = s.into();
         let psf = PSFGPV {
-            gp: GadgetParameters::init_default(&n, modulus),
-            s: s.clone(),
+            gp: GadgetParameters::init_default(&n, &modulus),
+            s,
         };
         let n = i64::try_from(&n).unwrap();
         Self {
             psf: Box::new(psf),
             hash: Box::new(HashMatZq {
-                modulus: modulus.clone(),
+                modulus,
                 rows: n,
                 cols: 1,
             }),
