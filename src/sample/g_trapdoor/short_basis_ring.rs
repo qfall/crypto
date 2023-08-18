@@ -59,6 +59,10 @@ use qfall_math::{
 ///
 /// let short_base = gen_short_basis_for_trapdoor_ring(&params, &a, &r, &e);
 /// ```
+///
+/// Panics ...
+/// - if `e` and `r` are not both of dimensions `1 x k`.
+/// - if `a` is not of dimension 1 x 1.
 pub fn gen_short_basis_for_trapdoor_ring(
     params: &GadgetParametersRing,
     a: &MatPolynomialRingZq,
@@ -151,7 +155,6 @@ fn compute_s(params: &GadgetParametersRing) -> MatPolyOverZ {
 
 #[cfg(test)]
 mod test_gen_short_basis_for_trapdoor_ring {
-
     use super::gen_short_basis_for_trapdoor_ring;
     use crate::sample::g_trapdoor::{
         gadget_parameters::GadgetParametersRing, gadget_ring::gen_trapdoor_ring_lwe,
@@ -392,7 +395,6 @@ mod test_gen_sa {
 
         sa_r.reduce_by_poly(&PolyOverZ::from(&PolyOverZq::from(&params.modulus)));
 
-        println!("{}", sa_r.into_coefficient_embedding_from_matrix(4));
 
         let sa_r_cmp = MatZ::from_str(
             "[\
@@ -433,7 +435,6 @@ mod test_compute_s {
         integer_mod_q::Modulus,
     };
     use std::str::FromStr;
-
     use crate::sample::g_trapdoor::{
         gadget_parameters::GadgetParametersRing, short_basis_ring::compute_s,
     };
