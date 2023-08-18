@@ -20,17 +20,22 @@ use qfall_math::{
 
 /// Generates a short basis according to [\[1\]](<../index.html#:~:text=[1]>).
 /// Also refer to Lemma 5.3 in the eprint version <https://eprint.iacr.org/2011/501.pdf>.
-/// Both interpreted in the ring-setting.
+/// Both have to be adopted to the ring-setting here.
 ///
-/// *Note*: At the moment this function does not support tags, this may be added later
-/// (and the signature of this function may change).
+/// The matrix is generated as:
+/// `[ 1 | 0 | e,  0 | 1 | r, 0_{2xn} | I_{kxk} ] * [ 0 | I_2', S' | W' ]`
+/// with
+/// - `W' := [X^0 | X^1 | ... | X^{n-1}] \otimes W`,
+/// - `I_2' := [X^0 | X^1 | ... | X^{n-1}] \otimes I_2` and
+/// - `S':= [X^0 | X^1 | ... | X^{n-1}] \otimes S`.
+/// Here `W` is a solution of `g^tW = -A [ I_2 | 0 ] mod q`,
+/// `S` is a reordered (if `base^k=q` then reversed, otherwise the same as before)
+/// short base of `\Lambda^\perp(g^t)`, i.e. `S''` is a reordered short base of `g^t`
+/// in the classical case and `S':= [X^0 | X^1 | ... | X^{n-1}] \otimes S''`.
 ///
-/// The matrix is generated as `[ 1 | 0 | e,  0 | 1 | r, 0 | I ] * [ 0 | I_2, S' | W ]`
-/// where `w` is a solution of `g^tw = -A [ I_2 | 0 ] mod q` and `S'` is a
-/// reordering of `S` (if `base^k=q` then reversed, otherwise the same as before).
-/// This corresponds to an appropriate reordering from
+/// The appropriate reordering comes from
 /// [\[1\]](<../index.html#:~:text=[1]>) and Lemma 3.2 from
-/// [\[2\]](<../index.html#:~:text=[2]>) in the ring-setting.
+/// [\[2\]](<../index.html#:~:text=[2]>).
 ///
 /// Parameters:
 /// - `params`: the gadget parameters with which the trapdoor was generated
@@ -49,7 +54,6 @@ use qfall_math::{
 ///     integer::PolyOverZ,
 ///     integer_mod_q::{Modulus},
 ///     rational::Q,
-///     traits::{GetNumColumns, GetNumRows},
 /// };
 ///
 /// let params = GadgetParametersRing::init_default(8, &Modulus::from(16));
@@ -78,7 +82,7 @@ pub fn gen_short_basis_for_trapdoor_ring(
     basis
 }
 
-/// Computes [ 1 | 0 | e,  0 | 1 | r, 0 | I ]
+/// Computes [ 1 | 0 | e,  0 | 1 | r, 0_{2xk} | I_{kxk} ]
 fn gen_sa_l(e: &MatPolyOverZ, r: &MatPolyOverZ) -> MatPolyOverZ {
     let out = e.concat_vertical(r).unwrap();
 
@@ -90,9 +94,11 @@ fn gen_sa_l(e: &MatPolyOverZ, r: &MatPolyOverZ) -> MatPolyOverZ {
     identity_left.concat_horizontal(&out).unwrap()
 }
 
-/// Computes `[0 | I , S' | W]`
+/// Computes `pd \tensor [0_{2xk}, S''] || pd \tensor [I_{2x2}, w]` where
+/// `pd := [X^0 | X^1 | ... | X^{n-1}]`.
+/// Finally, the sa_r must have `n*m = n*(k+2)` columns.
 fn gen_sa_r(params: &GadgetParametersRing, a: &MatPolynomialRingZq) -> MatPolyOverZ {
-    let n = PolyOverZq::from(&params.modulus).get_degree();
+    let n = params.modulus.get_degree();
     let mut poly_degrees = MatPolyOverZ::new(1, n);
     for i in 0..n {
         let mut x_i = PolyOverZ::default();
@@ -100,30 +106,40 @@ fn gen_sa_r(params: &GadgetParametersRing, a: &MatPolynomialRingZq) -> MatPolyOv
         poly_degrees.set_entry(0, i, x_i).unwrap();
     }
 
-    let ident = MatPolyOverZ::identity(2, 2);
-    let right = poly_degrees.tensor_product(&ident.concat_vertical(&compute_w(params, a)).unwrap());
-
+    // compute a short base for `\Lambda^\perp(g^t)` in the classical but interpreted in
+    // the ring and by applying the tensor product lift it to a short base for
+    // `\Lambda^\perp(g^t)` in the ring.
     let mut s = compute_s(params);
     if params.base.pow(&params.k).unwrap() == Z::from(&params.q) {
         s.reverse_columns();
     }
     let s = poly_degrees.tensor_product(&s);
-    let zero = MatPolyOverZ::new(2, s.get_num_columns());
+    let zero = MatPolyOverZ::new(2, &params.k * n);
     let left = zero.concat_vertical(&s).unwrap();
+
+    // compute a solution for `g^tw = - a[I_2|0] mod qR`, but as all `w_i := X^i*w` are
+    // also valid solution, we use the tensor product to have a possible solutions for
+    // each power.
+    let w = compute_w(params, a);
+    let ident = MatPolyOverZ::identity(2, 2);
+    let right = poly_degrees.tensor_product(&ident.concat_vertical(&w).unwrap());
 
     left.concat_horizontal(&right).unwrap()
 }
 
-/// Computes `w` with `g^tw = - a[I_2|0] mod qR`
+/// Computes `w` with `g^tw = - a[I_2|0] mod qR` This is equivalent to finding solutions
+/// for `g^tw_0 = -a_0 mod qR` and `g^tw_1 = -a_1 mod qR` and concatenating them after.
 fn compute_w(params: &GadgetParametersRing, a: &MatPolynomialRingZq) -> MatPolyOverZ {
     let minus_one = PolynomialRingZq::from((&PolyOverZ::from(-1), &params.modulus));
-    let rhs_1: PolynomialRingZq = a.get_entry(0, 0).unwrap();
-    let rhs_2: PolynomialRingZq = a.get_entry(0, 1).unwrap();
+    let rhs_0: PolynomialRingZq = a.get_entry(0, 0).unwrap();
+    let rhs_1: PolynomialRingZq = a.get_entry(0, 1).unwrap();
+
+    let w_0 =
+        find_solution_gadget_ring(&(&minus_one * &rhs_0), &params.k, &params.base).transpose();
     let w_1 =
         find_solution_gadget_ring(&(&minus_one * &rhs_1), &params.k, &params.base).transpose();
-    let w_2 =
-        find_solution_gadget_ring(&(&minus_one * &rhs_2), &params.k, &params.base).transpose();
-    w_1.concat_horizontal(&w_2).unwrap()
+
+    w_0.concat_horizontal(&w_1).unwrap()
 }
 
 /// Computes a short basis for the gadget vector.
@@ -170,8 +186,7 @@ mod test_gen_short_basis_for_trapdoor_ring {
     #[test]
     fn is_basis() {
         for n in [5, 10, 12] {
-            let params =
-                GadgetParametersRing::init_default(n, &Modulus::try_from(&Z::from(16)).unwrap());
+            let params = GadgetParametersRing::init_default(n, &Modulus::from(16));
             let a_bar = PolyOverZ::sample_uniform(&params.n, 0, &params.q).unwrap();
 
             let (a, r, e) = gen_trapdoor_ring_lwe(&params, &a_bar, &Q::from(5)).unwrap();
@@ -192,8 +207,7 @@ mod test_gen_short_basis_for_trapdoor_ring {
     #[test]
     fn basis_is_reduced() {
         for n in [5, 10, 12] {
-            let params =
-                GadgetParametersRing::init_default(n, &Modulus::try_from(&Z::from(16)).unwrap());
+            let params = GadgetParametersRing::init_default(n, &Modulus::from(16));
             let a_bar = PolyOverZ::sample_uniform(&params.n, 0, &params.q).unwrap();
 
             let (a, r, e) = gen_trapdoor_ring_lwe(&params, &a_bar, &Q::from(5)).unwrap();
@@ -213,18 +227,17 @@ mod test_gen_short_basis_for_trapdoor_ring {
     #[test]
     fn ensure_orthogonalized_length_perfect_power() {
         for n in 4..8 {
-            let params =
-                GadgetParametersRing::init_default(n, &Modulus::try_from(&Z::from(32)).unwrap());
+            let params = GadgetParametersRing::init_default(n, &Modulus::from(32));
             let a_bar = PolyOverZ::sample_uniform(&params.n, 0, &params.q).unwrap();
 
             let (a, r, e) = gen_trapdoor_ring_lwe(&params, &a_bar, &Q::from(5)).unwrap();
 
             let short_base = gen_short_basis_for_trapdoor_ring(&params, &a, &r, &e);
-
             let short_base_embedded = short_base.into_coefficient_embedding_from_matrix(n);
 
             let orthogonalized_short_basis = MatQ::from(&short_base_embedded).gso();
 
+            // Compute s_1(r) and s_1(e).
             let s1_r = {
                 let mut r_max = Q::ZERO;
                 let r_embedded = r.into_coefficient_embedding_from_matrix(n);
@@ -258,6 +271,8 @@ mod test_gen_short_basis_for_trapdoor_ring {
                 e_max
             };
 
+            // Check that all vectors within the orthogonalized base satisfy the length
+            // condition.
             let orth_s_length = 2;
             let upper_bound: Q = (s1_r + s1_e + 1) * orth_s_length;
             for i in 0..orthogonalized_short_basis.get_num_columns() {
@@ -273,18 +288,17 @@ mod test_gen_short_basis_for_trapdoor_ring {
     #[test]
     fn ensure_orthogonalized_length_not_perfect_power() {
         for n in 4..8 {
-            let params =
-                GadgetParametersRing::init_default(n, &Modulus::try_from(&Z::from(42)).unwrap());
+            let params = GadgetParametersRing::init_default(n, &Modulus::from(42));
             let a_bar = PolyOverZ::sample_uniform(&params.n, 0, &params.q).unwrap();
 
             let (a, r, e) = gen_trapdoor_ring_lwe(&params, &a_bar, &Q::from(5)).unwrap();
 
             let short_base = gen_short_basis_for_trapdoor_ring(&params, &a, &r, &e);
-
             let short_base_embedded = short_base.into_coefficient_embedding_from_matrix(n);
 
             let orthogonalized_short_basis = MatQ::from(&short_base_embedded).gso();
 
+            // Compute s_1(r) and s_1(e).
             let s1_r = {
                 let mut r_max = Q::ZERO;
                 let r_embedded = r.into_coefficient_embedding_from_matrix(n);
@@ -318,6 +332,8 @@ mod test_gen_short_basis_for_trapdoor_ring {
                 e_max
             };
 
+            // Check that all vectors within the orthogonalized base satisfy the length
+            // condition.
             let orth_s_length = Q::from(5).sqrt();
             let upper_bound: Q = (s1_r + s1_e + 1) * orth_s_length;
             for i in 0..orthogonalized_short_basis.get_num_columns() {
@@ -395,7 +411,6 @@ mod test_gen_sa {
 
         sa_r.reduce_by_poly(&PolyOverZ::from(&PolyOverZq::from(&params.modulus)));
 
-
         let sa_r_cmp = MatZ::from_str(
             "[\
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],\
@@ -430,14 +445,14 @@ mod test_gen_sa {
 
 #[cfg(test)]
 mod test_compute_s {
+    use crate::sample::g_trapdoor::{
+        gadget_parameters::GadgetParametersRing, short_basis_ring::compute_s,
+    };
     use qfall_math::{
         integer::{MatPolyOverZ, Z},
         integer_mod_q::Modulus,
     };
     use std::str::FromStr;
-    use crate::sample::g_trapdoor::{
-        gadget_parameters::GadgetParametersRing, short_basis_ring::compute_s,
-    };
 
     /// Ensure that the matrix s is computed correctly for a power-of-two modulus.
     #[test]
