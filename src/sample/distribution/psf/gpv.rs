@@ -59,6 +59,7 @@ pub struct PSFGPV {
 impl PSF<MatZq, (MatZ, MatQ), MatZ, MatZq> for PSFGPV {
     /// Computes a G-Trapdoor according to the [`GadgetParameters`]
     /// defined in the struct.
+    /// It returns a matrix `A` together with a short base and its GSO.
     ///
     /// # Examples
     /// ```
@@ -115,7 +116,8 @@ impl PSF<MatZq, (MatZ, MatQ), MatZ, MatZq> for PSFGPV {
     ///
     /// Parameters:
     /// - `a`: The parity-check matrix
-    /// - `r`: The G-Trapdoor for `a`
+    /// - `short_base`: The short base for `\Lambda^\perp(A)`
+    /// - `short_base_gso`: The precomputed GSO of the short_base
     /// - `u`: The syndrome from the range
     ///
     /// Returns a sample `e` from the domain on the conditioned discrete
