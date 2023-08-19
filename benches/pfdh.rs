@@ -35,4 +35,16 @@ fn bench_pfdh_cycle(c: &mut Criterion) {
     c.bench_function("PFDH n=8", |b| b.iter(|| pfdh_cycle(8)));
 }
 
-criterion_group!(benches, bench_pfdh_cycle);
+fn cycle_signature_only(c: &mut Criterion) {
+    let mut pfdh = Pfdh::init_gpv(8, 113, 17, 128);
+
+    let m = "Hello World!";
+
+    let (pk, sk) = pfdh.gen();
+
+    c.bench_function("Signing using PFDH n=8", |b| {
+        b.iter(|| pfdh.sign(m.to_owned(), &sk, &pk))
+    });
+}
+
+criterion_group!(benches, bench_pfdh_cycle, cycle_signature_only);
