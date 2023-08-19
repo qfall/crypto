@@ -46,7 +46,7 @@ use serde::{Deserialize, Serialize};
 /// let (a, td) = psf.trap_gen();
 /// let domain_sample = psf.samp_d();
 /// let range_fa = psf.f_a(&a, &domain_sample);
-/// let preimage = psf.samp_p(&a, &r, &range_fa);
+/// let preimage = psf.samp_p(&a, &td, &range_fa);
 ///
 /// assert!(psf.check_domain(&preimage));
 /// ```
@@ -136,7 +136,7 @@ impl PSF<MatZq, (MatZ, MatQ), MatZ, MatZq> for PSFGPV {
     /// let domain_sample = psf.samp_d();
     /// let range_fa = psf.f_a(&a, &domain_sample);
     ///
-    /// let preimage = psf.samp_p(&a, &r, &range_fa);
+    /// let preimage = psf.samp_p(&a, &td, &range_fa);
     /// assert_eq!(range_fa, psf.f_a(&a, &preimage))
     /// ```
     fn samp_p(&self, a: &MatZq, (short_base, short_base_gso): &(MatZ, MatQ), u: &MatZq) -> MatZ {
