@@ -9,8 +9,8 @@
 //! This module contains hashes into different domains.
 
 use qfall_math::{
-    integer::Z,
-    integer_mod_q::{MatZq, Modulus, Zq},
+    integer::{MatPolyOverZ, Z},
+    integer_mod_q::{MatPolynomialRingZq, MatZq, Modulus, ModulusPolynomialRingZq, Zq},
     traits::SetEntry,
 };
 use serde::{Deserialize, Serialize};
@@ -106,14 +106,15 @@ pub fn hash_to_mat_zq_sha256(
     string: &str,
     num_rows: impl Into<i64> + Display,
     num_cols: impl Into<i64> + Display,
-    modulus: &Modulus,
+    modulus: impl Into<Modulus>,
 ) -> MatZq {
+    let modulus = modulus.into();
     let num_rows_new: i64 = num_rows.into();
     let num_cols_new: i64 = num_cols.into();
     if num_cols_new <= 0 || num_rows_new <= 0 {
         panic!("The number of rows and number of columns must be at least one.");
     }
-    let mut matrix = MatZq::new(num_rows_new, num_cols_new, modulus);
+    let mut matrix = MatZq::new(num_rows_new, num_cols_new, &modulus);
     let new_string = format!("{num_rows_new} {num_cols_new} {string}");
     for i in 0..num_rows_new {
         for j in 0..num_cols_new {
@@ -121,7 +122,7 @@ pub fn hash_to_mat_zq_sha256(
                 .set_entry(
                     i,
                     j,
-                    hash_to_zq_sha256(&format!("{i} {j} {new_string}"), modulus),
+                    hash_to_zq_sha256(&format!("{i} {j} {new_string}"), &modulus),
                 )
                 .unwrap();
         }
@@ -217,6 +218,32 @@ mod tests_sha {
     }
 }
 
+/// Hash object to hash a String into a [`MatZq`].
+/// The object fixes the modulus and the corresponding dimensions.
+///
+/// Parameters:
+/// - `modulus`: Defines the range in which each entry is hashed
+/// - `rows`: Defines the number of rows of the hash value
+/// - `cols`: Defines the number of columns of the hash value
+///
+/// Returns a [`MatZq`] as a hash for the given string.
+///
+/// # Examples
+/// ```
+/// use qfall_crypto::primitive::hash::{HashMatZq, HashInto};
+/// use qfall_crypto::primitive::hash::hash_to_mat_zq_sha256;
+/// use qfall_math::{integer::Z, integer_mod_q::{Modulus, MatZq}};
+/// use std::str::FromStr;
+///
+/// let modulus = Modulus::from(7);
+///
+/// let hasher = HashMatZq {
+///     modulus: modulus,
+///     rows: 17,
+///     cols: 3,
+/// };
+/// let hash_val = hasher.hash("Hello");
+/// ```
 #[derive(Serialize, Deserialize)]
 pub struct HashMatZq {
     pub modulus: Modulus,
@@ -227,7 +254,131 @@ pub trait HashInto<Domain> {
     fn hash(&self, m: &str) -> Domain;
 }
 impl HashInto<MatZq> for HashMatZq {
+    /// Hashes a given String literal into a [`MatZq`].
+    /// The dimensions and the modulus is fixed by the hash object.
+    ///
+    /// Parameters:
+    /// - `string`: specifies the value that is hashed
+    ///
+    /// Returns a [`MatZq`] as a hash for the given string.
+    ///
+    /// # Examples
+    /// ```
+    /// use qfall_crypto::primitive::hash::{HashMatZq, HashInto};
+    /// use qfall_crypto::primitive::hash::hash_to_mat_zq_sha256;
+    /// use qfall_math::{integer::Z, integer_mod_q::{Modulus, MatZq}};
+    /// use std::str::FromStr;
+    ///
+    /// let modulus = Modulus::from(7);
+    ///
+    /// let hasher = HashMatZq {
+    ///     modulus: modulus,
+    ///     rows: 17,
+    ///     cols: 3,
+    /// };
+    /// let hash_val = hasher.hash("Hello");
+    /// ```
     fn hash(&self, m: &str) -> MatZq {
         hash_to_mat_zq_sha256(m, self.rows, self.cols, &self.modulus)
+    }
+}
+
+/// Hash object to hash a String into a [`MatPolynomialRingZq`].
+/// The object fixes the modulus and the corresponding dimensions.
+///
+/// Parameters:
+/// - `modulus`: Defines the range in which each entry is hashed
+/// - `rows`: Defines the number of rows of the hash value
+/// - `cols`: Defines the number of columns of the hash value
+///
+/// Returns a [`MatZq`] as a hash for the given string.
+///
+/// # Examples
+/// ```
+/// use qfall_crypto::primitive::hash::{HashMatPolynomialRingZq, HashInto};
+/// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
+/// use qfall_math::{
+///     integer_mod_q::Modulus,
+///     traits::{GetNumColumns, GetNumRows},
+/// };
+///
+/// let gp = GadgetParametersRing::init_default(10, &Modulus::from(99));
+///
+/// let hasher = HashMatPolynomialRingZq {
+///     modulus: gp.modulus,
+///     rows: 17,
+///     cols: 3,
+/// };
+/// let hash_val = hasher.hash("Hello");
+/// ```
+#[derive(Serialize, Deserialize)]
+pub struct HashMatPolynomialRingZq {
+    pub modulus: ModulusPolynomialRingZq,
+    pub rows: i64,
+    pub cols: i64,
+}
+impl HashInto<MatPolynomialRingZq> for HashMatPolynomialRingZq {
+    /// Hashes a given String literal into a [`MatPolynomialRingZq`].
+    /// The dimensions and the modulus is fixed by the hash object.
+    ///
+    /// Parameters:
+    /// - `string`: specifies the value that is hashed
+    ///
+    /// Returns a [`MatPolynomialRingZq`] as a hash for the given string.
+    ///
+    /// # Examples
+    /// ```
+    /// use qfall_crypto::primitive::hash::{HashMatPolynomialRingZq, HashInto};
+    /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
+    /// use qfall_math::{
+    ///     integer_mod_q::Modulus,
+    ///     traits::{GetNumColumns, GetNumRows},
+    /// };
+    ///
+    /// let gp = GadgetParametersRing::init_default(10, &Modulus::from(99));
+    ///
+    /// let hasher = HashMatPolynomialRingZq {
+    ///     modulus: gp.modulus,
+    ///     rows: 17,
+    ///     cols: 3,
+    /// };
+    /// let hash_val = hasher.hash("Hello");
+    /// ```
+    fn hash(&self, m: &str) -> MatPolynomialRingZq {
+        let highest_deg = self.modulus.get_degree();
+        let embedding =
+            (&hash_to_mat_zq_sha256(m, self.rows * highest_deg, self.cols, &self.modulus.get_q()))
+                .into();
+        let poly_mat = MatPolyOverZ::from_coefficient_embedding_to_matrix(&embedding, highest_deg);
+        MatPolynomialRingZq::from((&poly_mat, &self.modulus))
+    }
+}
+
+#[cfg(test)]
+mod hash_into_mat_polynomial_ring_zq {
+    use super::{HashInto, HashMatPolynomialRingZq};
+    use crate::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
+    use qfall_math::{
+        integer_mod_q::Modulus,
+        traits::{GetNumColumns, GetNumRows},
+    };
+
+    /// Ensure that the hash function maps into the correct dimension and it is also
+    /// static, i.e. the same value is returned, when the same value  is hashed.
+    #[test]
+    fn correct_dimensions() {
+        let gp = GadgetParametersRing::init_default(10, &Modulus::from(99));
+
+        let hasher = HashMatPolynomialRingZq {
+            modulus: gp.modulus,
+            rows: 17,
+            cols: 3,
+        };
+        let hash_val = hasher.hash("Hello");
+        let hash_val_2 = hasher.hash("Hello");
+
+        assert_eq!(hasher.rows, hash_val.get_num_rows());
+        assert_eq!(hasher.cols, hash_val.get_num_columns());
+        assert_eq!(hash_val, hash_val_2);
     }
 }
