@@ -73,6 +73,7 @@ pub struct GadgetParameters {
 ///
 /// let params = GadgetParametersRing::init_default(42, &Modulus::from(42));
 /// ```
+#[derive(Serialize, Deserialize)]
 pub struct GadgetParametersRing {
     pub n: Z,
     pub k: Z,

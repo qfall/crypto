@@ -176,7 +176,7 @@ mod test_gen_short_basis_for_trapdoor_ring {
         gadget_parameters::GadgetParametersRing, gadget_ring::gen_trapdoor_ring_lwe,
     };
     use qfall_math::{
-        integer::{PolyOverZ, Z},
+        integer::PolyOverZ,
         integer_mod_q::{MatPolynomialRingZq, Modulus},
         rational::{MatQ, Q},
         traits::{GetEntry, GetNumColumns, GetNumRows, Pow},
