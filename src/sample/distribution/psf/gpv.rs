@@ -43,7 +43,7 @@ use serde::{Deserialize, Serialize};
 ///     s: Q::from(12),
 /// };
 ///
-/// let (a, r) = psf.trap_gen();
+/// let (a, td) = psf.trap_gen();
 /// let domain_sample = psf.samp_d();
 /// let range_fa = psf.f_a(&a, &domain_sample);
 /// let preimage = psf.samp_p(&a, &r, &range_fa);
@@ -56,7 +56,7 @@ pub struct PSFGPV {
     pub s: Q,
 }
 
-impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
+impl PSF<MatZq, (MatZ, MatQ), MatZ, MatZq> for PSFGPV {
     /// Computes a G-Trapdoor according to the [`GadgetParameters`]
     /// defined in the struct.
     ///
@@ -72,14 +72,19 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     ///     s: Q::from(12),
     /// };
     ///
-    /// let (a, r) = psf.trap_gen();
+    /// let (a, (sh_b, sh_b_gso)) = psf.trap_gen();
     /// ```
-    fn trap_gen(&self) -> (MatZq, MatZ) {
+    fn trap_gen(&self) -> (MatZq, (MatZ, MatQ)) {
         let a_bar = MatZq::sample_uniform(&self.gp.n, &self.gp.m_bar, &self.gp.q);
 
         let tag = MatZq::identity(&self.gp.n, &self.gp.n, &self.gp.q);
 
-        gen_trapdoor(&self.gp, &a_bar, &tag).unwrap()
+        let (a, r) = gen_trapdoor(&self.gp, &a_bar, &tag).unwrap();
+
+        let short_base = gen_short_basis_for_trapdoor(&self.gp, &tag, &a, &r);
+        let short_base_gso = MatQ::from(&short_base).gso();
+
+        (a, (short_base, short_base_gso))
     }
 
     /// Samples in the domain using SampleD with the standard basis and center `0`.
@@ -95,7 +100,7 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     ///     gp: GadgetParameters::init_default(8, 64),
     ///     s: Q::from(12),
     /// };
-    /// let (a, r) = psf.trap_gen();
+    /// let (a, td) = psf.trap_gen();
     ///
     /// let domain_sample = psf.samp_d();
     /// ```
@@ -127,22 +132,26 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     ///     gp: GadgetParameters::init_default(8, 64),
     ///     s: Q::from(12),
     /// };
-    /// let (a, r) = psf.trap_gen();
+    /// let (a, td) = psf.trap_gen();
     /// let domain_sample = psf.samp_d();
     /// let range_fa = psf.f_a(&a, &domain_sample);
     ///
     /// let preimage = psf.samp_p(&a, &r, &range_fa);
     /// assert_eq!(range_fa, psf.f_a(&a, &preimage))
     /// ```
-    fn samp_p(&self, a: &MatZq, r: &MatZ, u: &MatZq) -> MatZ {
-        let tag = MatZq::identity(&self.gp.n, &self.gp.n, &self.gp.q);
-        let short_basis = gen_short_basis_for_trapdoor(&self.gp, &tag, a, r);
-
+    fn samp_p(&self, a: &MatZq, (short_base, short_base_gso): &(MatZ, MatQ), u: &MatZq) -> MatZ {
         let sol: MatZ = (&a.solve_gaussian_elimination(u).unwrap()).into();
 
         let center = MatQ::from(&(-1 * &sol));
 
-        sol + MatZ::sample_d(&short_basis, &self.gp.n, &center, &self.s).unwrap()
+        sol + MatZ::sample_d_precomputed_gso(
+            short_base,
+            short_base_gso,
+            &self.gp.n,
+            &center,
+            &self.s,
+        )
+        .unwrap()
     }
 
     /// Implements the efficiently computable function `fa` which here corresponds to
@@ -165,7 +174,7 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     ///     gp: GadgetParameters::init_default(8, 64),
     ///     s: Q::from(12),
     /// };
-    /// let (a, r) = psf.trap_gen();
+    /// let (a, td) = psf.trap_gen();
     /// let domain_sample = psf.samp_d();
     /// let range_fa = psf.f_a(&a, &domain_sample);
     /// ```
@@ -193,7 +202,7 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     ///     gp: GadgetParameters::init_default(8, 64),
     ///     s: Q::from(12),
     /// };
-    /// let (a, r) = psf.trap_gen();
+    /// let (a, td) = psf.trap_gen();
     ///
     /// let vector = MatZ::new(a.get_num_columns(), 1);
     ///

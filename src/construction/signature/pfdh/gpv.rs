@@ -17,11 +17,11 @@ use crate::{
 use qfall_math::{
     integer::{MatZ, Z},
     integer_mod_q::{MatZq, Modulus},
-    rational::Q,
+    rational::{MatQ, Q},
 };
 use std::marker::PhantomData;
 
-impl Pfdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq> {
+impl Pfdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
     /// Initializes an PFDH signature scheme from a [`PSFGPV`].
     ///
     /// This function corresponds to an implementation of an PFDH-signature
