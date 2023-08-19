@@ -19,6 +19,7 @@ use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, marker::PhantomData};
 
 pub mod gpv;
+pub mod gpv_ring;
 pub mod serialize;
 
 /// This struct captures the general definition of a hash-then-sign signature scheme
