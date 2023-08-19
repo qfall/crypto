@@ -337,7 +337,7 @@ mod test_compute_s {
         assert_eq!(s_cmp, s)
     }
 
-    /// Ensure that the matrix s is computed correctly for a power-of-two modulus
+    /// Ensure that the matrix s is computed correctly for a an arbitrary modulus
     #[test]
     fn base_2_arbitrary() {
         let modulus = Z::from(0b1100110);
@@ -345,7 +345,6 @@ mod test_compute_s {
 
         let s = compute_s(&params);
 
-        println!("{s}");
         let s_cmp = MatZ::from_str(
             "[[2, 0, 0, 0, 0, 0, 0],\
             [-1, 2, 0, 0, 0, 0, 1],\
@@ -356,12 +355,11 @@ mod test_compute_s {
             [0, 0, 0, 0, 0, -1, 1]]",
         )
         .unwrap();
-        println!("{}", Z::from(0b1100110));
 
         assert_eq!(s_cmp, s)
     }
 
-    /// Ensure that the matrix s is computed correctly for a power-of-two modulus
+    /// Ensure that the matrix s is computed correctly for a power-of-5 modulus
     #[test]
     fn base_5_power_5() {
         let mut params = GadgetParameters::init_default(1, &Modulus::from(625));
@@ -380,7 +378,8 @@ mod test_compute_s {
         assert_eq!(s_cmp, s)
     }
 
-    /// Ensure that the matrix s is computed correctly for a power-of-two modulus
+    /// Ensure that the matrix s is computed correctly for an arbitrary modulus with
+    /// base 5
     #[test]
     fn base_5_arbitrary() {
         let modulus = Z::from_str_b("4123", 5).unwrap();
@@ -429,7 +428,6 @@ mod test_compute_w {
         .unwrap();
 
         let w = compute_w(&params, &tag, &a);
-        println!("{w}");
         let g = gen_gadget_mat(&params.n, &params.k, &params.base).unwrap();
 
         let gw = MatZq::from((&(g * w), &params.q));
