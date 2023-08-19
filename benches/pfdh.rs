@@ -21,30 +21,40 @@ fn pfdh_cycle(n: i64) {
     pfdh.vfy(m.to_owned(), &sigma, &pk);
 }
 
-/// Benchmark [pfdh_cycle] with `n = 8`.
+/// Benchmark [bench_pfdh_full_cycle] with `n = 8`.
 ///
 /// This benchmark can be run with for example:
-/// - `cargo criterion PFDH\ n=8`
-/// - `cargo bench --bench benchmarks PFDH\ n=8`
-/// - `cargo flamegraph --bench benchmarks -- --bench PFDH\ n=8`
+/// - `cargo criterion Full\ Cycle\ PFDH\ n=8`
+/// - `cargo bench --bench benchmarks Full\ Cycle\ PFDH\ n=8`
+/// - `cargo flamegraph --bench benchmarks -- --bench Full\ Cycle\ PFDH\ n=8`
 ///
 /// Shorter variants or regex expressions can also be used to specify the
 /// benchmark name. The `\ ` is used to escape the space, alternatively,
 /// quotation marks can be used.
-fn bench_pfdh_cycle(c: &mut Criterion) {
-    c.bench_function("PFDH n=8", |b| b.iter(|| pfdh_cycle(8)));
+fn bench_pfdh_full_cycle(c: &mut Criterion) {
+    c.bench_function("Full Cycle PFDH n=8", |b| b.iter(|| pfdh_cycle(8)));
 }
 
-fn cycle_signature_only(c: &mut Criterion) {
+/// Benchmark [bench_pfdh_signature] with `n = 8`.
+///
+/// This benchmark can be run with for example:
+/// - `cargo criterion Signing\ PFDH\ n=8`
+/// - `cargo bench --bench benchmarks Signing\ PFDH\ n=8`
+/// - `cargo flamegraph --bench benchmarks -- --bench Signing\ PFDH\ n=8`
+///
+/// Shorter variants or regex expressions can also be used to specify the
+/// benchmark name. The `\ ` is used to escape the space, alternatively,
+/// quotation marks can be used.
+fn bench_pfdh_signature(c: &mut Criterion) {
     let mut pfdh = Pfdh::init_gpv(8, 113, 17, 128);
 
     let m = "Hello World!";
 
     let (pk, sk) = pfdh.gen();
 
-    c.bench_function("Signing using PFDH n=8", |b| {
+    c.bench_function("Signing PFDH n=8", |b| {
         b.iter(|| pfdh.sign(m.to_owned(), &sk, &pk))
     });
 }
 
-criterion_group!(benches, bench_pfdh_cycle, cycle_signature_only);
+criterion_group!(benches, bench_pfdh_full_cycle, bench_pfdh_signature);
