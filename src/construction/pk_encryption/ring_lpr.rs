@@ -12,10 +12,10 @@
 use super::PKEncryption;
 use qfall_math::{
     error::MathError,
-    integer::{MatZ, PolyOverZ, Z},
+    integer::{PolyOverZ, Z},
     integer_mod_q::{Modulus, ModulusPolynomialRingZq, PolyOverZq, PolynomialRingZq, Zq},
     rational::Q,
-    traits::{Distance, FromCoefficientEmbedding, GetCoefficient, Pow, SetCoefficient},
+    traits::{Distance, GetCoefficient, Pow, SetCoefficient},
 };
 use serde::{Deserialize, Serialize};
 
@@ -235,6 +235,8 @@ impl RingLPR {
             )));
         }
 
+        // TODO: Add check whether n is power of two
+
         // Found out by experience as the bound is not tight enough to ensure correctness for large n.
         // Hence, a small factor roughly of max(log n - 4, 1) has to be applied.
         // Checked for 100 parameter sets with 10 cyles each and no mismatching decryptions occurred.
@@ -248,7 +250,8 @@ impl RingLPR {
         // α = o (1 / sqrt(n) * log^3 n ))
         if self.alpha > 1 / (factor * self.n.sqrt() * self.n.log(2).unwrap().pow(3).unwrap()) {
             return Err(MathError::InvalidIntegerInput(String::from(
-                "Correctness is not guaranteed as α >= 1 / (sqrt(n) * log^3 n), but α < 1 / (sqrt(n) * log^3 n) is required. Please check the documentation!"
+                "Correctness is not guaranteed as α >= 1 / (sqrt(n) * log^3 n),\
+                but α < 1 / (sqrt(n) * log^3 n) is required. Please check the documentation!",
             )));
         }
 
@@ -298,47 +301,6 @@ impl RingLPR {
     pub fn secure128() -> Self {
         Self::new(512, 92897729, 0.000005)
     }
-
-    fn sample_poly_discrete_gauss(
-        n: &Z,
-        q: &ModulusPolynomialRingZq,
-        alpha: &Q,
-    ) -> PolynomialRingZq {
-        let x = MatZ::sample_discrete_gauss(n, 1, n, 0, alpha * q.get_q()).unwrap();
-        let y = PolyOverZ::from_coefficient_embedding(&x);
-        PolynomialRingZq::from((&y, q))
-    }
-
-    fn sample_poly_uniform(n: &Z, q: &ModulusPolynomialRingZq) -> PolynomialRingZq {
-        let y = PolyOverZ::sample_uniform(n, 0, q.get_q()).unwrap();
-        PolynomialRingZq::from((&y, q))
-    }
-
-    fn z_to_bits(value: &Z) -> Vec<u8> {
-        let mut value = value.clone();
-        let mut power_of_two = Z::from(2);
-        let mut result = vec![];
-        for _i in 0..value.bits() {
-            // get value mod 2^_i
-            let c_i = Zq::from((&value, &power_of_two)).get_value();
-
-            // if value mod 2^_i == 0 -> encrypt zero and append to ciphertext
-            // otherwise encrypt one and append to ciphertext
-            if c_i == Z::ZERO {
-                result.push(0);
-            } else {
-                result.push(1);
-            }
-
-            // update values for next loop
-            // remove encrypted bit from message
-            value = value - c_i;
-            // compute next power of two
-            power_of_two = power_of_two * 2;
-        }
-
-        result
-    }
 }
 
 impl Default for RingLPR {
@@ -381,11 +343,23 @@ impl PKEncryption for RingLPR {
     /// ```
     fn gen(&self) -> (Self::PublicKey, Self::SecretKey) {
         // a <- R_q
-        let a = Self::sample_poly_uniform(&self.n, &self.q);
+        let a = PolynomialRingZq::sample_uniform(&self.q);
         // s <- χ
-        let s = Self::sample_poly_discrete_gauss(&self.n, &self.q, &self.alpha);
+        let s = PolynomialRingZq::sample_discrete_gauss(
+            &self.q,
+            &self.n,
+            0,
+            &self.alpha * &self.q.get_q(),
+        )
+        .unwrap();
         // e <- χ
-        let e = Self::sample_poly_discrete_gauss(&self.n, &self.q, &self.alpha);
+        let e = PolynomialRingZq::sample_discrete_gauss(
+            &self.q,
+            &self.n,
+            0,
+            &self.alpha * &self.q.get_q(),
+        )
+        .unwrap();
 
         // b = s * a + e
         let b = &a * &s + e;
@@ -422,23 +396,41 @@ impl PKEncryption for RingLPR {
     fn enc(&self, pk: &Self::PublicKey, message: impl Into<Z>) -> Self::Cipher {
         // ensure mu has at most n bits
         let message: Z = message.into().abs();
-        let mu = Zq::from((message, Z::from(2).pow(&self.n - 2).unwrap())).get_value();
+        let mu = message.modulo(Z::from(2).pow(&self.n - 2).unwrap());
         // set mu_q_half to polynomial with n {0,1} coefficients
-        let bits = Self::z_to_bits(&mu);
+        let bits = mu.to_bits();
         let mut mu_q_half = PolynomialRingZq::from((&PolyOverZ::default(), &self.q));
         let q_half = self.q.get_q().div_floor(&Z::from(2));
         for (i, bit) in bits.iter().enumerate() {
-            if bit == &1u8 {
+            if *bit {
                 mu_q_half.set_coeff(i, &q_half).unwrap();
             }
         }
 
         // r <- χ
-        let r = Self::sample_poly_discrete_gauss(&self.n, &self.q, &self.alpha);
+        let r = PolynomialRingZq::sample_discrete_gauss(
+            &self.q,
+            &self.n,
+            0,
+            &self.alpha * &self.q.get_q(),
+        )
+        .unwrap();
         // e1 <- χ
-        let e1 = Self::sample_poly_discrete_gauss(&self.n, &self.q, &self.alpha);
+        let e1 = PolynomialRingZq::sample_discrete_gauss(
+            &self.q,
+            &self.n,
+            0,
+            &self.alpha * &self.q.get_q(),
+        )
+        .unwrap();
         // e2 <- χ
-        let e2 = Self::sample_poly_discrete_gauss(&self.n, &self.q, &self.alpha);
+        let e2 = PolynomialRingZq::sample_discrete_gauss(
+            &self.q,
+            &self.n,
+            0,
+            &self.alpha * &self.q.get_q(),
+        )
+        .unwrap();
 
         // u = a * r + e1
         let u = &pk.0 * &r + e1;
@@ -483,15 +475,17 @@ impl PKEncryption for RingLPR {
 
         // check for each coefficient whether it's closer to 0 or q/2
         // if closer to q/2 -> add 2^i to result
-        let mut out = Z::ZERO;
+        let mut vec = vec![];
         for i in 0..result.get_degree() {
             let coeff = Zq::from((result.get_coeff(i).unwrap(), self.q.get_q()));
             if coeff.distance(&q_half) < coeff.distance(Z::ZERO) {
-                out = out + Z::from(2).pow(i).unwrap();
+                vec.push(true);
+            } else {
+                vec.push(false);
             }
         }
 
-        out
+        Z::from_bits(&vec)
     }
 }
 
