@@ -10,7 +10,7 @@
 //! public key Regev encryption scheme with an instantiation of the regularity lemma
 //! via a discrete Gaussian distribution.
 
-use super::PKEncryption;
+use super::{GenericMultiBitEncryption, PKEncryption};
 use qfall_math::{
     error::MathError,
     integer::Z,
@@ -412,8 +412,7 @@ impl PKEncryption for RegevWithDiscreteGaussianRegularity {
     /// ```
     fn enc(&self, pk: &Self::PublicKey, message: impl Into<Z>) -> Self::Cipher {
         // generate message = message mod 2
-        let message = Zq::from((message, 2));
-        let message = message.get_value();
+        let message: Z = message.into().modulo(2);
 
         // e <- SampleD over lattice Z^m, center 0 with gaussian parameter r
         let vec_e = MatZq::sample_d_common(&self.m, &self.q, &self.n, &self.r).unwrap();
@@ -461,6 +460,9 @@ impl PKEncryption for RegevWithDiscreteGaussianRegularity {
         }
     }
 }
+
+// adds generic multi-bit encryption to this scheme
+impl GenericMultiBitEncryption for RegevWithDiscreteGaussianRegularity {}
 
 #[cfg(test)]
 mod test_pp_generation {
@@ -623,6 +625,63 @@ mod test_regev {
             let m = regev.dec(&sk, &cipher);
 
             assert_eq!(msg_mod, m);
+        }
+    }
+}
+
+#[cfg(test)]
+mod test_multi_bits {
+    use super::{GenericMultiBitEncryption, PKEncryption, RegevWithDiscreteGaussianRegularity};
+    use qfall_math::integer::Z;
+
+    /// Checks whether the multi-bit encryption cycle works properly
+    /// for small and large positive values.
+    #[test]
+    fn positive() {
+        let values = [3, 13, 23, 230, 501, 1024, i64::MAX];
+
+        for value in values {
+            let msg = Z::from(value);
+            let scheme = RegevWithDiscreteGaussianRegularity::default();
+
+            let (pk, sk) = scheme.gen();
+            let cipher = scheme.enc_multiple_bits(&pk, &msg);
+            let m = scheme.dec_multiple_bits(&sk, &cipher);
+
+            assert_eq!(msg, m);
+        }
+    }
+
+    /// Checks whether the multi-bit encryption cycle works properly
+    /// for zero.
+    #[test]
+    fn zero() {
+        let msg = Z::ZERO;
+        let scheme = RegevWithDiscreteGaussianRegularity::default();
+
+        let (pk, sk) = scheme.gen();
+        let cipher = scheme.enc_multiple_bits(&pk, &msg);
+        let m = scheme.dec_multiple_bits(&sk, &cipher);
+
+        assert_eq!(msg, m);
+    }
+
+    /// Checks whether the multi-bit encryption cycle works properly
+    /// for small and large negative values, which are not encrypted itself,
+    /// but their absolute value.
+    #[test]
+    fn negative() {
+        let values = [-3, -13, -23, -230, -501, -1024, i64::MIN];
+
+        for value in values {
+            let msg = Z::from(value);
+            let scheme = RegevWithDiscreteGaussianRegularity::default();
+
+            let (pk, sk) = scheme.gen();
+            let cipher = scheme.enc_multiple_bits(&pk, &msg);
+            let m = scheme.dec_multiple_bits(&sk, &cipher);
+
+            assert_eq!(msg.abs(), m);
         }
     }
 }
