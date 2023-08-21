@@ -19,9 +19,6 @@ use qfall_math::{
 /// Generates a short basis according to [\[1\]](<../index.html#:~:text=[1]>).
 /// Also refer to Lemma 5.3 in the eprint version <https://eprint.iacr.org/2011/501.pdf>.
 ///
-/// *Note*: At the moment this function does not support tags other than the identity.
-/// The function will panic right now, if anything else was provided.
-///
 /// The matrix is generated as `[ I | R, 0 | I ] * [ 0 | I, S' | W ]`
 /// where `W` is a solution of `GW = -H^{-1}A [ I | 0 ] mod q` and `S'` is a
 /// reordering of `S` (if `base^k=q` then reversed, otherwise the same as before).
@@ -121,23 +118,38 @@ fn compute_s(params: &GadgetParameters) -> MatZ {
 
 /// Computes `W` with `GW = -H^{-1}A [ I | 0 ] mod q`
 fn compute_w(params: &GadgetParameters, tag: &MatZq, a: &MatZq) -> MatZ {
-    // TODO invert tag, remove this, once we can invert tags.
-    let identity = MatZq::identity(tag.get_num_rows(), tag.get_num_columns(), tag.get_mod());
-    assert_eq!(&identity, tag);
-    let tag_inv = tag;
+    let tag_inv = invert_tag(tag);
 
     let rhs = Z::MINUS_ONE * tag_inv * (a * MatZ::identity(a.get_num_columns(), &params.m_bar));
     find_solution_gadget_mat(&rhs, &params.k, &params.base)
 }
 
+/// Inverts a tag matrix (inefficiently using solve)
+fn invert_tag(tag: &MatZq) -> MatZq {
+    if tag.is_identity() {
+        return tag.clone();
+    }
+    let identity = MatZq::identity(tag.get_num_rows(), tag.get_num_columns(), tag.get_mod());
+    let mut res = MatZq::new(tag.get_num_rows(), tag.get_num_columns(), tag.get_mod());
+    for i in 0..tag.get_num_rows() {
+        let target = identity.get_column(i).unwrap();
+        let sol = tag.solve_gaussian_elimination(&target).unwrap();
+        res.set_column(i, &sol, 0).unwrap();
+    }
+    res
+}
+
 #[cfg(test)]
 mod test_gen_short_basis_for_trapdoor {
     use super::gen_short_basis_for_trapdoor;
-    use crate::sample::g_trapdoor::{gadget_parameters::GadgetParameters, gen_trapdoor_default};
+    use crate::sample::g_trapdoor::{
+        gadget_classical::gen_trapdoor, gadget_parameters::GadgetParameters, gen_trapdoor_default,
+    };
     use qfall_math::{
+        integer::Z,
         integer_mod_q::{MatZq, Modulus},
         rational::{MatQ, Q},
-        traits::{GetNumColumns, GetNumRows, Pow},
+        traits::{GetNumColumns, GetNumRows, Pow, SetEntry},
     };
 
     /// Ensure that every vector within the returned basis is in `\Lambda^\perp(A)`
@@ -160,6 +172,50 @@ mod test_gen_short_basis_for_trapdoor {
         }
     }
 
+    /// Ensures that the trapdoor generated is actually a base for `\Lambda^\perp(A)`
+    /// included with an actual tag, here `a*I_n`.
+    #[test]
+    fn is_basis_with_tag_factor_identity() {
+        for n in [2, 5, 10, 12] {
+            let modulus = Modulus::from(124 + 2 * n);
+            let params = GadgetParameters::init_default(n, &modulus);
+
+            let tag = 17 * MatZq::identity(n, n, &params.q);
+            let a_bar = MatZq::sample_uniform(n, &params.m_bar, &params.q);
+
+            let (a, r) = gen_trapdoor(&params, &a_bar, &tag).unwrap();
+
+            let short_basis = gen_short_basis_for_trapdoor(&params, &tag, &a, &r);
+
+            let zero_vec = MatZq::new(a.get_num_rows(), 1, &modulus);
+            for i in 0..short_basis.get_num_columns() {
+                assert_eq!(zero_vec, &a * short_basis.get_column(i).unwrap())
+            }
+        }
+    }
+
+    /// Ensures that the trapdoor generated is actually a base for `\Lambda^\perp(A)`
+    /// included with an actual tag.
+    #[test]
+    fn is_basis_with_tag_arbitrarily() {
+        for n in [2, 5, 10, 12] {
+            let modulus = Modulus::from(124 + 2 * n);
+            let params = GadgetParameters::init_default(n, &modulus);
+
+            let tag = calculate_invertible_tag(n, &modulus);
+            let a_bar = MatZq::sample_uniform(n, &params.m_bar, &params.q);
+
+            let (a, r) = gen_trapdoor(&params, &a_bar, &tag).unwrap();
+
+            let short_basis = gen_short_basis_for_trapdoor(&params, &tag, &a, &r);
+
+            let zero_vec = MatZq::new(a.get_num_rows(), 1, &modulus);
+            for i in 0..short_basis.get_num_columns() {
+                assert_eq!(zero_vec, &a * short_basis.get_column(i).unwrap())
+            }
+        }
+    }
+
     /// Ensure that the orthogonalized short base length is upper bounded by
     /// `(s_1(R)+1)*||\tilde S'||`
     #[test]
@@ -167,9 +223,10 @@ mod test_gen_short_basis_for_trapdoor {
         for n in [1, 5, 7] {
             let modulus = Modulus::from(128);
             let params = GadgetParameters::init_default(n, &modulus);
-            let (a, r) = gen_trapdoor_default(&params.n, &modulus);
+            let tag = calculate_invertible_tag(n, &modulus);
+            let a_bar = MatZq::sample_uniform(n, &params.m_bar, &params.q);
 
-            let tag = MatZq::identity(&params.n, &params.n, &modulus);
+            let (a, r) = gen_trapdoor(&params, &a_bar, &tag).unwrap();
 
             let short_basis = gen_short_basis_for_trapdoor(&params, &tag, &a, &r);
 
@@ -193,9 +250,10 @@ mod test_gen_short_basis_for_trapdoor {
         for n in [1, 5, 7] {
             let modulus = Modulus::from(127);
             let params = GadgetParameters::init_default(n, &modulus);
-            let (a, r) = gen_trapdoor_default(&params.n, &modulus);
+            let tag = calculate_invertible_tag(n, &modulus);
+            let a_bar = MatZq::sample_uniform(n, &params.m_bar, &params.q);
 
-            let tag = MatZq::identity(&params.n, &params.n, &modulus);
+            let (a, r) = gen_trapdoor(&params, &a_bar, &tag).unwrap();
 
             let short_basis = gen_short_basis_for_trapdoor(&params, &tag, &a, &r);
 
@@ -210,6 +268,24 @@ mod test_gen_short_basis_for_trapdoor {
                 assert!(b_tilde_i.norm_eucl_sqrd().unwrap() <= upper_bound.pow(2).unwrap())
             }
         }
+    }
+
+    /// Generates an invertible tag matrix (generates a diagonal matrix) and sets entries
+    /// above the diagonal uniformly at random.
+    fn calculate_invertible_tag(size: i64, modulus: &Modulus) -> MatZq {
+        let max_value = Z::from(modulus);
+        let mut out = MatZq::identity(size, size, modulus);
+        // create a diagonal matrix with random values (because it is a diagonal matrix
+        // with `1` on the diagonal, it is always invertible)
+        for row in 0..size {
+            for column in 0..size {
+                if row < column {
+                    out.set_entry(row, column, Z::sample_uniform(0, &max_value).unwrap())
+                        .unwrap();
+                }
+            }
+        }
+        out
     }
 }
 
