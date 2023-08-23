@@ -157,6 +157,8 @@ impl DualRegevIBE {
         let gadget = GadgetParameters::init_default(&n, &q);
         let log_q = Z::from(&q).log_ceil(2).unwrap();
         let n_log_q = &n * &log_q;
+
+        // m is computed due to the [`PSFGPV`] implementation
         let m = &gadget.m_bar + n_log_q;
         let r: Q = m.sqrt();
         let alpha = 1 / (&r * 2 * (&m + Z::ONE).sqrt() * (&n).log(2).unwrap());
@@ -233,7 +235,7 @@ impl DualRegevIBE {
     /// correctness according to Lemma 5.1 of [\[2\]](<index.html#:~:text=[2]>).
     ///
     /// The required properties are:
-    /// - α <= 1/(r *sqrt(m)* log(n)
+    /// - α <= 1/(2 * r * sqrt(m) * log(n))
     ///
     /// **WARNING:** Some requirements are missing to ensure overwhelming correctness of the scheme.
     ///
@@ -260,10 +262,10 @@ impl DualRegevIBE {
             )));
         }
 
-        // α <= 1/(r *sqrt(m)* log(n))
+        // α <= 1/(r * sqrt(m) * log(n))
         if &self.alpha > &(1 / (2 * &self.r * (&self.m + Z::ONE).sqrt()) * self.n.log(2).unwrap()) {
             return Err(MathError::InvalidIntegerInput(String::from(
-                "Correctness is not guaranteed as α > 1/(r *sqrt(m)* log(n)), but α <= 1/(2 * r *sqrt(m)* log(n)) is required.",
+                "Correctness is not guaranteed as α > 1/(r * sqrt(m) * log(n)), but α <= 1/(2 * r * sqrt(m) * log(n)) is required.",
             )));
         }
 
