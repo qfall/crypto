@@ -8,13 +8,7 @@
 
 //! This module contains an implementation of the IND-CPA secure
 //! identity based public key encryption scheme. The encryption scheme is based
-//! on [`DualRegev`].
-//!
-//! The main references are listed in the following:
-//! - \[1\] Gentry, Craig and Peikert, Chris and Vaikuntanathan, Vinod (2008).
-//! Trapdoors for hard lattices and new cryptographic constructions.
-//! In: Proceedings of the fortieth annual ACM symposium on Theory of computing.
-//! <https://dl.acm.org/doi/pdf/10.1145/1374376.1374407>
+//! on [`DualRegevIBE`].
 
 use super::IBE;
 use crate::{
