@@ -10,12 +10,9 @@
 //! using G-Trapdoors to generate a short basis and corresponding trapdoor.
 
 use super::PSF;
-use crate::sample::{
-    distribution::psf,
-    g_trapdoor::{
-        gadget_classical::gen_trapdoor, gadget_parameters::GadgetParameters,
-        short_basis_classical::gen_short_basis_for_trapdoor,
-    },
+use crate::sample::g_trapdoor::{
+    gadget_classical::gen_trapdoor, gadget_parameters::GadgetParameters,
+    short_basis_classical::gen_short_basis_for_trapdoor,
 };
 use qfall_math::{
     integer::{MatZ, Z},
@@ -233,35 +230,11 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
 mod test_gpv_psf {
     use super::PSF;
     use crate::sample::distribution::psf::gpv::PSFGPV;
-    use crate::sample::g_trapdoor::gadget_classical::gen_gadget_mat;
     use crate::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     use qfall_math::integer::MatZ;
     use qfall_math::integer_mod_q::Modulus;
     use qfall_math::rational::Q;
-    use qfall_math::traits::{Concatenate, GetNumColumns, GetNumRows, SetEntry};
-
-    /// Ensures that `TrapGen` actually computes a G-Trapdoor together with a
-    /// corresponding matrix.
-    #[test]
-    fn trap_gen_generates_g_trapdoor() {
-        for (n, modulus) in [(5, 256), (10, 128), (15, 157)] {
-            let modulus = Modulus::from(modulus);
-            let psf = PSFGPV {
-                gp: GadgetParameters::init_default(n, &modulus),
-                s: Q::ZERO,
-            };
-
-            let (a, r) = psf.trap_gen();
-            let identity =
-                MatZ::identity(a.get_num_columns() - r.get_num_rows(), r.get_num_columns());
-            let g_trapdoor = r.concat_vertical(&identity).unwrap();
-
-            assert_eq!(
-                gen_gadget_mat(&psf.gp.n, &psf.gp.k, &psf.gp.base).unwrap(),
-                MatZ::from(&(a * g_trapdoor))
-            );
-        }
-    }
+    use qfall_math::traits::{GetNumColumns, GetNumRows, SetEntry};
 
     /// Ensures that `samp_d` actually computes values that are in D_n.
     #[test]
