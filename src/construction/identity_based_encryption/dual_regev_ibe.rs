@@ -107,12 +107,12 @@ impl DualRegevIBE {
             s: r.clone(),
         };
         Self {
-            n: n,
-            m: m,
-            q: q,
-            r: r,
-            alpha: alpha,
-            psf: psf,
+            n,
+            m,
+            q,
+            r,
+            alpha,
+            psf,
             storage: HashMap::new(),
         }
     }
@@ -161,19 +161,19 @@ impl DualRegevIBE {
         // m is computed due to the [`PSFGPV`] implementation
         let m = &gadget.m_bar + n_log_q;
         let r: Q = m.sqrt();
-        let alpha = 1 / (&r * 2 * (&m + Z::ONE).sqrt() * (&n).log(2).unwrap());
+        let alpha = 1 / (&r * 2 * (&m + Z::ONE).sqrt() * (n).log(2).unwrap());
 
         let psf = PSFGPV {
             gp: gadget,
             s: r.clone(),
         };
         Self {
-            n: n.into(),
-            m: m,
-            q: q,
-            r: r,
-            alpha: alpha,
-            psf: psf,
+            n,
+            m,
+            q,
+            r,
+            alpha,
+            psf,
             storage: HashMap::new(),
         }
     }
@@ -208,21 +208,21 @@ impl DualRegevIBE {
 
         // Security requirements
         // q >= 5 * r * (m + 1)
-        if &q < &((5 * &self.r) * (&self.m + Q::ONE)) {
+        if q < (5 * &self.r) * (&self.m + Q::ONE) {
             return Err(MathError::InvalidIntegerInput(String::from(
                 "Security is not guaranteed as q < 5 * r * (m + 1), but q >= 5 * r * (m + 1) is required.",
             )));
         }
 
         // r >= sqrt(m)
-        if &self.r < &self.m.sqrt() {
+        if self.r < self.m.sqrt() {
             return Err(MathError::InvalidIntegerInput(String::from(
                 "Security is not guaranteed as r < sqrt(m), but r >= sqrt(m) is required.",
             )));
         }
 
         // m >= (n + 1) * log(q)
-        if &Q::from(&self.m) <= &((&self.n + 1) * &q.log(2).unwrap()) {
+        if Q::from(&self.m) <= (&self.n + 1) * &q.log(2).unwrap() {
             return Err(MathError::InvalidIntegerInput(String::from(
         "Security is not guaranteed as m <= (n + 1) * log(q), but m > (n + 1) * log(q) is required.",
     )));
@@ -263,7 +263,7 @@ impl DualRegevIBE {
         }
 
         // α <= 1/(r * sqrt(m) * log(n))
-        if &self.alpha > &(1 / (2 * &self.r * (&self.m + Z::ONE).sqrt()) * self.n.log(2).unwrap()) {
+        if self.alpha > 1 / (2 * &self.r * (&self.m + Z::ONE).sqrt()) * self.n.log(2).unwrap() {
             return Err(MathError::InvalidIntegerInput(String::from(
                 "Correctness is not guaranteed as α > 1/(r * sqrt(m) * log(n)), but α <= 1/(2 * r * sqrt(m) * log(n)) is required.",
             )));
@@ -351,8 +351,8 @@ impl IBE for DualRegevIBE {
             return value.clone();
         }
 
-        let u = hash_to_mat_zq_sha256(&identity, &self.n, 1, &self.q);
-        let secret_key = self.psf.samp_p(&master_pk, &master_sk, &u);
+        let u = hash_to_mat_zq_sha256(identity, &self.n, 1, &self.q);
+        let secret_key = self.psf.samp_p(master_pk, master_sk, &u);
 
         // insert secret key in HashMap
         self.storage.insert(identity.clone(), secret_key.clone()); //todo insert for different pk and sk
@@ -391,7 +391,7 @@ impl IBE for DualRegevIBE {
         identity: &Self::Identity,
         message: impl Into<Z>,
     ) -> Self::Cipher {
-        let identity_based_pk = hash_to_mat_zq_sha256(&identity, &self.n, 1, &self.q);
+        let identity_based_pk = hash_to_mat_zq_sha256(identity, &self.n, 1, &self.q);
 
         let message = Zq::from((message, 2));
         let message = message.get_value();
@@ -417,13 +417,11 @@ impl IBE for DualRegevIBE {
         let message_entry = &vec_s_t * identity_based_pk + msg_q_half;
 
         // [A * e | c]`
-        let c = ((vec_s_t * master_pk)
+        ((vec_s_t * master_pk)
             .concat_horizontal(&message_entry)
             .unwrap()
             + vec_e_t)
-            .transpose();
-
-        c
+            .transpose()
     }
 
     /// Decrypts the provided `cipher` using the secret key `sk` by following these steps:
