@@ -47,7 +47,7 @@ use std::collections::HashMap;
 /// use qfall_math::integer::Z;
 /// // setup public parameters and key pair
 /// let mut ibe = DualRegevIBE::default();
-/// let (pk, sk) = ibe.gen();
+/// let (pk, sk) = ibe.setup();
 ///
 /// // extract a identity based secret key
 /// let identity = String::from("identity");
@@ -312,9 +312,9 @@ impl IBE for DualRegevIBE {
     /// use qfall_crypto::construction::identity_based_encryption::{DualRegevIBE, IBE};
     /// let ibe = DualRegevIBE::default();
     ///
-    /// let (pk, sk) = ibe.gen();
+    /// let (pk, sk) = ibe.setup();
     /// ```
-    fn gen(&self) -> (Self::MasterPublicKey, Self::MasterSecretKey) {
+    fn setup(&self) -> (Self::MasterPublicKey, Self::MasterSecretKey) {
         self.psf.trap_gen()
     }
 
@@ -335,7 +335,7 @@ impl IBE for DualRegevIBE {
     /// ```
     /// use qfall_crypto::construction::identity_based_encryption::{IBE, DualRegevIBE};
     /// let mut ibe = DualRegevIBE::default();
-    /// let (master_pk, master_sk) = ibe.gen();
+    /// let (master_pk, master_sk) = ibe.setup();
     ///
     /// let id = String::from("identity");
     /// let sk = ibe.extract(&master_pk, &master_sk, &id);
@@ -380,7 +380,7 @@ impl IBE for DualRegevIBE {
     /// ```
     /// use qfall_crypto::construction::identity_based_encryption::{DualRegevIBE, IBE};
     /// let ibe = DualRegevIBE::default();
-    /// let (pk, sk) = ibe.gen();
+    /// let (pk, sk) = ibe.setup();
     ///
     /// let id = String::from("identity");
     /// let cipher = ibe.enc(&pk, &id, 1);
@@ -441,7 +441,7 @@ impl IBE for DualRegevIBE {
     /// use qfall_math::integer::Z;
     /// // setup public parameters and key pair
     /// let mut ibe = DualRegevIBE::default();
-    /// let (pk, sk) = ibe.gen();
+    /// let (pk, sk) = ibe.setup();
     ///
     /// // extract a identity based secret key
     /// let identity = String::from("identity");
@@ -517,7 +517,7 @@ mod test_dual_regev_ibe {
         let id = String::from("Hello World!");
         let mut cryptosystem = DualRegevIBE::default();
 
-        let (pk, sk) = cryptosystem.gen();
+        let (pk, sk) = cryptosystem.setup();
         let id_sk = cryptosystem.extract(&pk, &sk, &id);
         let cipher = cryptosystem.enc(&pk, &id, &msg);
         let m = cryptosystem.dec(&id_sk, &cipher);
@@ -533,7 +533,7 @@ mod test_dual_regev_ibe {
         let id = String::from("Hel213lo World!");
         let mut cryptosystem = DualRegevIBE::new_from_n(5);
 
-        let (pk, sk) = cryptosystem.gen();
+        let (pk, sk) = cryptosystem.setup();
         let id_sk = cryptosystem.extract(&pk, &sk, &id);
         let cipher = cryptosystem.enc(&pk, &id, &msg);
         let m = cryptosystem.dec(&id_sk, &cipher);
@@ -551,7 +551,7 @@ mod test_dual_regev_ibe {
             cryptosystem.check_security().unwrap();
             cryptosystem.check_correctness().unwrap();
 
-            let (pk, sk) = cryptosystem.gen();
+            let (pk, sk) = cryptosystem.setup();
 
             let id_sk = cryptosystem.extract(&pk, &sk, &id);
             for _j in 1..=100 {
