@@ -24,7 +24,7 @@ use serde::{Deserialize, Serialize};
 
 /// A lattice-based implementation of a [`PSF`] according to
 /// [\[1\]](<../index.html#:~:text=[1]>) using
-/// G-Trapdoors where D_n = \{e \in \Z^m | |e| \leq s \sqrt{m}\}
+/// G-Trapdoors where D_n = {e ∈ Z^m | |e| <= s sqrt(m)}
 /// and R_n = Z_q^n.
 ///
 /// Attributes
@@ -183,7 +183,7 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
         a * value
     }
 
-    /// Checks whether a value `sigma` is in D_n = \{e \in \Z^m | |e| \leq s \sqrt{m}\}.
+    /// Checks whether a value `sigma` is in D_n = {e ∈ Z^m | |e| <= s sqrt(m)}.
     ///
     /// Attributes
     /// - `sigma`: The value for which is checked, if it is in the domain

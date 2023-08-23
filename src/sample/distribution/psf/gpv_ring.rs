@@ -28,7 +28,7 @@ use serde::{Deserialize, Serialize};
 
 /// A lattice-based implementation of a [`PSF`] according to
 /// [\[1\]](<../index.html#:~:text=[1]>) and [\[3\]](<../index.html#:~:text=[3]>)
-/// using G-Trapdoors where D_n = \{e \in R^m | |\iota(e)| \leq s \sqrt{m*n}\}
+/// using G-Trapdoors where D_n = {e ∈ R^m | |iota(e)| <= s sqrt(m*n) }
 /// and R_n = R_q.
 ///
 /// Attributes
