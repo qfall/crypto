@@ -125,7 +125,6 @@ mod test_fdh {
 
             let sigma = fdh.sign(m.to_owned(), &sk, &pk);
 
-            assert_eq!(&sigma, &fdh.sign(m.to_owned(), &sk, &pk));
             assert!(
                 fdh.vfy(m.to_owned(), &sigma, &pk),
                 "This is a probabilistic test and may fail with negligible probability. \
@@ -142,9 +141,11 @@ mod test_fdh {
 
         let m = "Hello World!";
         let (pk, sk) = fdh.gen();
-        let _ = fdh.sign(m.to_owned(), &sk, &pk);
+        let sign_1 = fdh.sign(m.to_owned(), &sk, &pk);
+        let sign_2 = fdh.sign(m.to_owned(), &sk, &pk);
 
-        assert!(fdh.storage.contains_key(m))
+        assert!(fdh.storage.contains_key(m));
+        assert_eq!(sign_1, sign_2);
     }
 
     /// Ensure that after deserialization the HashMap still contains all entries.
