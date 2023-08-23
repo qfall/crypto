@@ -198,8 +198,8 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
         for block in 0..(center.get_num_rows() / (self.gp.modulus.get_degree())) {
             let sub_mat = center
                 .get_submatrix(
-                    block * (self.gp.modulus.get_degree() - 1),
-                    (block + 1) * (self.gp.modulus.get_degree() - 1) - 1,
+                    block * self.gp.modulus.get_degree(),
+                    (block + 1) * self.gp.modulus.get_degree() - 1,
                     0,
                     0,
                 )
@@ -251,21 +251,16 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
     /// ```
     ///
     /// # Panics ...
-    /// - if the number of rows of `sigma` does not match the number of columns of `a`.
-    /// - if `sigma` is not a column vector.
+    /// - if `sigma` is not in the domain.
     fn f_a(&self, a: &MatPolynomialRingZq, sigma: &MatPolyOverZ) -> MatPolynomialRingZq {
-        assert!(
-            sigma.is_column_vector(),
-            "The input vector is not a column vector."
-        );
+        assert!(self.check_domain(sigma));
         let sigma = MatPolynomialRingZq::from((sigma, &a.get_mod()));
         a * sigma
     }
 
-    /// Checks whether a value `sigma` is in
-    /// D_n = {e ∈ R^m | |iota(e)| <= s sqrt(m*n) }.
+    /// Checks whether a value `sigma` is in D_n = {e ∈ R^m | |iota(e)| <= s sqrt(m*n) }.
     ///
-    /// Attributes
+    /// Parameters:
     /// - `sigma`: The value for which is checked, if it is in the domain
     ///
     /// Returns true, if `sigma` is in D_n.
@@ -297,8 +292,171 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
         let nr_coeffs = self.gp.modulus.get_degree();
         let sigma_embedded = sigma.into_coefficient_embedding_from_matrix(nr_coeffs);
 
-        Q::from(&sigma_embedded.norm_eucl_sqrd().unwrap())
-            <= self.s.pow(2).unwrap() * sigma_embedded.get_num_rows()
+        sigma.is_column_vector()
             && m == Z::from(sigma.get_num_rows())
+            && Q::from(&sigma_embedded.norm_eucl_sqrd().unwrap())
+                <= self.s.pow(2).unwrap() * sigma_embedded.get_num_rows()
+    }
+}
+
+#[cfg(test)]
+mod test_gpv_psf {
+    use super::PSF;
+    use crate::sample::distribution::psf::gpv_ring::PSFGPVRing;
+    use crate::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
+    use qfall_math::integer::{MatPolyOverZ, PolyOverZ};
+    use qfall_math::integer_mod_q::MatPolynomialRingZq;
+    use qfall_math::rational::Q;
+    use qfall_math::traits::{GetNumColumns, GetNumRows, SetEntry};
+
+    fn compute_s(n: i64) -> Q {
+        ((2 * 2 * Q::from(1.005_f64) * Q::from(n).sqrt() + 1) * 2) * 4
+    }
+
+    /// Ensures that `samp_d` actually computes values that are in D_n.
+    #[test]
+    fn samp_d_samples_from_dn() {
+        let (n, modulus) = (5, 123456789);
+        let psf = PSFGPVRing {
+            gp: GadgetParametersRing::init_default(n, modulus),
+            s: Q::from(1000),
+            s_td: Q::from(1.005_f64),
+        };
+
+        for _ in 0..5 {
+            assert!(psf.check_domain(&psf.samp_d()));
+        }
+    }
+
+    /// Ensures that `samp_p` actually computes preimages that are also in the correct
+    /// domain.
+    #[test]
+    fn samp_p_preimage_and_domain() {
+        for (n, modulus) in [(5, i32::MAX - 57), (6, i32::MAX)] {
+            let psf = PSFGPVRing {
+                gp: GadgetParametersRing::init_default(n, modulus),
+                s: compute_s(n),
+                s_td: Q::from(1.005_f64),
+            };
+            let (a, r) = psf.trap_gen();
+            let domain_sample = psf.samp_d();
+            let range_fa = psf.f_a(&a, &domain_sample);
+
+            let preimage = psf.samp_p(&a, &r, &range_fa);
+
+            assert_eq!(range_fa, psf.f_a(&a, &preimage));
+            assert!(psf.check_domain(&preimage));
+        }
+    }
+
+    /// Ensures that `f_a` returns `a*sigma`.
+    #[test]
+    fn f_a_works_as_expected() {
+        for (n, modulus) in [(5, 256), (6, 128)] {
+            let psf = PSFGPVRing {
+                gp: GadgetParametersRing::init_default(n, modulus),
+                s: compute_s(n),
+                s_td: Q::from(1.005_f64),
+            };
+            let (a, _) = psf.trap_gen();
+            let domain_sample = psf.samp_d();
+
+            let domain_sample_2 = MatPolynomialRingZq::from((&domain_sample, &a.get_mod()));
+            assert_eq!(&a * &domain_sample_2, psf.f_a(&a, &domain_sample));
+        }
+    }
+
+    /// Ensures that `f_a` panics if a value is provided, that is not within the domain.
+    /// Sigma is not a vector.
+    #[test]
+    #[should_panic]
+    fn f_a_sigma_not_in_domain_matrix() {
+        let psf = PSFGPVRing {
+            gp: GadgetParametersRing::init_default(8, 1024),
+            s: compute_s(8),
+            s_td: Q::from(1.005_f64),
+        };
+        let (a, _) = psf.trap_gen();
+        let not_in_domain = MatPolyOverZ::new(a.get_num_columns(), 2);
+
+        let _ = psf.f_a(&a, &not_in_domain);
+    }
+
+    /// Ensures that `f_a` panics if a value is provided, that is not within the domain.
+    /// Sigma is not of the correct length.
+    #[test]
+    #[should_panic]
+    fn f_a_sigma_not_in_domain_incorrect_length() {
+        let psf = PSFGPVRing {
+            gp: GadgetParametersRing::init_default(8, 1024),
+            s: compute_s(8),
+            s_td: Q::from(1.005_f64),
+        };
+        let (a, _) = psf.trap_gen();
+        let not_in_domain = MatPolyOverZ::new(a.get_num_columns() - 1, 1);
+
+        let _ = psf.f_a(&a, &not_in_domain);
+    }
+
+    /// Ensures that `f_a` panics if a value is provided, that is not within the domain.
+    /// Sigma is too long.
+    #[test]
+    #[should_panic]
+    fn f_a_sigma_not_in_domain_too_long() {
+        let psf = PSFGPVRing {
+            gp: GadgetParametersRing::init_default(8, 1024),
+            s: compute_s(8),
+            s_td: Q::from(1.005_f64),
+        };
+        let (a, _) = psf.trap_gen();
+        let not_in_domain = psf.s.round()
+            * a.get_num_columns()
+            * 8
+            * MatPolyOverZ::identity(a.get_num_columns(), 1);
+
+        let _ = psf.f_a(&a, &not_in_domain);
+    }
+
+    /// Ensures that `check_domain` works for vectors with the correct length.
+    #[test]
+    fn check_domain_as_expected() {
+        let psf = PSFGPVRing {
+            gp: GadgetParametersRing::init_default(9, 1024),
+            s: compute_s(9),
+            s_td: Q::from(1.005_f64),
+        };
+        let (a, _) = psf.trap_gen();
+        let value = PolyOverZ::from(psf.s.round() * 3);
+        let mut in_domain = MatPolyOverZ::new(a.get_num_columns(), 1);
+        for i in 0..in_domain.get_num_rows() {
+            in_domain.set_entry(i, 0, &value).unwrap();
+        }
+
+        assert!(psf.check_domain(&MatPolyOverZ::new(a.get_num_columns(), 1)));
+        assert!(psf.check_domain(&in_domain));
+    }
+
+    /// Ensures that `check_domain` returns false for values that are not in the domain.
+    #[test]
+    fn check_domain_not_in_dn() {
+        let psf = PSFGPVRing {
+            gp: GadgetParametersRing::init_default(8, 1024),
+            s: compute_s(8),
+            s_td: Q::from(1.005_f64),
+        };
+        let (a, _) = psf.trap_gen();
+
+        let matrix = MatPolyOverZ::new(a.get_num_columns(), 2);
+        let too_short = MatPolyOverZ::new(a.get_num_columns() - 1, 1);
+        let too_long = MatPolyOverZ::new(a.get_num_columns() + 1, 1);
+        let entry_too_large = psf.s.round()
+            * a.get_num_columns()
+            * 8
+            * MatPolyOverZ::identity(a.get_num_columns(), 1);
+
+        assert!(!psf.check_domain(&matrix));
+        assert!(!psf.check_domain(&too_long));
+        assert!(!psf.check_domain(&too_short));
+        assert!(!psf.check_domain(&entry_too_large));
     }
 }

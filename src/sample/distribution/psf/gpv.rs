@@ -192,7 +192,7 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
 
     /// Checks whether a value `sigma` is in D_n = {e ∈ Z^m | |e| <= s sqrt(m)}.
     ///
-    /// Attributes
+    /// Parameters:
     /// - `sigma`: The value for which is checked, if it is in the domain
     ///
     /// Returns true, if `sigma` is in D_n.
