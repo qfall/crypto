@@ -359,8 +359,9 @@ mod hash_into_mat_polynomial_ring_zq {
     use super::{HashInto, HashMatPolynomialRingZq};
     use crate::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
     use qfall_math::{
+        integer::PolyOverZ,
         integer_mod_q::Modulus,
-        traits::{GetNumColumns, GetNumRows},
+        traits::{GetEntry, GetNumColumns, GetNumRows},
     };
 
     /// Ensure that the hash function maps into the correct dimension and it is also
@@ -376,9 +377,11 @@ mod hash_into_mat_polynomial_ring_zq {
         };
         let hash_val = hasher.hash("Hello");
         let hash_val_2 = hasher.hash("Hello");
+        let entry: PolyOverZ = hash_val.get_entry(0, 0).unwrap();
 
         assert_eq!(hasher.rows, hash_val.get_num_rows());
         assert_eq!(hasher.cols, hash_val.get_num_columns());
         assert_eq!(hash_val, hash_val_2);
+        assert_eq!(9, entry.get_degree())
     }
 }
