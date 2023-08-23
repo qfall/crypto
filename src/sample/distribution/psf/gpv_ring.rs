@@ -131,6 +131,9 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
     /// from the G-Trapdoor from the conditioned conditioned
     /// discrete gaussian with `f_a(a,e) = u` for a provided syndrome `u`.
     ///
+    /// *Note*: the provided parameters `a,r,e,u` must fit together,
+    /// otherwise unexpected behavior such as panics may occur.
+    ///
     /// Parameters:
     /// - `a`: The parity-check matrix
     /// - `r`: Together with `e` builds a G-Trapdoor for `a`
@@ -217,13 +220,13 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
     }
 
     /// Implements the efficiently computable function `f_a` which here corresponds to
-    /// `a*value`
+    /// `a*sigma`.
     ///
     /// Parameters:
     /// - `a`: The parity-check matrix of dimensions `n x m`
-    /// - `value`: A column vector of length `m`
+    /// - `sigma`: A column vector of length `m`
     ///
-    /// Returns `a*value`
+    /// Returns `a*sigma`
     ///
     /// # Examples
     /// ```
@@ -246,7 +249,15 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
     /// let domain_sample = psf.samp_d();
     /// let range_fa = psf.f_a(&a, &domain_sample);
     /// ```
+    ///
+    /// # Panics ...
+    /// - if the number of rows of `sigma` does not match the number of columns of `a`.
+    /// - if `sigma` is not a column vector.
     fn f_a(&self, a: &MatPolynomialRingZq, sigma: &MatPolyOverZ) -> MatPolynomialRingZq {
+        assert!(
+            sigma.is_column_vector(),
+            "The input vector is not a column vector."
+        );
         let sigma = MatPolynomialRingZq::from((sigma, &a.get_mod()));
         a * sigma
     }

@@ -114,6 +114,9 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     /// from the G-Trapdoor from the conditioned conditioned
     /// discrete gaussian with `f_a(a,e) = u` for a provided syndrome `u`.
     ///
+    /// *Note*: the provided parameters `a,r,u` must fit together,
+    /// otherwise unexpected behavior such as panics may occur.
+    ///
     /// Parameters:
     /// - `a`: The parity-check matrix
     /// - `r`: The G-Trapdoor for `a`
@@ -153,14 +156,14 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
         sol + MatZ::sample_d(&short_basis, &self.gp.n, &center, &self.s).unwrap()
     }
 
-    /// Implements the efficiently computable function `fa` which here corresponds to
-    /// `a*value`
+    /// Implements the efficiently computable function `f_a` which here corresponds to
+    /// `a*sigma`.
     ///
     /// Parameters:
     /// - `a`: The parity-check matrix of dimensions `n x m`
-    /// - `value`: A column vector of length `m`
+    /// - `sigma`: A column vector of length `m`
     ///
-    /// Returns `a*value`
+    /// Returns `a*sigma`
     ///
     /// # Examples
     /// ```
@@ -179,8 +182,12 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     /// let domain_sample = psf.samp_d();
     /// let range_fa = psf.f_a(&a, &domain_sample);
     /// ```
-    fn f_a(&self, a: &MatZq, value: &MatZ) -> MatZq {
-        a * value
+    ///
+    /// # Panics ...
+    /// - if the number of rows of `sigma` does not match the number of columns of `a`.
+    /// - if `sigma` is not a column vector.
+    fn f_a(&self, a: &MatZq, sigma: &MatZ) -> MatZq {
+        a * sigma
     }
 
     /// Checks whether a value `sigma` is in D_n = {e ∈ Z^m | |e| <= s sqrt(m)}.
