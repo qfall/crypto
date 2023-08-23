@@ -48,7 +48,7 @@ impl
     /// - `modulus`: The modulus used for the G-Trapdoors
     /// - `s`: The gaussian parameter with which is sampled
     ///
-    /// Returns an explicit implementation of a FDH-signature scheme.
+    /// Returns an explicit implementation of an FDH-signature scheme.
     ///
     /// # Example
     /// ```

@@ -216,7 +216,7 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
             .unwrap()
     }
 
-    /// Implements the efficiently computable function `fa` which here corresponds to
+    /// Implements the efficiently computable function `f_a` which here corresponds to
     /// `a*value`
     ///
     /// Parameters:
@@ -252,7 +252,7 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
     }
 
     /// Checks whether a value `sigma` is in
-    /// D_n = \{e \in R^m | |\iota(e)| \leq s \sqrt{m*n}\}.
+    /// D_n = {e ∈ R^m | |iota(e)| <= s sqrt(m*n) }.
     ///
     /// Attributes
     /// - `sigma`: The value for which is checked, if it is in the domain

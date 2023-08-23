@@ -25,6 +25,8 @@ use qfall_math::{
 /// Parameters:
 /// - `vec`: The vector for which the rotation matrix will be computed.
 ///
+/// Returns the rotation matrix of `vec` as a [`MatZ`].
+///
 /// # Examples
 /// ```
 /// use qfall_crypto::utils::rotation_matrix::rot_minus;
