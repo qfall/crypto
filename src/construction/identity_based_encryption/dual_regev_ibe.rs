@@ -35,8 +35,7 @@ use std::collections::HashMap;
 /// - `n`: specifies the security parameter, which is not equal to the bit-security level
 /// - `m`: defines the dimension of the underlying lattice
 /// - `q`: specifies the modulus over which the encryption is computed
-/// - `r`: specifies the gaussian parameter used by the [`PSF`],
-///   i.e. used for encryption
+/// - `r`: specifies the gaussian parameter used by the [`PSF`]
 /// - `alpha`: specifies the gaussian parameter used for independent
 ///   sampling from χ, i.e. for multiple discrete Gaussian samples used
 ///   for key generation
@@ -540,7 +539,7 @@ mod test_dual_regev_ibe {
         assert_eq!(msg, m);
     }
 
-    /// for message 0 and small n.
+    /// multi test for different identities, message 1 and small n
     #[test]
     fn new_from_n() {
         for i in 1..=5 {
@@ -561,5 +560,18 @@ mod test_dual_regev_ibe {
                 assert_eq!(msg, m);
             }
         }
+    }
+
+    /// checking whether the storage works properly
+    #[test]
+    fn extract_storage() {
+        let id = String::from(format!("Hello World!"));
+        let mut cryptosystem = DualRegevIBE::default();
+        let (pk, sk) = cryptosystem.setup();
+
+        let id_sk_1 = cryptosystem.extract(&pk, &sk, &id);
+        let id_sk_2 = cryptosystem.extract(&pk, &sk, &id);
+
+        assert_eq!(id_sk_1, id_sk_2)
     }
 }
