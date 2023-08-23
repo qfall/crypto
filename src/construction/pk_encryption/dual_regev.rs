@@ -537,7 +537,10 @@ mod test_pp_generation {
 mod test_dual_regev {
     use super::DualRegev;
     use crate::construction::pk_encryption::PKEncryption;
-    use qfall_math::integer::Z;
+    use qfall_math::{
+        integer::Z,
+        traits::{GetNumColumns, GetNumRows},
+    };
 
     /// Checks whether the full-cycle of gen, enc, dec works properly
     /// for message 0 and small n.
@@ -586,6 +589,7 @@ mod test_dual_regev {
         let dr = DualRegev::new_from_n(50);
 
         let (pk, sk) = dr.gen();
+        println!("rows:{}, cols:{}", pk.get_num_rows(), pk.get_num_columns());
         let cipher = dr.enc(&pk, &msg);
         let m = dr.dec(&sk, &cipher);
         assert_eq!(msg, m);

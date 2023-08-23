@@ -9,6 +9,16 @@
 //! This module provides the trait a struct should implement if it is an
 //! instance of a identity based public key encryption scheme. Furthermore,
 //! it contains cryptographic schemes implementing the `IBE` trait.
+//! The main references are listed in the following
+//! and will be further referenced in submodules by these numbers:
+//! - \[1\] Gentry, Craig and Peikert, Chris and Vaikuntanathan, Vinod (2008).
+//! Trapdoors for hard lattices and new cryptographic constructions.
+//! In: Proceedings of the fortieth annual ACM symposium on Theory of computing.
+//! <https://dl.acm.org/doi/pdf/10.1145/1374376.1374407>
+//! - \[2\] Regev, Oded (2009).
+//! On lattices, learning with errors, random linear codes, and cryptography.
+//! In: Journal of the ACM 6.
+//! <https://dl.acm.org/doi/pdf/10.1145/1568318.1568324>
 
 mod dual_regev_ibe;
 pub use dual_regev_ibe::DualRegevIBE;

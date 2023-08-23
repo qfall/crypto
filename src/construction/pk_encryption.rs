@@ -23,7 +23,7 @@
 //! On lattices, learning with errors, random linear codes, and cryptography.
 //! In: Journal of the ACM 6.
 //! <https://dl.acm.org/doi/pdf/10.1145/1568318.1568324>
-//! \[4\] Lindner, R., and C. Peikert (2011).
+//! - \[4\] Lindner, R., and C. Peikert (2011).
 //! Better key sizes (and attacks) for LWE-based encryption.
 //! In: Topics in Cryptology -  RSA Conference 2011, Springer.
 //! <https://eprint.iacr.org/2010/613.pdf>
