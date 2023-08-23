@@ -10,9 +10,12 @@
 //! using G-Trapdoors to generate a short basis and corresponding trapdoor.
 
 use super::PSF;
-use crate::sample::g_trapdoor::{
-    gadget_classical::gen_trapdoor, gadget_parameters::GadgetParameters,
-    short_basis_classical::gen_short_basis_for_trapdoor,
+use crate::sample::{
+    distribution::psf,
+    g_trapdoor::{
+        gadget_classical::gen_trapdoor, gadget_parameters::GadgetParameters,
+        short_basis_classical::gen_short_basis_for_trapdoor,
+    },
 };
 use qfall_math::{
     integer::{MatZ, Z},
@@ -157,7 +160,7 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     }
 
     /// Implements the efficiently computable function `f_a` which here corresponds to
-    /// `a*sigma`.
+    /// `a*sigma`. The sigma must be from the domain, i.e. D_n.
     ///
     /// Parameters:
     /// - `a`: The parity-check matrix of dimensions `n x m`
@@ -184,9 +187,9 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     /// ```
     ///
     /// # Panics ...
-    /// - if the number of rows of `sigma` does not match the number of columns of `a`.
-    /// - if `sigma` is not a column vector.
+    /// - if `sigma` is not in the domain.
     fn f_a(&self, a: &MatZq, sigma: &MatZ) -> MatZq {
+        assert!(self.check_domain(sigma));
         a * sigma
     }
 
@@ -220,7 +223,185 @@ impl PSF<MatZq, MatZ, MatZ, MatZq> for PSFGPV {
     /// ```
     fn check_domain(&self, sigma: &MatZ) -> bool {
         let m = &self.gp.n * &self.gp.k + &self.gp.m_bar;
-        Q::from(&sigma.norm_eucl_sqrd().unwrap()) <= self.s.pow(2).unwrap() * &m
+        sigma.is_column_vector()
             && m == Z::from(sigma.get_num_rows())
+            && Q::from(&sigma.norm_eucl_sqrd().unwrap()) <= self.s.pow(2).unwrap() * &m
+    }
+}
+
+#[cfg(test)]
+mod test_gpv_psf {
+    use super::PSF;
+    use crate::sample::distribution::psf::gpv::PSFGPV;
+    use crate::sample::g_trapdoor::gadget_classical::gen_gadget_mat;
+    use crate::sample::g_trapdoor::gadget_parameters::GadgetParameters;
+    use qfall_math::integer::MatZ;
+    use qfall_math::integer_mod_q::Modulus;
+    use qfall_math::rational::Q;
+    use qfall_math::traits::{Concatenate, GetNumColumns, GetNumRows, SetEntry};
+
+    /// Ensures that `TrapGen` actually computes a G-Trapdoor together with a
+    /// corresponding matrix.
+    #[test]
+    fn trap_gen_generates_g_trapdoor() {
+        for (n, modulus) in [(5, 256), (10, 128), (15, 157)] {
+            let modulus = Modulus::from(modulus);
+            let psf = PSFGPV {
+                gp: GadgetParameters::init_default(n, &modulus),
+                s: Q::ZERO,
+            };
+
+            let (a, r) = psf.trap_gen();
+            let identity =
+                MatZ::identity(a.get_num_columns() - r.get_num_rows(), r.get_num_columns());
+            let g_trapdoor = r.concat_vertical(&identity).unwrap();
+
+            assert_eq!(
+                gen_gadget_mat(&psf.gp.n, &psf.gp.k, &psf.gp.base).unwrap(),
+                MatZ::from(&(a * g_trapdoor))
+            );
+        }
+    }
+
+    /// Ensures that `samp_d` actually computes values that are in D_n.
+    #[test]
+    fn samp_d_samples_from_dn() {
+        for (n, modulus) in [(5, 256), (10, 128), (15, 157)] {
+            let modulus = Modulus::from(modulus);
+            let psf = PSFGPV {
+                gp: GadgetParameters::init_default(n, &modulus),
+                s: Q::from(10),
+            };
+
+            for _ in 0..5 {
+                assert!(psf.check_domain(&psf.samp_d()));
+            }
+        }
+    }
+
+    /// Ensures that `samp_p` actually computes preimages that are also in the correct
+    /// domain.
+    #[test]
+    fn samp_p_preimage_and_domain() {
+        for (n, modulus) in [(5, 256), (6, 128)] {
+            let modulus = Modulus::from(modulus);
+            let psf = PSFGPV {
+                gp: GadgetParameters::init_default(n, &modulus),
+                s: Q::from(10),
+            };
+            let (a, r) = psf.trap_gen();
+            let domain_sample = psf.samp_d();
+            let range_fa = psf.f_a(&a, &domain_sample);
+
+            let preimage = psf.samp_p(&a, &r, &range_fa);
+            assert_eq!(range_fa, psf.f_a(&a, &preimage));
+            assert!(psf.check_domain(&preimage));
+        }
+    }
+
+    /// Ensures that `f_a` returns `a*sigma`.
+    #[test]
+    fn f_a_works_as_expected() {
+        for (n, modulus) in [(5, 256), (6, 128)] {
+            let modulus = Modulus::from(modulus);
+            let psf = PSFGPV {
+                gp: GadgetParameters::init_default(n, &modulus),
+                s: Q::from(10),
+            };
+            let (a, _) = psf.trap_gen();
+            let domain_sample = psf.samp_d();
+
+            assert_eq!(&a * &domain_sample, psf.f_a(&a, &domain_sample));
+        }
+    }
+
+    /// Ensures that `f_a` panics if a value is provided, that is not within the domain.
+    /// Sigma is not a vector.
+    #[test]
+    #[should_panic]
+    fn f_a_sigma_not_in_domain_matrix() {
+        let modulus = Modulus::from(128);
+        let psf = PSFGPV {
+            gp: GadgetParameters::init_default(8, &modulus),
+            s: Q::from(10),
+        };
+        let (a, _) = psf.trap_gen();
+        let not_in_domain = MatZ::new(a.get_num_columns(), 2);
+
+        let _ = psf.f_a(&a, &not_in_domain);
+    }
+
+    /// Ensures that `f_a` panics if a value is provided, that is not within the domain.
+    /// Sigma is not of the correct length.
+    #[test]
+    #[should_panic]
+    fn f_a_sigma_not_in_domain_incorrect_length() {
+        let modulus = Modulus::from(128);
+        let psf = PSFGPV {
+            gp: GadgetParameters::init_default(8, &modulus),
+            s: Q::from(10),
+        };
+        let (a, _) = psf.trap_gen();
+        let not_in_domain = MatZ::new(a.get_num_columns() - 1, 1);
+
+        let _ = psf.f_a(&a, &not_in_domain);
+    }
+
+    /// Ensures that `f_a` panics if a value is provided, that is not within the domain.
+    /// Sigma is too long.
+    #[test]
+    #[should_panic]
+    fn f_a_sigma_not_in_domain_too_long() {
+        let modulus = Modulus::from(128);
+        let psf = PSFGPV {
+            gp: GadgetParameters::init_default(8, &modulus),
+            s: Q::from(10),
+        };
+        let (a, _) = psf.trap_gen();
+        let not_in_domain =
+            psf.s.round() * a.get_num_columns() * MatZ::identity(a.get_num_columns(), 1);
+
+        let _ = psf.f_a(&a, &not_in_domain);
+    }
+
+    /// Ensures that `check_domain` works for vectors with the correct length.
+    #[test]
+    fn check_domain_as_expected() {
+        let modulus = Modulus::from(128);
+        let psf = PSFGPV {
+            gp: GadgetParameters::init_default(8, &modulus),
+            s: Q::from(10),
+        };
+        let (a, _) = psf.trap_gen();
+        let value = psf.s.round();
+        let mut in_domain = MatZ::new(a.get_num_columns(), 1);
+        for i in 0..in_domain.get_num_rows() {
+            in_domain.set_entry(i, 0, &value).unwrap();
+        }
+
+        assert!(psf.check_domain(&MatZ::new(a.get_num_columns(), 1)));
+        assert!(psf.check_domain(&in_domain));
+    }
+
+    /// Ensures that `check_domain` returns false for values that are not in the domain.
+    #[test]
+    fn check_domain_not_in_dn() {
+        let modulus = Modulus::from(128);
+        let psf = PSFGPV {
+            gp: GadgetParameters::init_default(8, &modulus),
+            s: Q::from(10),
+        };
+        let (a, _) = psf.trap_gen();
+
+        let matrix = MatZ::new(a.get_num_columns(), 2);
+        let too_short = MatZ::new(a.get_num_columns() - 1, 1);
+        let too_long = MatZ::new(a.get_num_columns() + 1, 1);
+        let entry_too_large =
+            psf.s.round() * a.get_num_columns() * MatZ::identity(a.get_num_columns(), 1);
+
+        assert!(!psf.check_domain(&matrix));
+        assert!(!psf.check_domain(&too_long));
+        assert!(!psf.check_domain(&too_short));
+        assert!(!psf.check_domain(&entry_too_large));
     }
 }
