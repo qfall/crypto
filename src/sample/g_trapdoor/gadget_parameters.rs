@@ -73,6 +73,7 @@ pub struct GadgetParameters {
 ///
 /// let params = GadgetParametersRing::init_default(42, &Modulus::from(42));
 /// ```
+#[derive(Serialize, Deserialize)]
 pub struct GadgetParametersRing {
     pub n: Z,
     pub k: Z,
@@ -172,6 +173,7 @@ impl GadgetParametersRing {
         // [`i64`] because downstream matrices can be at most that size
         let modulus = modulus.into();
         let n = n.into();
+        let modulus = modulus.into();
         assert!(n >= Z::ONE && n <= Z::from(i64::MAX));
 
         let base = Z::from(2);

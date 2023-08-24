@@ -25,6 +25,9 @@
 //! - \[4\] Cash, D., Hofheinz, D., Kiltz, E., & Peikert, C. (2012).
 //! Bonsai trees, or how to delegate a lattice basis. Journal of cryptology, 25, 601-639.
 //! <https://doi.org/10.1007/s00145-011-9105-2>
+//! - \[5\] Chen, Yuanmi, and Phong Q. Nguyen. "BKZ 2.0: Better lattice security
+//! estimates." International Conference on the Theory and Application of Cryptology and
+//! Information Security. Berlin, Heidelberg: Springer Berlin Heidelberg, 2011.
 
 use self::{gadget_classical::gen_trapdoor, gadget_parameters::GadgetParameters};
 use crate::sample::g_trapdoor::{

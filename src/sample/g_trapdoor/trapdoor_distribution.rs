@@ -38,6 +38,7 @@ pub trait TrapdoorDistribution {
 /// - `s`: the gaussian parameter with which is sampled
 ///
 /// Returns a matrix which is sampled according to the defined distribution
+#[typetag::serde]
 pub trait TrapdoorDistributionRing {
     fn sample(&self, n: &Z, nr_cols: &Z, s: &Q) -> MatPolyOverZ;
 }
@@ -50,6 +51,7 @@ pub struct PlusMinusOneZero;
 /// A distribution which samples a row vector of type [`MatPolyOverZ`] where each
 /// coefficient is a polynomial of degree `n-1` and each coefficient of the polynomial
 /// is sampled using [`Z::sample_discrete_gauss`]
+#[derive(Serialize, Deserialize)]
 pub struct SampleZ;
 
 #[typetag::serde]
@@ -79,6 +81,7 @@ impl TrapdoorDistribution for PlusMinusOneZero {
     }
 }
 
+#[typetag::serde]
 impl TrapdoorDistributionRing for SampleZ {
     /// Sample a matrix of polynomials of length `n` with entries sampled
     /// using [`Z::sample_discrete_gauss`]

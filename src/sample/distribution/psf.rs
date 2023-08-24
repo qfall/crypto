@@ -10,6 +10,7 @@
 //! explicit constructions such as [`PSFGPV`](gpv::PSFGPV).
 
 pub mod gpv;
+pub mod gpv_ring;
 
 /// This trait should be implemented by all constructions that are
 /// actual implementations of a [`PSF`].
