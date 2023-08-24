@@ -286,7 +286,7 @@ impl RingLPR {
     /// use qfall_crypto::construction::pk_encryption::RingLPR;
     /// let lpr = RingLPR::default();
     ///
-    /// let is_valid = lpr.check_security().is_ok();
+    /// assert!(lpr.check_security().is_ok());
     /// ```
     ///
     /// # Errors and Failures
@@ -319,8 +319,8 @@ impl RingLPR {
     /// into a [`PolynomialRingZq`] with entries q/2 for any 1-bit and 0 as coefficient for any 0-bit.
     fn z_into_polynomialringzq(&self, mu: &Z) -> PolynomialRingZq {
         let bits = mu.to_bits();
-        let mut mu_q_half = PolynomialRingZq::from((&PolyOverZ::default(), &self.q));
-        let q_half = self.q.get_q().div_floor(&Z::from(2));
+        let mut mu_q_half = PolynomialRingZq::from((PolyOverZ::default(), &self.q));
+        let q_half = self.q.get_q().div_floor(2);
         for (i, bit) in bits.iter().enumerate() {
             if *bit {
                 mu_q_half.set_coeff(i, &q_half).unwrap();
@@ -492,7 +492,7 @@ impl PKEncryption for RingLPR {
         // res = v - s * u
         let result = &cipher.1 - sk * &cipher.0;
 
-        let q_half = self.q.get_q().div_floor(&Z::from(2));
+        let q_half = self.q.get_q().div_floor(2);
 
         // check for each coefficient whether it's closer to 0 or q/2
         // if closer to q/2 -> add 2^i to result
@@ -659,7 +659,7 @@ mod test_ring_lpr {
         let (pk, sk) = scheme.gen();
 
         for msg in messages {
-            let cipher = scheme.enc(&pk, &msg);
+            let cipher = scheme.enc(&pk, msg);
             let m = scheme.dec(&sk, &cipher);
 
             assert_eq!(Z::ZERO, m);
