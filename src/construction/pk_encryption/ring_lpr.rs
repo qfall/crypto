@@ -22,6 +22,8 @@ use serde::{Deserialize, Serialize};
 /// This struct manages and stores the public parameters of a [`RingLPR`]
 /// public key encryption instance.
 ///
+/// This encryption scheme is implemented according to the description in [\[1\]](<index.html#:~:text=[1]>).
+///
 /// Attributes:
 /// - `n`: specifies the security parameter, which is not equal to the bit-security level
 /// - `q`: specifies the modulus over which the encryption is computed
@@ -37,7 +39,7 @@ use serde::{Deserialize, Serialize};
 /// let (pk, sk) = lpr.gen();
 ///
 /// // encrypt a bit
-/// let msg = Z::ZERO; // must be a bit, i.e. msg = 0 or 1
+/// let msg = Z::from(15); // must be at most n bits, i.e. for default 2^16 - 1
 /// let cipher = lpr.enc(&pk, &msg);
 ///
 /// // decrypt
@@ -123,9 +125,7 @@ impl RingLPR {
             "Choose n >= 10 as this function does not return parameters ensuring proper correctness of the scheme otherwise."
         );
 
-        let mut q: ModulusPolynomialRingZq;
-        let mut alpha: Q;
-        (q, alpha) = Self::gen_new_public_parameters(&n);
+        let (mut q, mut alpha) = Self::gen_new_public_parameters(&n);
         let mut out = Self {
             n: n.clone(),
             q,
@@ -203,6 +203,7 @@ impl RingLPR {
     ///
     /// The required properties are:
     /// - α = o (1 / (sqrt(n) * log^3 n))
+    /// - n = 2^d for some d ∈ N_0
     ///
     /// **WARNING**: This bound is not tight. Hence, we added a small factor
     /// loosely corresponding to max(log n - 4, 1) below to ensure correctness
@@ -217,7 +218,7 @@ impl RingLPR {
     /// use qfall_crypto::construction::pk_encryption::RingLPR;
     /// let lpr = RingLPR::default();
     ///
-    /// let is_valid = lpr.check_correctness().is_ok();
+    /// assert!(lpr.check_correctness().is_ok());
     /// ```
     ///
     /// # Errors and Failures
@@ -225,7 +226,7 @@ impl RingLPR {
     /// if at least one parameter was not chosen appropriately for a
     /// correct RingLPR public key encryption instance.
     /// - Returns a [`MathError`] of type [`ConversionError`](MathError::ConversionError)
-    /// if the value does not fit into an [`i64`]
+    /// if the value does not fit into an [`i64`].
     pub fn check_correctness(&self) -> Result<(), MathError> {
         let n_i64 = i64::try_from(&self.n)?;
 
@@ -235,7 +236,19 @@ impl RingLPR {
             )));
         }
 
-        // TODO: Add check whether n is power of two
+        // ensure n = 2^d for some d ∈ N_0
+        let result = self.n.is_perfect_power();
+        let err_msg = String::from(
+            "n is not a perfect power of 2, \
+            which is required for the correctness of this scheme.",
+        );
+        if let Some((root, _)) = result {
+            if root != Z::from(2) {
+                return Err(MathError::InvalidIntegerInput(err_msg));
+            }
+        } else {
+            return Err(MathError::InvalidIntegerInput(err_msg));
+        }
 
         // Found out by experience as the bound is not tight enough to ensure correctness for large n.
         // Hence, a small factor roughly of max(log n - 4, 1) has to be applied.
@@ -250,7 +263,7 @@ impl RingLPR {
         // α = o (1 / sqrt(n) * log^3 n ))
         if self.alpha > 1 / (factor * self.n.sqrt() * self.n.log(2).unwrap().pow(3).unwrap()) {
             return Err(MathError::InvalidIntegerInput(String::from(
-                "Correctness is not guaranteed as α >= 1 / (sqrt(n) * log^3 n),\
+                "Correctness is not guaranteed as α >= 1 / (sqrt(n) * log^3 n), \
                 but α < 1 / (sqrt(n) * log^3 n) is required. Please check the documentation!",
             )));
         }
@@ -296,10 +309,25 @@ impl RingLPR {
 
     /// This function instantiates a 128-bit secure [`RingLPR`] scheme.
     ///
-    /// The public parameters used for this scheme were generated via `RingLPR::new_from_n(350)`
+    /// The public parameters used for this scheme were generated via `RingLPR::new_from_n(512)`
     /// and its bit-security determined via the [lattice estimator](https://github.com/malb/lattice-estimator).
     pub fn secure128() -> Self {
         Self::new(512, 92897729, 0.000005)
+    }
+
+    /// Turns a [`Z`] instance into its bit representation, converts this bit representation
+    /// into a [`PolynomialRingZq`] with entries q/2 for any 1-bit and 0 as coefficient for any 0-bit.
+    fn z_into_polynomialringzq(&self, mu: &Z) -> PolynomialRingZq {
+        let bits = mu.to_bits();
+        let mut mu_q_half = PolynomialRingZq::from((&PolyOverZ::default(), &self.q));
+        let q_half = self.q.get_q().div_floor(&Z::from(2));
+        for (i, bit) in bits.iter().enumerate() {
+            if *bit {
+                mu_q_half.set_coeff(i, &q_half).unwrap();
+            }
+        }
+
+        mu_q_half
     }
 }
 
@@ -368,7 +396,7 @@ impl PKEncryption for RingLPR {
         ((a, b), s)
     }
 
-    /// Generates an encryption of `message mod 2^(n-2)` for the provided public key by following these steps:
+    /// Generates an encryption of `message mod 2^n` for the provided public key by following these steps:
     /// - r <- χ
     /// - e1 <- χ
     /// - e2 <- χ
@@ -396,16 +424,9 @@ impl PKEncryption for RingLPR {
     fn enc(&self, pk: &Self::PublicKey, message: impl Into<Z>) -> Self::Cipher {
         // ensure mu has at most n bits
         let message: Z = message.into().abs();
-        let mu = message.modulo(Z::from(2).pow(&self.n - 2).unwrap());
+        let mu = message.modulo(Z::from(2).pow(&self.n).unwrap());
         // set mu_q_half to polynomial with n {0,1} coefficients
-        let bits = mu.to_bits();
-        let mut mu_q_half = PolynomialRingZq::from((&PolyOverZ::default(), &self.q));
-        let q_half = self.q.get_q().div_floor(&Z::from(2));
-        for (i, bit) in bits.iter().enumerate() {
-            if *bit {
-                mu_q_half.set_coeff(i, &q_half).unwrap();
-            }
-        }
+        let mu_q_half = self.z_into_polynomialringzq(&mu);
 
         // r <- χ
         let r = PolynomialRingZq::sample_discrete_gauss(
@@ -476,7 +497,7 @@ impl PKEncryption for RingLPR {
         // check for each coefficient whether it's closer to 0 or q/2
         // if closer to q/2 -> add 2^i to result
         let mut vec = vec![];
-        for i in 0..result.get_degree() {
+        for i in 0..self.q.get_degree() {
             let coeff = Zq::from((result.get_coeff(i).unwrap(), self.q.get_q()));
             if coeff.distance(&q_half) < coeff.distance(Z::ZERO) {
                 vec.push(true);
@@ -536,6 +557,14 @@ mod test_pp_generation {
         }
     }
 
+    /// Ensure that `n` chosen as a non-power of two does not result in a provably correct scheme.
+    #[test]
+    fn non_power_of_2_n() {
+        let scheme = RingLPR::new(7, 17, 0.01);
+
+        assert!(scheme.check_correctness().is_err())
+    }
+
     /// Ensures that `new_from_n` is available for types implementing [`Into<Z>`].
     #[test]
     fn availability() {
@@ -580,7 +609,7 @@ mod test_ring_lpr {
     fn cycle_small_n() {
         let scheme = RingLPR::default();
         let (pk, sk) = scheme.gen();
-        let messages = [0, 1, 2, 15, 70, 256, 580, 1000, 4000, 8000];
+        let messages = [0, 1, 2, 15, 70, 256, 580, 1000, 4000, 8000, 65535];
 
         for message in messages {
             let cipher = scheme.enc(&pk, message);
@@ -622,10 +651,10 @@ mod test_ring_lpr {
         }
     }
 
-    /// Checks that modulus 2^(n-1) is applied correctly.
+    /// Checks that modulus 2^n is applied correctly.
     #[test]
     fn modulus_application() {
-        let messages = [32768];
+        let messages = [65536];
         let scheme = RingLPR::default();
         let (pk, sk) = scheme.gen();
 
