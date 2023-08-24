@@ -84,7 +84,7 @@ impl TrapdoorDistributionRing for SampleZ {
     /// using [`Z::sample_discrete_gauss`]
     ///
     /// Parameters:
-    /// - `n`: degree of the polynomial
+    /// - `n`: length of the polynomial
     /// - `nr_cols`: number of columns of the matrix
     /// - `s`: the gaussian parameter used for SampleZ
     ///
@@ -102,7 +102,7 @@ impl TrapdoorDistributionRing for SampleZ {
         let nr_cols = i64::try_from(nr_cols).unwrap();
         let mut out_mat = MatPolyOverZ::new(1, nr_cols);
         for j in 0..nr_cols {
-            let sample = PolyOverZ::sample_discrete_gauss(n, n, 0, s).unwrap();
+            let sample = PolyOverZ::sample_discrete_gauss(n - 1, n, 0, s).unwrap();
             out_mat.set_entry(0, j, &sample).unwrap();
         }
 
@@ -151,7 +151,7 @@ mod test_sample_z {
             // it should be the same as sampling a vector with 10*15 entries
             let coeff_embedding = sample
                 .transpose()
-                .into_coefficient_embedding_from_matrix(11);
+                .into_coefficient_embedding_from_matrix(10);
 
             // test for concentration bound
             assert!(
