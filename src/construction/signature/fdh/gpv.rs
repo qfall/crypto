@@ -17,11 +17,11 @@ use crate::{
 use qfall_math::{
     integer::{MatZ, Z},
     integer_mod_q::{MatZq, Modulus},
-    rational::Q,
+    rational::{MatQ, Q},
 };
 use std::{collections::HashMap, marker::PhantomData};
 
-impl Fdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq> {
+impl Fdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
     /// Initializes an FDH signature scheme from a [`PSFGPV`].
     ///
     /// This function corresponds to an implementation of an FDH-signature
@@ -90,7 +90,7 @@ mod text_fdh {
     use qfall_math::{
         integer::{MatZ, Z},
         integer_mod_q::{MatZq, Modulus},
-        rational::Q,
+        rational::{MatQ, Q},
         traits::Pow,
     };
 
@@ -148,8 +148,7 @@ mod text_fdh {
         let _ = fdh.sign(m.to_owned(), &sk, &pk);
 
         let fdh_string = serde_json::to_string(&fdh).expect("Unable to create a json object");
-        println!("{}", fdh_string);
-        let fdh_2: Fdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq> =
+        let fdh_2: Fdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> =
             serde_json::from_str(&fdh_string).unwrap();
 
         assert_eq!(fdh.storage, fdh_2.storage);
