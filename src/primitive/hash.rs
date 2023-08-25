@@ -102,7 +102,7 @@ pub fn hash_to_zq_sha256(string: &str, modulus: &Modulus) -> Zq {
 /// ```
 ///
 /// # Panics ...
-/// - if the number of rows or columns is less or equal to `0`.
+/// - if the number of rows or columns is less or equal to `0` or does not fit into an [`i64`].
 pub fn hash_to_mat_zq_sha256(
     string: &str,
     num_rows: impl TryInto<i64> + Display,
