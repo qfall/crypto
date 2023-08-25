@@ -39,6 +39,8 @@ use std::collections::HashMap;
 /// - `alpha`: specifies the gaussian parameter used for independent
 ///   sampling from χ, i.e. for multiple discrete Gaussian samples used
 ///   for key generation
+/// - `psf`: specifies the PSF used for extracting secret keys
+/// - `storage`: is a [`HashMap`] which stores all previously computed secret keys corresponding to their identites
 ///
 /// # Examples
 /// ```
