@@ -22,7 +22,7 @@ use qfall_math::{
     error::MathError,
     integer::{MatZ, Z},
     integer_mod_q::{MatZq, Modulus, Zq},
-    rational::Q,
+    rational::{MatQ, Q},
     traits::{Concatenate, Distance, GetEntry, Pow, SetEntry},
 };
 use serde::{Deserialize, Serialize};
@@ -296,7 +296,7 @@ impl Default for DualRegevIBE {
 impl IBE for DualRegevIBE {
     type Cipher = MatZq;
     type MasterPublicKey = MatZq;
-    type MasterSecretKey = MatZ;
+    type MasterSecretKey = (MatZ, MatQ);
     type SecretKey = MatZ;
     type Identity = String;
 

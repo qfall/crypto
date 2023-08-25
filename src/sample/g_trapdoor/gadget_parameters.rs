@@ -173,7 +173,6 @@ impl GadgetParametersRing {
         // [`i64`] because downstream matrices can be at most that size
         let modulus = modulus.into();
         let n = n.into();
-        let modulus = modulus.into();
         assert!(n >= Z::ONE && n <= Z::from(i64::MAX));
 
         let base = Z::from(2);
