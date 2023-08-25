@@ -32,7 +32,9 @@ pub trait IBE {
     type Cipher;
     type Identity;
 
-    // algorithm to initialize an [`IBE`] scheme
+    /// Generates a master public key pair `(mpk, msk)` suitable for the specific identity-based encryption scheme (IBE).
+    ///
+    /// Returns a tuple `(mpk, msk)` consisting of [`Self::MasterPublicKey`] and [`Self::MasterSecretKey`].
     fn setup(&self) -> (Self::MasterPublicKey, Self::MasterSecretKey);
 
     // algorithm used do extract an identity specific secret key
