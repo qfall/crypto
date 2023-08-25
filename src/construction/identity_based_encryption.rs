@@ -43,10 +43,17 @@ pub trait IBE {
         identity: &Self::Identity,
     ) -> Self::SecretKey;
 
-    // encryption algorithm
+    /// Encrypts the provided `message` using the master public key `mpk` and `identity` of the recipient.
+    ///
+    /// Parameters:
+    /// - `mpk`: specifies the master public key used for this IBE
+    /// - `identity`: specifies the recipient that should be able to decrypt the encrypted message
+    /// - `message`: specifies the message to be encrypted
+    ///
+    /// Returns the encryption of `message` as a [`Self::Cipher`] instance.
     fn enc(
         &self,
-        pk: &Self::MasterPublicKey,
+        mpk: &Self::MasterPublicKey,
         identity: &Self::Identity,
         message: impl Into<Z>,
     ) -> Self::Cipher;
