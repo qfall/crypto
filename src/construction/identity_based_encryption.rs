@@ -37,11 +37,18 @@ pub trait IBE {
     /// Returns a tuple `(mpk, msk)` consisting of [`Self::MasterPublicKey`] and [`Self::MasterSecretKey`].
     fn setup(&self) -> (Self::MasterPublicKey, Self::MasterSecretKey);
 
-    // algorithm used do extract an identity specific secret key
+    /// Extracts a secret key corresponding to the specified `identity` using the master secret key `msk`.
+    ///
+    /// Parameters:
+    /// - `mpk`: specifies the master public key
+    /// - `msk`: specifies the master secret key used for extracting the secret of `identity`
+    /// - `identity`: specifies the identity for which the secret key should be extracted
+    ///
+    /// Returns a secret key for the specified `identity` as a [`Self::SecretKey`].
     fn extract(
         &mut self,
-        pk: &Self::MasterPublicKey,
-        sk: &Self::MasterSecretKey,
+        mpk: &Self::MasterPublicKey,
+        msk: &Self::MasterSecretKey,
         identity: &Self::Identity,
     ) -> Self::SecretKey;
 
