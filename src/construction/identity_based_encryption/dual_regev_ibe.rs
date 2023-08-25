@@ -225,8 +225,9 @@ impl DualRegevIBE {
         // m >= (n + 1) * log(q)
         if Q::from(&self.m) <= (&self.n + 1) * &q.log(2).unwrap() {
             return Err(MathError::InvalidIntegerInput(String::from(
-        "Security is not guaranteed as m <= (n + 1) * log(q), but m > (n + 1) * log(q) is required.",
-    )));
+                "Security is not guaranteed as m <= (n + 1) * log(q), \
+                but m > (n + 1) * log(q) is required.",
+            )));
         }
 
         Ok(())
