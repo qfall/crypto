@@ -125,7 +125,7 @@ mod test_deserialization {
     use qfall_math::{
         integer::{MatZ, Z},
         integer_mod_q::{MatZq, Modulus},
-        rational::Q,
+        rational::{MatQ, Q},
     };
 
     /// Ensure that deserialization works.
@@ -142,7 +142,7 @@ mod test_deserialization {
         let signature = pfdh.sign(m.to_owned(), &sk, &pk);
 
         let pfdh_string = serde_json::to_string(&pfdh).expect("Unable to create a json object");
-        let pfdh_2: Result<Pfdh<MatZq, MatZ, MatZ, MatZq, PSFGPV, HashMatZq>, _> =
+        let pfdh_2: Result<Pfdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq>, _> =
             serde_json::from_str(&pfdh_string);
 
         assert!(pfdh_2.is_ok());

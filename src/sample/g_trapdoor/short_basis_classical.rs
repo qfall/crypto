@@ -12,7 +12,7 @@
 use super::{gadget_classical::find_solution_gadget_mat, gadget_parameters::GadgetParameters};
 use qfall_math::{
     integer::{MatZ, Z},
-    integer_mod_q::{MatZq, Zq},
+    integer_mod_q::MatZq,
     traits::{Concatenate, GetNumColumns, GetNumRows, Pow, SetEntry, Tensor},
 };
 
@@ -106,10 +106,9 @@ fn compute_s(params: &GadgetParameters) -> MatZ {
         // represent modulus in `base` and set last row accordingly
         let mut q = Z::from(&params.q);
         for i in 0..(sk.get_num_rows()) {
-            let q_i = Zq::from((&q, &params.base)).get_value();
+            let q_i = q.modulo(&params.base);
             sk.set_entry(i, sk.get_num_columns() - 1, &q_i).unwrap();
-            q = q - q_i;
-            q = q.div_exact(&params.base).unwrap();
+            q = (q - q_i).div_exact(&params.base).unwrap();
         }
         sk
     };
@@ -386,16 +385,13 @@ mod test_compute_s {
     use crate::sample::g_trapdoor::{
         gadget_parameters::GadgetParameters, short_basis_classical::compute_s,
     };
-    use qfall_math::{
-        integer::{MatZ, Z},
-        integer_mod_q::Modulus,
-    };
+    use qfall_math::integer::{MatZ, Z};
     use std::str::FromStr;
 
     /// Ensure that the matrix s is computed correctly for a power-of-two modulus
     #[test]
     fn base_2_power_two() {
-        let params = GadgetParameters::init_default(2, &Modulus::from(16));
+        let params = GadgetParameters::init_default(2, 16);
 
         let s = compute_s(&params);
 
@@ -417,7 +413,7 @@ mod test_compute_s {
     #[test]
     fn base_2_arbitrary() {
         let modulus = Z::from(0b1100110);
-        let params = GadgetParameters::init_default(1, &Modulus::from(&modulus));
+        let params = GadgetParameters::init_default(1, modulus);
 
         let s = compute_s(&params);
 
@@ -438,7 +434,7 @@ mod test_compute_s {
     /// Ensure that the matrix s is computed correctly for a power-of-5 modulus
     #[test]
     fn base_5_power_5() {
-        let mut params = GadgetParameters::init_default(1, &Modulus::from(625));
+        let mut params = GadgetParameters::init_default(1, 625);
         params.k = Z::from(4);
         params.base = Z::from(5);
 
@@ -459,7 +455,7 @@ mod test_compute_s {
     #[test]
     fn base_5_arbitrary() {
         let modulus = Z::from_str_b("4123", 5).unwrap();
-        let mut params = GadgetParameters::init_default(1, &Modulus::from(&modulus));
+        let mut params = GadgetParameters::init_default(1, modulus);
         params.k = Z::from(4);
         params.base = Z::from(5);
 
@@ -485,7 +481,7 @@ mod test_compute_w {
     };
     use qfall_math::{
         integer::{MatZ, Z},
-        integer_mod_q::{MatZq, Modulus},
+        integer_mod_q::MatZq,
         traits::GetNumColumns,
     };
     use std::str::FromStr;
@@ -493,7 +489,7 @@ mod test_compute_w {
     /// Ensure that `GW = A[I|0] mod q`
     #[test]
     fn working_example_tag_identity() {
-        let params = GadgetParameters::init_default(2, &Modulus::from(8));
+        let params = GadgetParameters::init_default(2, 8);
         let tag = MatZq::identity(2, 2, &params.q);
 
         let a = MatZq::from_str(

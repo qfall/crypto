@@ -1,15 +1,13 @@
-// Copyright © 2023 Sven Moog
+// Copyright © 2023 Marvin Beckmann
 //
 // This file is part of qFALL-crypto.
 //
 // qFALL-crypto is free software: you can redistribute it and/or modify it under
 // the terms of the Mozilla Public License Version 2.0 as published by the
 // Mozilla Foundation. See <https://mozilla.org/en-US/MPL/2.0/>.
-//! This file collects the benchmarks from other files.
 
-use criterion::criterion_main;
+//! This module contains common functions that are used by sub functions.
+//!
+//! This can include specialized implementations for certain parameter sets, such as rotation matrices.
 
-pub mod pfdh;
-pub mod regev;
-
-criterion_main! {regev::benches, pfdh::benches}
+pub mod rotation_matrix;

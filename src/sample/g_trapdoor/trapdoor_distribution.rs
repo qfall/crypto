@@ -12,7 +12,7 @@
 use qfall_math::{
     integer::{MatPolyOverZ, MatZ, PolyOverZ, Z},
     rational::Q,
-    traits::{SetCoefficient, SetEntry},
+    traits::SetEntry,
 };
 use serde::{Deserialize, Serialize};
 
@@ -38,6 +38,7 @@ pub trait TrapdoorDistribution {
 /// - `s`: the gaussian parameter with which is sampled
 ///
 /// Returns a matrix which is sampled according to the defined distribution
+#[typetag::serde]
 pub trait TrapdoorDistributionRing {
     fn sample(&self, n: &Z, nr_cols: &Z, s: &Q) -> MatPolyOverZ;
 }
@@ -50,6 +51,7 @@ pub struct PlusMinusOneZero;
 /// A distribution which samples a row vector of type [`MatPolyOverZ`] where each
 /// coefficient is a polynomial of degree `n-1` and each coefficient of the polynomial
 /// is sampled using [`Z::sample_discrete_gauss`]
+#[derive(Serialize, Deserialize)]
 pub struct SampleZ;
 
 #[typetag::serde]
@@ -79,12 +81,13 @@ impl TrapdoorDistribution for PlusMinusOneZero {
     }
 }
 
+#[typetag::serde]
 impl TrapdoorDistributionRing for SampleZ {
     /// Sample a matrix of polynomials of length `n` with entries sampled
     /// using [`Z::sample_discrete_gauss`]
     ///
     /// Parameters:
-    /// - `n`: degree of the polynomial
+    /// - `n`: length of the polynomial
     /// - `nr_cols`: number of columns of the matrix
     /// - `s`: the gaussian parameter used for SampleZ
     ///
@@ -102,11 +105,7 @@ impl TrapdoorDistributionRing for SampleZ {
         let nr_cols = i64::try_from(nr_cols).unwrap();
         let mut out_mat = MatPolyOverZ::new(1, nr_cols);
         for j in 0..nr_cols {
-            let mut sample = PolyOverZ::default();
-            for k in 0..n {
-                let sample_z = Z::sample_discrete_gauss(n, &Z::ZERO, s).unwrap();
-                sample.set_coeff(k, &sample_z).unwrap();
-            }
+            let sample = PolyOverZ::sample_discrete_gauss(n - 1, n, 0, s).unwrap();
             out_mat.set_entry(0, j, &sample).unwrap();
         }
 

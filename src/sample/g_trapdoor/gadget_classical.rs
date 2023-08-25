@@ -118,9 +118,8 @@ pub fn gen_gadget_mat(
 /// it is negative or it does not fit into an [`i64`].
 pub fn gen_gadget_vec(k: impl TryInto<i64> + Display, base: &Z) -> Result<MatZ, MathError> {
     let mut out = MatZ::new(k, 1);
-    let mut i = 0;
-    while out.set_entry(i, 0, &base.pow(i)?).is_ok() {
-        i += 1;
+    for i in 0..out.get_num_rows() {
+        out.set_entry(i, 0, &base.pow(i)?)?;
     }
     Ok(out)
 }
@@ -168,10 +167,9 @@ pub fn find_solution_gadget_vec(value: &Zq, k: &Z, base: &Z) -> MatZ {
     let mut value = value.get_value();
     let mut out = MatZ::new(k, 1);
     for i in 0..out.get_num_rows() {
-        let val_i = Zq::from((&value, base)).get_value();
+        let val_i = value.modulo(base);
         out.set_entry(i, 0, &val_i).unwrap();
-        value = value - val_i;
-        value = value.div_exact(base).unwrap();
+        value = (value - val_i).div_exact(base).unwrap();
     }
     out
 }
@@ -180,7 +178,6 @@ pub fn find_solution_gadget_vec(value: &Zq, k: &Z, base: &Z) -> MatZ {
 ///
 /// Computes a entrywise solution using the structure of the gadget matrix to its
 /// advantage and utilizing `find_solution_gadget_vec`.
-///
 ///
 /// Parameters:
 /// - `value`: the matrix for which a solution has to be computed
@@ -213,24 +210,14 @@ pub fn find_solution_gadget_vec(value: &Zq, k: &Z, base: &Z) -> MatZ {
 /// # Panics ...
 /// - if the modulus of the value is greater than `base^k`.
 pub fn find_solution_gadget_mat(value: &MatZq, k: &Z, base: &Z) -> MatZ {
-    let mut vec_col: Vec<MatZ> = Vec::new();
+    let mut out = MatZ::new(k * value.get_num_rows(), value.get_num_columns());
     for i in 0..value.get_num_columns() as usize {
         let mut _out: MatZ = find_solution_gadget_vec(&value.get_entry(0, i).unwrap(), k, base);
         for j in 1..value.get_num_rows() as usize {
-            _out = _out
-                .concat_vertical(&find_solution_gadget_vec(
-                    &value.get_entry(j, i).unwrap(),
-                    k,
-                    base,
-                ))
-                .unwrap();
+            let sol_j = find_solution_gadget_vec(&value.get_entry(j, i).unwrap(), k, base);
+            _out = _out.concat_vertical(&sol_j).unwrap();
         }
-        vec_col.push(_out);
-    }
-
-    let mut out = vec_col.first().unwrap().clone();
-    for out_append in &mut vec_col[1..] {
-        out = out.concat_horizontal(out_append).unwrap()
+        out.set_column(i, &_out, 0).unwrap();
     }
     out
 }

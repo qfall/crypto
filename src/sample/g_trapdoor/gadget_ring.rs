@@ -13,7 +13,7 @@ use super::{gadget_classical::find_solution_gadget_mat, gadget_parameters::Gadge
 use qfall_math::{
     error::MathError,
     integer::{MatPolyOverZ, PolyOverZ, Z},
-    integer_mod_q::{MatPolynomialRingZq, MatZq, Modulus, PolyOverZq, PolynomialRingZq},
+    integer_mod_q::{MatPolynomialRingZq, MatZq, Modulus, PolynomialRingZq},
     rational::Q,
     traits::{Concatenate, GetEntry, IntoCoefficientEmbedding, Pow, SetCoefficient, SetEntry},
 };
@@ -43,10 +43,10 @@ use std::fmt::Display;
 /// use qfall_math::integer_mod_q::Modulus;
 /// use qfall_math::rational::Q;
 ///
-/// let params = GadgetParametersRing::init_default(8, &Modulus::try_from(&Z::from(17)).unwrap());
-/// let a_bar = PolyOverZ::sample_uniform(&params.n, &0, &params.q).unwrap();
+/// let params = GadgetParametersRing::init_default(8, 17);
+/// let a_bar = PolyOverZ::sample_uniform(&params.n, 0, &params.q).unwrap();
 ///
-/// let (a, r, e) = gen_trapdoor_ring_lwe(&params, &a_bar, &Q::from(10)).unwrap();
+/// let (a, r, e) = gen_trapdoor_ring_lwe(&params, &a_bar, 10).unwrap();
 /// ```
 /// # Errors and Failures
 /// - Returns a [`MathError`] of type [`InvalidMatrix`](MathError::InvalidMatrix)
@@ -56,11 +56,12 @@ use std::fmt::Display;
 pub fn gen_trapdoor_ring_lwe(
     params: &GadgetParametersRing,
     a_bar: &PolyOverZ,
-    s: &Q,
+    s: impl Into<Q>,
 ) -> Result<(MatPolynomialRingZq, MatPolyOverZ, MatPolyOverZ), MathError> {
+    let s = s.into();
     // Sample `r` and `e` using a provided distribution
-    let r = params.distribution.sample(&params.n, &params.k, s);
-    let e = params.distribution.sample(&params.n, &params.k, s);
+    let r = params.distribution.sample(&params.n, &params.k, &s);
+    let e = params.distribution.sample(&params.n, &params.k, &s);
 
     // compute the parity check matrix
     // `A = [1 | a | g^t - ar + e]`
@@ -127,7 +128,7 @@ pub fn gen_gadget_ring(
 /// use qfall_math::traits::GetEntry;
 /// use std::str::FromStr;
 ///
-/// let gp = GadgetParametersRing::init_default(10, &Modulus::from(128));
+/// let gp = GadgetParametersRing::init_default(10, 128);
 ///
 /// let gadget = gen_gadget_ring(&gp.k, &gp.base).unwrap();
 /// let gadget = MatPolynomialRingZq::from((&gadget, &gp.modulus));
@@ -145,7 +146,7 @@ pub fn gen_gadget_ring(
 pub fn find_solution_gadget_ring(u: &PolynomialRingZq, k: &Z, base: &Z) -> MatPolyOverZ {
     let k_i64 = i64::try_from(k).unwrap();
     let modulus = u.get_mod();
-    let size = PolyOverZq::from(&modulus).get_degree();
+    let size = modulus.get_degree();
     let value = u.get_poly().into_coefficient_embedding(size);
     let value = MatZq::from((&value, &Modulus::from(modulus.get_q())));
 
@@ -171,8 +172,7 @@ mod test_gen_trapdoor_ring {
     };
     use qfall_math::{
         integer::{MatPolyOverZ, PolyOverZ, Z},
-        integer_mod_q::{MatPolynomialRingZq, Modulus},
-        rational::Q,
+        integer_mod_q::MatPolynomialRingZq,
         traits::{Concatenate, GetCoefficient, GetEntry, GetNumColumns, GetNumRows, Pow},
     };
 
@@ -187,12 +187,11 @@ mod test_gen_trapdoor_ring {
     /// trapdoor for `a`
     #[test]
     fn is_trapdoor() {
-        let modulus = Modulus::try_from(&Z::from(32)).unwrap();
-        let params = GadgetParametersRing::init_default(6, &modulus);
+        let params = GadgetParametersRing::init_default(6, 32);
         let a_bar = PolyOverZ::sample_uniform(&params.n, 0, &params.q).unwrap();
 
         // call gen_trapdoor to get matrix a and its 'trapdoor' r
-        let (a, r, e) = gen_trapdoor_ring_lwe(&params, &a_bar, &Q::from(10)).unwrap();
+        let (a, r, e) = gen_trapdoor_ring_lwe(&params, &a_bar, 10).unwrap();
 
         // generate the trapdoor for a from r as trapdoor = [[e],[r],[I]]
         let trapdoor =
@@ -217,14 +216,14 @@ mod test_find_solution_gadget_ring {
     use crate::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
     use qfall_math::{
         integer::PolyOverZ,
-        integer_mod_q::{MatPolynomialRingZq, Modulus, PolynomialRingZq},
+        integer_mod_q::{MatPolynomialRingZq, PolynomialRingZq},
     };
     use std::str::FromStr;
 
     /// Ensures that the algorithm finds a correct solution such that `<g^t, x> = u`
     #[test]
     fn is_correct_solution() {
-        let gp = GadgetParametersRing::init_default(3, &Modulus::from(32));
+        let gp = GadgetParametersRing::init_default(3, 32);
 
         let gadget = gen_gadget_ring(&gp.k, &gp.base).unwrap();
         let gadget = MatPolynomialRingZq::from((&gadget, &gp.modulus));
