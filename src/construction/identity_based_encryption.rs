@@ -58,6 +58,12 @@ pub trait IBE {
         message: impl Into<Z>,
     ) -> Self::Cipher;
 
-    // decryption algorithm
+    /// Decrypts the provided `cipher` using the extracted secret key `sk`.
+    ///
+    /// Parameters:
+    /// - `sk`: specifies the extracted secret key used for decryption
+    /// - `cipher`: specifies the ciphertext to be decrypted
+    ///
+    /// Returns the decryption of `cipher` as a [`Z`] instance.
     fn dec(&self, sk: &Self::SecretKey, cipher: &Self::Cipher) -> Z;
 }
