@@ -38,8 +38,7 @@ impl Pfdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
     ///
     /// # Example
     /// ```
-    /// use qfall_crypto::construction::signature::pfdh::Pfdh;
-    /// use crate::qfall_crypto::construction::signature::SignatureScheme;
+    /// use qfall_crypto::construction::signature::{pfdh::Pfdh, SignatureScheme};
     ///
     /// let mut pfdh = Pfdh::init_gpv(4, 113, 17, 128);
     ///
@@ -50,6 +49,9 @@ impl Pfdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
     ///
     /// assert!(pfdh.vfy(m.to_owned(), &sigma, &pk))
     /// ```
+    ///
+    /// # Panics ...
+    /// - if `modulus <= 1`.
     pub fn init_gpv(
         n: impl Into<Z>,
         modulus: impl Into<Modulus>,
@@ -84,7 +86,7 @@ impl Pfdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
 mod text_fdh {
     use super::Pfdh;
     use crate::construction::signature::SignatureScheme;
-    use qfall_math::{integer::Z, integer_mod_q::Modulus, rational::Q, traits::Pow};
+    use qfall_math::{integer::Z, rational::Q, traits::Pow};
 
     /// Ensure that the generated signature is valid
     #[test]
@@ -94,7 +96,7 @@ mod text_fdh {
         // `s >= ||\tilde short_base|| * omega(\sqrt{\log m})`,
         // here `\log(2*n*k) = omega(\sqrt{\log m}))` (Theorem 4.1 - GPV08)
         let s: Q = ((&n * &k).sqrt() + 1) * Q::from(2) * (Z::from(2) * &n * &k).log(2).unwrap();
-        let modulus = Modulus::try_from(&Z::from(2).pow(&k).unwrap()).unwrap();
+        let modulus = Z::from(2).pow(&k).unwrap();
 
         let mut pfdh = Pfdh::init_gpv(n, &modulus, &s, 128);
         let (pk, sk) = pfdh.gen();

@@ -60,15 +60,14 @@ pub mod trapdoor_distribution;
 /// # Examples
 /// ```
 /// use qfall_crypto::sample::g_trapdoor::gen_trapdoor_default;
-/// use qfall_math::integer::Z;
-/// use qfall_math::integer_mod_q::Modulus;
 ///
-/// let (a,r) = gen_trapdoor_default(42, &Modulus::from(101));
+/// let (a,r) = gen_trapdoor_default(42, 101);
 /// ```
 ///
 /// # Panics ...
 /// - if the security parameter `n` is not in `[1, i64::MAX]`.
-pub fn gen_trapdoor_default(n: impl Into<Z>, modulus: &Modulus) -> (MatZq, MatZ) {
+/// - if `modulus <= 1`.
+pub fn gen_trapdoor_default(n: impl Into<Z>, modulus: impl Into<Modulus>) -> (MatZq, MatZ) {
     // panic if n < 1 (security parameter must be positive)
     let n = n.into();
     assert!(n >= Z::ONE);
@@ -100,17 +99,16 @@ pub fn gen_trapdoor_default(n: impl Into<Z>, modulus: &Modulus) -> (MatZq, MatZ)
 /// # Examples
 /// ```
 /// use qfall_crypto::sample::g_trapdoor::gen_trapdoor_ring_default;
-/// use qfall_math::integer::Z;
-/// use qfall_math::integer_mod_q::Modulus;
 ///
-/// let (a,r, e) = gen_trapdoor_ring_default(100, &Modulus::try_from(&Z::from(29)).unwrap(), 10);;
+/// let (a,r, e) = gen_trapdoor_ring_default(100, 29, 10);;
 /// ```
 ///
 /// # Panics...
 /// - if the security parameter `n` is not in `[1, i64::MAX]`.
+/// - if `modulus <= 1`.
 pub fn gen_trapdoor_ring_default(
     n: impl Into<Z>,
-    modulus: &Modulus,
+    modulus: impl Into<Modulus>,
     s: impl Into<Q>,
 ) -> (MatPolynomialRingZq, MatPolyOverZ, MatPolyOverZ) {
     // panic if n < 1 (security parameter must be positive)
@@ -134,7 +132,6 @@ mod test_gen_trapdoor_default {
     use crate::sample::g_trapdoor::gadget_classical::gen_gadget_mat;
     use qfall_math::{
         integer::{MatZ, Z},
-        integer_mod_q::Modulus,
         traits::{Concatenate, GetNumColumns, GetNumRows, Pow},
     };
 
@@ -150,7 +147,7 @@ mod test_gen_trapdoor_default {
                 let m_bar = n * k + n_log_2_pow_2;
                 let m = &m_bar + n * k;
 
-                let (a, r) = gen_trapdoor_default(n, &Modulus::from(q));
+                let (a, r) = gen_trapdoor_default(n, q);
 
                 assert_eq!(n as i64, a.get_num_rows());
                 assert_eq!(m, Z::from(a.get_num_columns()));
@@ -169,7 +166,7 @@ mod test_gen_trapdoor_default {
             for k in [5, 10] {
                 let q = 2_i64.pow(k);
 
-                let (a, r) = gen_trapdoor_default(n, &Modulus::from(q));
+                let (a, r) = gen_trapdoor_default(n, q);
 
                 let trapdoor = r.concat_vertical(&MatZ::identity(n * k, n * k)).unwrap();
 

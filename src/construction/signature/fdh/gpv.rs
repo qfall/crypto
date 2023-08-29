@@ -37,40 +37,34 @@ impl Fdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
     ///
     /// # Example
     /// ```
-    /// use qfall_crypto::construction::signature::fdh::Fdh;
-    /// use qfall_math::integer::Z;
-    /// use qfall_math::integer_mod_q::Modulus;
-    /// use qfall_math::rational::Q;
-    /// use crate::qfall_crypto::construction::signature::SignatureScheme;
-    ///
-    /// let s = Q::from(17);
-    /// let n = Z::from(4);
-    /// let modulus = Modulus::try_from(&Z::from(113)).unwrap();
-    ///
-    /// let mut fdh = Fdh::init_gpv(n, &modulus, &s);
+    /// use qfall_crypto::construction::signature::{fdh::Fdh, SignatureScheme};
     ///
     /// let m = "Hello World!";
     ///
+    /// let mut fdh = Fdh::init_gpv(4, 113, 17);
     /// let (pk, sk) = fdh.gen();
-    /// let sigma = fdh.sign(m.to_owned(), &sk, &pk);
     ///
-    /// assert_eq!(&sigma, &fdh.sign(m.to_owned(), &sk, &pk));
-    /// assert!(fdh.vfy(m.to_owned(), &sigma, &pk))
+    /// let sigma = fdh.sign(m.to_string(), &sk, &pk);
+    ///
+    /// assert!(fdh.vfy(m.to_string(), &sigma, &pk))
     /// ```
-    pub fn init_gpv(n: impl Into<Z>, modulus: &Modulus, s: &Q) -> Self {
+    ///
+    /// # Panics ...
+    /// - if `modulus <= 1`.
+    pub fn init_gpv(n: impl Into<Z>, modulus: impl Into<Modulus>, s: impl Into<Q>) -> Self {
         let n = n.into();
+        let n_i64 = i64::try_from(&n).unwrap();
+        let modulus = modulus.into();
         let psf = PSFGPV {
-            gp: GadgetParameters::init_default(&n, modulus),
-            s: s.clone(),
+            gp: GadgetParameters::init_default(&n, &modulus),
+            s: s.into(),
         };
-        let n = i64::try_from(&n).unwrap();
-        let modulus = modulus.clone();
         Self {
             psf: Box::new(psf),
             storage: HashMap::new(),
             hash: Box::new(HashMatZq {
                 modulus,
-                rows: n,
+                rows: n_i64,
                 cols: 1,
             }),
             _a_type: PhantomData,
@@ -89,7 +83,7 @@ mod text_fdh {
     };
     use qfall_math::{
         integer::{MatZ, Z},
-        integer_mod_q::{MatZq, Modulus},
+        integer_mod_q::MatZq,
         rational::{MatQ, Q},
         traits::Pow,
     };
@@ -102,7 +96,7 @@ mod text_fdh {
         // `s >= ||\tilde short_base|| * omega(\sqrt{\log m})`,
         // here `\log(2*n*k) = omega(\sqrt{\log m}))` (Theorem 4.1 - GPV08)
         let s: Q = ((&n * &k).sqrt() + 1) * Q::from(2) * (Z::from(2) * &n * &k).log(2).unwrap();
-        let modulus = Modulus::try_from(&Z::from(2).pow(&k).unwrap()).unwrap();
+        let modulus = Z::from(2).pow(&k).unwrap();
 
         let mut fdh = Fdh::init_gpv(n, &modulus, &s);
         let (pk, sk) = fdh.gen();
@@ -120,11 +114,7 @@ mod text_fdh {
     /// Ensure that an entry is actually added to the local storage
     #[test]
     fn storage_filled() {
-        let s = Q::from(10);
-        let n = Z::from(5);
-        let modulus = Modulus::try_from(&Z::from(1024)).unwrap();
-
-        let mut fdh = Fdh::init_gpv(n, &modulus, &s);
+        let mut fdh = Fdh::init_gpv(5, 1024, 10);
 
         let m = "Hello World!";
         let (pk, sk) = fdh.gen();
@@ -136,11 +126,7 @@ mod text_fdh {
     /// Ensure that after deserialization the HashMap still contains all entries.
     #[test]
     fn reload_hashmap() {
-        let s = Q::from(10);
-        let n = Z::from(5);
-        let modulus = Modulus::try_from(&Z::from(1024)).unwrap();
-
-        let mut fdh = Fdh::init_gpv(&n, &modulus, &s);
+        let mut fdh = Fdh::init_gpv(5, 1024, 10);
 
         // fill one entry in the HashMap
         let m = "Hello World!";

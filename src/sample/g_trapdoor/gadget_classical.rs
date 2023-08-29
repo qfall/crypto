@@ -36,10 +36,9 @@ use std::fmt::Display;
 /// # Examples
 /// ```
 /// use qfall_crypto::sample::g_trapdoor::{gadget_parameters::GadgetParameters, gadget_classical::gen_trapdoor};
-/// use qfall_math::integer::Z;
-/// use qfall_math::integer_mod_q::{Modulus, MatZq};
+/// use qfall_math::integer_mod_q::MatZq;
 ///
-/// let params = GadgetParameters::init_default(42, &Modulus::from(42));
+/// let params = GadgetParameters::init_default(42, 42);
 /// let a_bar = MatZq::sample_uniform(42, &params.m_bar, &params.q);
 /// let tag = MatZq::identity(42, 42, &params.q);
 ///
@@ -79,7 +78,7 @@ pub fn gen_trapdoor(
 /// use qfall_crypto::sample::g_trapdoor::gadget_classical::gen_gadget_mat;
 /// use qfall_math::integer::Z;
 ///
-/// let g = gen_gadget_mat(&Z::from(3), &Z::from(4), &Z::from(2));
+/// let g = gen_gadget_mat(4, 4, &Z::from(2));
 /// ```
 /// # Errors and Failures
 /// - Returns a [`MathError`] of type [`InvalidMatrix`](MathError::InvalidMatrix)
@@ -297,8 +296,7 @@ mod test_gen_trapdoor {
     /// trapdoor for `a`
     #[test]
     fn is_trapdoor_without_tag() {
-        let modulus = Modulus::from(32);
-        let params = GadgetParameters::init_default(42, &modulus);
+        let params = GadgetParameters::init_default(42, 32);
         let a_bar = MatZq::sample_uniform(42, &params.m_bar, &params.q);
         let tag = MatZq::identity(42, 42, &params.q);
 
@@ -316,8 +314,8 @@ mod test_gen_trapdoor {
         // ensure G = A*trapdoor (definition of a trapdoor)
         let gadget_mat = gen_gadget_mat(&params.n, &params.k, &Z::from(2)).unwrap();
         assert_eq!(
-            MatZq::from((&gadget_mat, &modulus)),
-            a * MatZq::from((&trapdoor, &modulus))
+            MatZq::from((&gadget_mat, &params.q)),
+            a * MatZq::from((&trapdoor, &params.q))
         );
     }
 

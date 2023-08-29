@@ -41,24 +41,15 @@ pub mod serialize;
 /// # Example
 /// ## Signature Scheme from [`PSFGPV`](crate::sample::distribution::psf::gpv::PSFGPV)
 /// ```
-/// use qfall_crypto::construction::signature::fdh::Fdh;
-/// use qfall_math::integer::Z;
-/// use qfall_math::integer_mod_q::Modulus;
-/// use qfall_math::rational::Q;
-/// use crate::qfall_crypto::construction::signature::SignatureScheme;
+/// use qfall_crypto::construction::signature::{fdh::Fdh, SignatureScheme};
 ///
-/// let s = Q::from(17);
-/// let n = Z::from(4);
-/// let modulus = Modulus::try_from(&Z::from(113)).unwrap();
-///
-/// let mut fdh = Fdh::init_gpv(n, &modulus, &s);
+/// let mut fdh = Fdh::init_gpv(4, 113, 17);
 ///
 /// let m = "Hello World!";
 ///
 /// let (pk, sk) = fdh.gen();
 /// let sigma = fdh.sign(m.to_owned(), &sk, &pk);
 ///
-/// assert_eq!(&sigma, &fdh.sign(m.to_owned(), &sk, &pk));
 /// assert!(fdh.vfy(m.to_owned(), &sigma, &pk))
 /// ```
 #[derive(Serialize)]

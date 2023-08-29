@@ -39,17 +39,12 @@ use qfall_math::{
 /// use qfall_crypto::sample::g_trapdoor::{gadget_parameters::GadgetParameters,
 /// gen_trapdoor_default};
 /// use qfall_crypto::sample::g_trapdoor::short_basis_classical::gen_short_basis_for_trapdoor;
-/// use qfall_math::{
-///     integer::Z,
-///     integer_mod_q::{MatZq, Modulus},
-///     traits::{GetNumColumns, GetNumRows},
-/// };
+/// use qfall_math::integer_mod_q::MatZq;
 ///
-/// let modulus = Modulus::from(127);
-/// let params = GadgetParameters::init_default(10, &modulus);
-/// let (a, r) = gen_trapdoor_default(&params.n, &modulus);
+/// let params = GadgetParameters::init_default(10, 127);
+/// let (a, r) = gen_trapdoor_default(&params.n, 127);
 ///
-/// let tag = MatZq::identity(&params.n, &params.n, &modulus);
+/// let tag = MatZq::identity(&params.n, &params.n, 127);
 ///
 /// let short_basis = gen_short_basis_for_trapdoor(&params, &tag, &a, &r);
 /// ```
@@ -294,15 +289,12 @@ mod test_gen_sa {
     use crate::sample::g_trapdoor::{
         gadget_parameters::GadgetParameters, short_basis_classical::gen_sa_r,
     };
-    use qfall_math::{
-        integer::MatZ,
-        integer_mod_q::{MatZq, Modulus},
-    };
+    use qfall_math::{integer::MatZ, integer_mod_q::MatZq};
     use std::str::FromStr;
 
     /// Returns a fixed trapdoor and a matrix a for a fixed parameter set
     fn get_fixed_trapdoor_for_tag_identity() -> (GadgetParameters, MatZq, MatZ) {
-        let params = GadgetParameters::init_default(2, &Modulus::from(8));
+        let params = GadgetParameters::init_default(2, 8);
 
         let a = MatZq::from_str(
             "[\
