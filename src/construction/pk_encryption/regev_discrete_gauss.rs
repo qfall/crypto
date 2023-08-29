@@ -621,7 +621,7 @@ mod test_regev {
         for msg in messages {
             let msg_mod = Z::from(msg.rem_euclid(2));
 
-            let cipher = regev.enc(&pk, &msg);
+            let cipher = regev.enc(&pk, msg);
             let m = regev.dec(&sk, &cipher);
 
             assert_eq!(msg_mod, m);

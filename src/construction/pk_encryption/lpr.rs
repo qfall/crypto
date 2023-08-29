@@ -624,7 +624,7 @@ mod test_lpr {
         for msg in messages {
             let msg_mod = Z::from(msg.rem_euclid(2));
 
-            let cipher = dr.enc(&pk, &msg);
+            let cipher = dr.enc(&pk, msg);
             let m = dr.dec(&sk, &cipher);
 
             assert_eq!(msg_mod, m);
