@@ -12,6 +12,7 @@
 
 use super::IBE;
 use crate::{
+    construction::pk_encryption::{DualRegev, PKEncryption},
     primitive::hash::hash_to_mat_zq_sha256,
     sample::{
         distribution::psf::{gpv::PSFGPV, PSF},
@@ -21,9 +22,9 @@ use crate::{
 use qfall_math::{
     error::MathError,
     integer::{MatZ, Z},
-    integer_mod_q::{MatZq, Modulus, Zq},
+    integer_mod_q::{MatZq, Modulus},
     rational::{MatQ, Q},
-    traits::{Concatenate, Distance, GetEntry, Pow, SetEntry},
+    traits::{Concatenate, Pow},
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -32,15 +33,11 @@ use std::collections::HashMap;
 /// public key encryption instance based on [\[1\]](<index.html#:~:text=[1]>).
 ///
 /// Attributes:
-/// - `n`: specifies the security parameter, which is not equal to the bit-security level
-/// - `m`: defines the dimension of the underlying lattice
-/// - `q`: specifies the modulus over which the encryption is computed
 /// - `r`: specifies the gaussian parameter used by the [`PSF`]
-/// - `alpha`: specifies the gaussian parameter used for independent
-///   sampling from χ, i.e. for multiple discrete Gaussian samples used
-///   for key generation
+/// - `dual_regev`: a [`DualRegev`] instance with fitting parameters `n`, `m`, `q`, `alpha`
 /// - `psf`: specifies the PSF used for extracting secret keys
-/// - `storage`: is a [`HashMap`] which stores all previously computed secret keys corresponding to their identites
+/// - `storage`: is a [`HashMap`] which stores all previously computed secret keys
+/// corresponding to their identities
 ///
 /// # Examples
 /// ```
@@ -65,11 +62,8 @@ use std::collections::HashMap;
 /// ```
 #[derive(Serialize, Deserialize)]
 pub struct DualRegevIBE {
-    n: Z,       // security parameter
-    m: Z,       // number of rows of matrix A
-    q: Modulus, // modulus
-    r: Q,       // gaussian parameter the [`PSF`]
-    alpha: Q,   // gaussian parameter the encryption
+    r: Q, // gaussian parameter the [`PSF`]
+    dual_regev: DualRegev,
     psf: PSFGPV,
     storage: HashMap<String, MatZ>,
 }
@@ -108,12 +102,9 @@ impl DualRegevIBE {
             s: r.clone(),
         };
         Self {
-            n,
-            m,
-            q,
             r,
-            alpha,
             psf,
+            dual_regev: DualRegev::new(n, m, q, alpha),
             storage: HashMap::new(),
         }
     }
@@ -169,12 +160,9 @@ impl DualRegevIBE {
             s: r.clone(),
         };
         Self {
-            n,
-            m,
-            q,
             r,
-            alpha,
             psf,
+            dual_regev: DualRegev::new(n, m, q, alpha),
             storage: HashMap::new(),
         }
     }
@@ -205,25 +193,25 @@ impl DualRegevIBE {
     /// if at least one parameter was not chosen appropriately for a
     /// secure Dual Regev public key encryption instance.
     pub fn check_security(&self) -> Result<(), MathError> {
-        let q = Q::from(&self.q);
+        let q = Q::from(&self.dual_regev.q);
 
         // Security requirements
         // q >= 5 * r * (m + 1)
-        if q < (5 * &self.r) * (&self.m + Q::ONE) {
+        if q < (5 * &self.r) * (&self.dual_regev.m + Q::ONE) {
             return Err(MathError::InvalidIntegerInput(String::from(
                 "Security is not guaranteed as q < 5 * r * (m + 1), but q >= 5 * r * (m + 1) is required.",
             )));
         }
 
         // r >= sqrt(m)
-        if self.r < self.m.sqrt() {
+        if self.r < self.dual_regev.m.sqrt() {
             return Err(MathError::InvalidIntegerInput(String::from(
                 "Security is not guaranteed as r < sqrt(m), but r >= sqrt(m) is required.",
             )));
         }
 
         // m >= (n + 1) * log(q)
-        if Q::from(&self.m) <= (&self.n + 1) * &q.log(2).unwrap() {
+        if Q::from(&self.dual_regev.m) <= (&self.dual_regev.n + 1) * &q.log(2).unwrap() {
             return Err(MathError::InvalidIntegerInput(String::from(
                 "Security is not guaranteed as m <= (n + 1) * log(q), \
                 but m > (n + 1) * log(q) is required.",
@@ -258,14 +246,17 @@ impl DualRegevIBE {
     /// if at least one parameter was not chosen appropriately for a
     /// correct Dual Regev IBE public key encryption instance.
     pub fn check_correctness(&self) -> Result<(), MathError> {
-        if self.n <= Z::ONE {
+        if self.dual_regev.n <= Z::ONE {
             return Err(MathError::InvalidIntegerInput(String::from(
                 "n must be chosen bigger than 1.",
             )));
         }
 
         // α <= 1/(r * sqrt(m) * log(n))
-        if self.alpha > 1 / (2 * &self.r * (&self.m + Z::ONE).sqrt()) * self.n.log(2).unwrap() {
+        if self.dual_regev.alpha
+            > 1 / (2 * &self.r * (&self.dual_regev.m + Z::ONE).sqrt())
+                * self.dual_regev.n.log(2).unwrap()
+        {
             return Err(MathError::InvalidIntegerInput(String::from(
                 "Correctness is not guaranteed as α > 1/(r * sqrt(m) * log(n)), but α <= 1/(2 * r * sqrt(m) * log(n)) is required.",
             )));
@@ -353,7 +344,7 @@ impl IBE for DualRegevIBE {
             return value.clone();
         }
 
-        let u = hash_to_mat_zq_sha256(identity, &self.n, 1, &self.q);
+        let u = hash_to_mat_zq_sha256(identity, &self.dual_regev.n, 1, &self.dual_regev.q);
         let secret_key = self.psf.samp_p(master_pk, master_sk, &u);
 
         // insert secret key in HashMap
@@ -363,20 +354,17 @@ impl IBE for DualRegevIBE {
     }
 
     /// Generates an encryption of `message mod 2` for the provided public key
-    /// and identity by following these steps:
-    /// e = <- χ^(m+1)
-    /// p = H(id)
-    /// - u = A * e
-    /// - c = p^t * e + message *  ⌊q/2⌋
+    /// and identity by by calling [`DualRegev::enc()`] on
+    /// pk = [master_pk | H(id)].
     ///
     /// Then, `cipher = [u | c]` is output.
     ///
     /// Parameters:
-    /// - `master_pk`: specifies the public key, which contains two matrices `pk = (A, p)`
+    /// - `master_pk`: specifies the public key, which cis matrix `pk = A`
     /// - `identity`: specifies the identity used for encryption
     /// - `message`: specifies the message that should be encrypted
     ///
-    /// Returns a cipher of the form `cipher = [u | c]` for [`MatZq`] `u`.
+    /// Returns a cipher of type [`MatZq`] for master_pk an identity.
     ///
     /// # Examples
     /// ```
@@ -393,45 +381,20 @@ impl IBE for DualRegevIBE {
         identity: &Self::Identity,
         message: impl Into<Z>,
     ) -> Self::Cipher {
-        let identity_based_pk = hash_to_mat_zq_sha256(identity, &self.n, 1, &self.q);
-
-        let message = message.into().modulo(2);
-
-        // s <- Z_q^n
-        let vec_s_t = MatZq::sample_uniform(1, &self.n, &self.q);
-        // e <- χ^(m+1)
-        let vec_e_t = MatZq::sample_discrete_gauss(
-            1,
-            &self.m + 1,
-            &self.q,
-            &self.n,
-            0,
-            &self.alpha * Z::from(&self.q),
+        let identity_based_pk =
+            hash_to_mat_zq_sha256(identity, &self.dual_regev.n, 1, &self.dual_regev.q);
+        self.dual_regev.enc(
+            &master_pk.concat_horizontal(&identity_based_pk).unwrap(),
+            message,
         )
-        .unwrap();
-
-        // p^t * e + message *  ⌊q/2⌋
-        let mut msg_q_half = MatZq::identity(1, 1, &self.q);
-        msg_q_half
-            .set_entry(0, 0, message * Z::from(&self.q).div_floor(&Z::from(2)))
-            .unwrap();
-        let message_entry = &vec_s_t * identity_based_pk + msg_q_half;
-
-        // [A * e | c]`
-        ((vec_s_t * master_pk)
-            .concat_horizontal(&message_entry)
-            .unwrap()
-            + vec_e_t)
-            .transpose()
     }
 
-    /// Decrypts the provided `cipher` using the secret key `sk` by following these steps:
-    /// - x = c - s^t * u
-    /// - if x mod q is closer to ⌊q/2⌋ than to 0, output 1. Otherwise, output 0.
+    /// Decrypts the provided `cipher` using the secret key `sk` by using
+    /// [`DualRegev::dec()`]
     ///
     /// Parameters:
     /// - `sk_id`: specifies the secret key `sk = s` obtained by extract
-    /// - `cipher`: specifies the cipher containing `cipher = [u | c]`
+    /// - `cipher`: specifies the cipher containing `cipher = c`
     ///
     /// Returns the decryption of `cipher` as a [`Z`] instance.
     ///
@@ -457,18 +420,7 @@ impl IBE for DualRegevIBE {
     /// assert_eq!(msg, m)
     /// ```
     fn dec(&self, sk_id: &Self::SecretKey, cipher: &Self::Cipher) -> Z {
-        let tmp = (Z::MINUS_ONE * sk_id)
-            .concat_vertical(&MatZ::identity(1, 1))
-            .unwrap();
-        let result: Zq = (cipher.transpose() * tmp).get_entry(0, 0).unwrap();
-
-        let q_half = Z::from(&self.q).div_floor(&Z::from(2));
-
-        if result.distance(Z::ZERO) > result.distance(q_half) {
-            Z::ONE
-        } else {
-            Z::ZERO
-        }
+        self.dual_regev.dec(sk_id, cipher)
     }
 }
 

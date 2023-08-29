@@ -48,10 +48,10 @@ use serde::{Deserialize, Serialize};
 /// ```
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DualRegev {
-    n: Z,       // security parameter
-    m: Z,       // number of rows of matrix A
-    q: Modulus, // modulus
-    alpha: Q,   // gaussian parameter for sampleZ
+    pub(crate) n: Z,       // security parameter
+    pub(crate) m: Z,       // number of rows of matrix A
+    pub(crate) q: Modulus, // modulus
+    pub(crate) alpha: Q,   // gaussian parameter for sampleZ
 }
 
 impl DualRegev {
@@ -370,7 +370,7 @@ impl PKEncryption for DualRegev {
     ///
     /// Parameters:
     /// - `pk`: specifies the public key `pk = A`
-    /// - `message`: specifies the message that should be encryted
+    /// - `message`: specifies the message that should be encrypted
     ///
     /// Returns a cipher `c` of type [`MatZq`].
     ///
