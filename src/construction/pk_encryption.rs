@@ -33,11 +33,13 @@ mod dual_regev_discrete_gauss;
 mod lpr;
 mod regev;
 mod regev_discrete_gauss;
+mod ring_lpr;
 pub use dual_regev::DualRegev;
 pub use dual_regev_discrete_gauss::DualRegevWithDiscreteGaussianRegularity;
 pub use lpr::LPR;
 pub use regev::Regev;
 pub use regev_discrete_gauss::RegevWithDiscreteGaussianRegularity;
+pub use ring_lpr::RingLPR;
 
 use qfall_math::integer::Z;
 
