@@ -40,29 +40,29 @@ pub trait IBE {
     /// Extracts a secret key corresponding to the specified `identity` using the master secret key `msk`.
     ///
     /// Parameters:
-    /// - `mpk`: specifies the master public key
-    /// - `msk`: specifies the master secret key used for extracting the secret of `identity`
+    /// - `master_pk`: specifies the master public key
+    /// - `master_sk`: specifies the master secret key used for extracting the secret of `identity`
     /// - `identity`: specifies the identity for which the secret key should be extracted
     ///
     /// Returns a secret key for the specified `identity` as a [`Self::SecretKey`].
     fn extract(
         &mut self,
-        mpk: &Self::MasterPublicKey,
-        msk: &Self::MasterSecretKey,
+        master_pk: &Self::MasterPublicKey,
+        master_sk: &Self::MasterSecretKey,
         identity: &Self::Identity,
     ) -> Self::SecretKey;
 
     /// Encrypts the provided `message` using the master public key `mpk` and `identity` of the recipient.
     ///
     /// Parameters:
-    /// - `mpk`: specifies the master public key used for this IBE
+    /// - `master_pk`: specifies the master public key used for this IBE
     /// - `identity`: specifies the recipient that should be able to decrypt the encrypted message
     /// - `message`: specifies the message to be encrypted
     ///
     /// Returns the encryption of `message` as a [`Self::Cipher`] instance.
     fn enc(
         &self,
-        mpk: &Self::MasterPublicKey,
+        master_pk: &Self::MasterPublicKey,
         identity: &Self::Identity,
         message: impl Into<Z>,
     ) -> Self::Cipher;

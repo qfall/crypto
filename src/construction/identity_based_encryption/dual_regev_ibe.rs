@@ -395,8 +395,7 @@ impl IBE for DualRegevIBE {
     ) -> Self::Cipher {
         let identity_based_pk = hash_to_mat_zq_sha256(identity, &self.n, 1, &self.q);
 
-        let message = Zq::from((message, 2));
-        let message = message.get_value();
+        let message = message.into().modulo(2);
 
         // s <- Z_q^n
         let vec_s_t = MatZq::sample_uniform(1, &self.n, &self.q);
@@ -427,7 +426,6 @@ impl IBE for DualRegevIBE {
     }
 
     /// Decrypts the provided `cipher` using the secret key `sk` by following these steps:
-    /// - u = H(id)
     /// - x = c - s^t * u
     /// - if x mod q is closer to ⌊q/2⌋ than to 0, output 1. Otherwise, output 0.
     ///
@@ -528,10 +526,41 @@ mod test_dual_regev_ibe {
     }
 
     /// Checks whether the full-cycle of gen, extract, enc, dec works properly
+    /// for message 1 and the default.
+    #[test]
+    fn cycle_one_default() {
+        let msg = Z::ONE;
+        let id = String::from("Hello World!");
+        let mut cryptosystem = DualRegevIBE::default();
+
+        let (pk, sk) = cryptosystem.setup();
+        let id_sk = cryptosystem.extract(&pk, &sk, &id);
+        let cipher = cryptosystem.enc(&pk, &id, &msg);
+        let m = cryptosystem.dec(&id_sk, &cipher);
+
+        assert_eq!(msg, m)
+    }
+
+    /// Checks whether the full-cycle of gen, extract, enc, dec works properly
     /// for message 0 and small n.
     #[test]
     fn cycle_zero_small_n() {
         let msg = Z::ZERO;
+        let id = String::from("Hel213lo World!");
+        let mut cryptosystem = DualRegevIBE::new_from_n(5);
+
+        let (pk, sk) = cryptosystem.setup();
+        let id_sk = cryptosystem.extract(&pk, &sk, &id);
+        let cipher = cryptosystem.enc(&pk, &id, &msg);
+        let m = cryptosystem.dec(&id_sk, &cipher);
+        assert_eq!(msg, m);
+    }
+
+    /// Checks whether the full-cycle of gen, extract, enc, dec works properly
+    /// for message 1 and small n.
+    #[test]
+    fn cycle_one_small_n() {
+        let msg = Z::ONE;
         let id = String::from("Hel213lo World!");
         let mut cryptosystem = DualRegevIBE::new_from_n(5);
 
