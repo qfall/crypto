@@ -123,6 +123,7 @@ mod test_deserialization {
     use qfall_math::{integer::MatZ, integer_mod_q::MatZq, rational::MatQ};
 
     /// Ensure that deserialization works.
+    #[allow(clippy::type_complexity)]
     #[test]
     fn deserialize_gpv() {
         let mut fdh = Fdh::init_gpv(2, 127, 20);
