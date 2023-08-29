@@ -389,7 +389,7 @@ impl PKEncryption for DualRegevWithDiscreteGaussianRegularity {
     ///
     /// Parameters:
     /// - `pk`: specifies the public key, which contains two matrices `pk = (A, u)`
-    /// - `message`: specifies the message that should be encryted
+    /// - `message`: specifies the message that should be encrypted
     ///
     /// Returns a cipher of the form `cipher = (p, c)` for [`MatZq`] `u` and [`Zq`] `c`.
     ///

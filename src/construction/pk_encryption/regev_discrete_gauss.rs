@@ -398,7 +398,7 @@ impl PKEncryption for RegevWithDiscreteGaussianRegularity {
     ///
     /// Parameters:
     /// - `pk`: specifies the public key, which contains two matrices `pk = (A, p)`
-    /// - `message`: specifies the message that should be encryted
+    /// - `message`: specifies the message that should be encrypted
     ///
     /// Returns a cipher of the form `cipher = (u, c)` for [`MatZq`] `u` and [`Zq`] `c`.
     ///

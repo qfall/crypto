@@ -210,7 +210,7 @@ impl Regev {
     /// **WARNING:** Some requirements are missing to ensure
     /// overwhelming correctness of the scheme for small `n`.
     ///
-    /// Returns an empty resultif the public parameters guarantee correctness
+    /// Returns an empty result if the public parameters guarantee correctness
     /// with overwhelming probability or a [`MathError`] if the instance would
     /// not be correct.
     ///
@@ -381,7 +381,7 @@ impl PKEncryption for Regev {
     ///
     /// Parameters:
     /// - `pk`: specifies the public key `pk = A`
-    /// - `message`: specifies the message that should be encryted
+    /// - `message`: specifies the message that should be encrypted
     ///
     /// Returns a cipher `c` of type [`MatZq`].
     ///

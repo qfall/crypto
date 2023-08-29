@@ -370,7 +370,7 @@ impl PKEncryption for DualRegev {
     ///
     /// Parameters:
     /// - `pk`: specifies the public key `pk = A`
-    /// - `message`: specifies the message that should be encryted
+    /// - `message`: specifies the message that should be encrypted
     ///
     /// Returns a cipher `c` of type [`MatZq`].
     ///
