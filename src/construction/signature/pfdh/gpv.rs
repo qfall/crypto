@@ -88,7 +88,7 @@ mod text_fdh {
     use crate::construction::signature::SignatureScheme;
     use qfall_math::{integer::Z, rational::Q, traits::Pow};
 
-    /// Ensure that the generated signature is valid
+    /// Ensure that the generated signature is valid.
     #[test]
     fn ensure_valid_signature_is_generated() {
         let n = Z::from(4);

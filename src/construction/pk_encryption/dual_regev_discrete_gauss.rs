@@ -544,7 +544,8 @@ mod test_pp_generation {
         DualRegevWithDiscreteGaussianRegularity::new_from_n(1);
     }
 
-    /// Checks whether `secure128` outputs a new instance with correct and secure parameters.
+    /// Checks whether `secure128` outputs a new instance with correct and secure
+    /// parameters.
     #[test]
     fn secure128_validity() {
         let dr = DualRegevWithDiscreteGaussianRegularity::secure128();

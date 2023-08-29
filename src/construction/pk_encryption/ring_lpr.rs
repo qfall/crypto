@@ -557,7 +557,8 @@ mod test_pp_generation {
         }
     }
 
-    /// Ensure that `n` chosen as a non-power of two does not result in a provably correct scheme.
+    /// Ensure that `n` chosen as a non-power of two does not result in a provably
+    /// correct scheme.
     #[test]
     fn non_power_of_2_n() {
         let scheme = RingLPR::new(7, 17, 0.01);
@@ -587,7 +588,8 @@ mod test_pp_generation {
         RingLPR::new_from_n(9);
     }
 
-    /// Checks whether `secure128` outputs a new instance with correct and secure parameters.
+    /// Checks whether `secure128` outputs a new instance with correct and secure
+    /// parameters.
     #[test]
     fn secure128_validity() {
         let scheme = RingLPR::secure128();

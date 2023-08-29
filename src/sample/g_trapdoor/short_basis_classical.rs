@@ -146,7 +146,7 @@ mod test_gen_short_basis_for_trapdoor {
         traits::{GetNumColumns, GetNumRows, Pow, SetEntry},
     };
 
-    /// Ensure that every vector within the returned basis is in `\Lambda^\perp(A)`
+    /// Ensure that every vector within the returned basis is in `\Lambda^\perp(A)`.
     #[test]
     fn is_basis_not_power_tag_identity() {
         for n in [1, 5, 10, 12] {
@@ -211,7 +211,7 @@ mod test_gen_short_basis_for_trapdoor {
     }
 
     /// Ensure that the orthogonalized short base length is upper bounded by
-    /// `(s_1(R)+1)*||\tilde S'||`
+    /// `(s_1(R)+1)*||\tilde S'||`.
     #[test]
     fn ensure_orthogonalized_length_perfect_power() {
         for n in [1, 5, 7] {
@@ -238,7 +238,7 @@ mod test_gen_short_basis_for_trapdoor {
     }
 
     /// Ensure that the orthogonalized short base length is upper bounded by
-    /// `(s_1(R)+1)*||\tilde S'||`
+    /// `(s_1(R)+1)*||\tilde S'||`.
     #[test]
     fn ensure_orthogonalized_length_not_perfect_power() {
         for n in [1, 5, 7] {
@@ -317,7 +317,7 @@ mod test_gen_sa {
         (params, a, r)
     }
 
-    /// Ensure that the left part of the multiplication to get sa is correctly computed
+    /// Ensure that the left part of the multiplication to get sa is correctly computed.
     #[test]
     fn working_sa_l() {
         let (_, _, r) = get_fixed_trapdoor_for_tag_identity();
@@ -344,7 +344,7 @@ mod test_gen_sa {
     }
 
     /// Ensure that the right part of the multiplication to get sa is correctly computed
-    /// with tag as identity
+    /// with tag as identity.
     #[test]
     fn working_sa_r_identity() {
         let (params, a, _) = get_fixed_trapdoor_for_tag_identity();
@@ -380,7 +380,7 @@ mod test_compute_s {
     use qfall_math::integer::{MatZ, Z};
     use std::str::FromStr;
 
-    /// Ensure that the matrix s is computed correctly for a power-of-two modulus
+    /// Ensure that the matrix s is computed correctly for a power-of-two modulus.
     #[test]
     fn base_2_power_two() {
         let params = GadgetParameters::init_default(2, 16);
@@ -401,7 +401,7 @@ mod test_compute_s {
         assert_eq!(s_cmp, s)
     }
 
-    /// Ensure that the matrix s is computed correctly for a an arbitrary modulus
+    /// Ensure that the matrix s is computed correctly for a an arbitrary modulus.
     #[test]
     fn base_2_arbitrary() {
         let modulus = Z::from(0b1100110);
@@ -423,7 +423,7 @@ mod test_compute_s {
         assert_eq!(s_cmp, s)
     }
 
-    /// Ensure that the matrix s is computed correctly for a power-of-5 modulus
+    /// Ensure that the matrix s is computed correctly for a power-of-5 modulus.
     #[test]
     fn base_5_power_5() {
         let mut params = GadgetParameters::init_default(1, 625);
@@ -443,7 +443,7 @@ mod test_compute_s {
     }
 
     /// Ensure that the matrix s is computed correctly for an arbitrary modulus with
-    /// base 5
+    /// base 5.
     #[test]
     fn base_5_arbitrary() {
         let modulus = Z::from_str_b("4123", 5).unwrap();
@@ -478,7 +478,7 @@ mod test_compute_w {
     };
     use std::str::FromStr;
 
-    /// Ensure that `GW = A[I|0] mod q`
+    /// Ensure that `GW = A[I|0] mod q`.
     #[test]
     fn working_example_tag_identity() {
         let params = GadgetParameters::init_default(2, 8);

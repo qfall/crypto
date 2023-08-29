@@ -181,7 +181,7 @@ mod test_gen_trapdoor_ring {
     }
 
     /// Assure that the trapdoor `r` returned from [`gen_trapdoor`] is actually a
-    /// trapdoor for `a`
+    /// trapdoor for `a`.
     #[test]
     fn is_trapdoor() {
         let params = GadgetParametersRing::init_default(6, 32);
@@ -217,7 +217,7 @@ mod test_find_solution_gadget_ring {
     };
     use std::str::FromStr;
 
-    /// Ensures that the algorithm finds a correct solution such that `<g^t, x> = u`
+    /// Ensures that the algorithm finds a correct solution such that `<g^t, x> = u`.
     #[test]
     fn is_correct_solution() {
         let gp = GadgetParametersRing::init_default(3, 32);

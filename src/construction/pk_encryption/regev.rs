@@ -525,7 +525,8 @@ mod test_pp_generation {
         Regev::new_from_n(9);
     }
 
-    /// Checks whether `secure128` outputs a new instance with correct and secure parameters.
+    /// Checks whether `secure128` outputs a new instance with correct and secure
+    /// parameters.
     #[test]
     fn secure128_validity() {
         let regev = Regev::secure128();

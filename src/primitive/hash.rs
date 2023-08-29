@@ -142,7 +142,7 @@ mod tests_sha {
     };
     use std::str::FromStr;
 
-    // ensure sha256 works
+    /// Ensure sha256 works.
     #[test]
     fn test_sha256() {
         let str1 = "Hello World!";
@@ -161,7 +161,7 @@ mod tests_sha {
         );
     }
 
-    // ensure hashing into [`Zq`] works as intended
+    /// Ensure hashing into [`Zq`] works as intended.
     #[test]
     fn test_hash_to_zq_sha256() {
         let str1 = "Hello World!";
@@ -174,7 +174,7 @@ mod tests_sha {
         assert_eq!(Zq::from((12, 16)), hash2);
     }
 
-    // ensure hashing into [`Zq`] hits the whole domain not just the first 256 bit
+    /// Ensure hashing into [`Zq`] hits the whole domain not just the first 256 bit.
     #[test]
     fn test_hash_to_zq_sha256_large() {
         let str1 = "Hello World!";
@@ -192,7 +192,7 @@ mod tests_sha {
         assert!(large);
     }
 
-    // ensure hashing into [`MatZq`] works as intended
+    /// Ensure hashing into [`MatZq`] works as intended.
     #[test]
     fn test_hash_to_mat_zq_sha256() {
         let str1 = "Hello World!";
@@ -208,7 +208,7 @@ mod tests_sha {
         assert_eq!(MatZq::from_str("[[3, 12],[9, 12]] mod 16").unwrap(), hash2);
     }
 
-    // ensure hashing into [`MatZq`] works as intended
+    /// Ensure hashing into [`MatZq`] works as intended.
     #[test]
     #[should_panic]
     fn test_hash_to_mat_zq_sha256_negative_dimensions() {

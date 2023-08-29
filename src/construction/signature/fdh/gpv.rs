@@ -111,7 +111,7 @@ mod text_fdh {
         }
     }
 
-    /// Ensure that an entry is actually added to the local storage
+    /// Ensure that an entry is actually added to the local storage.
     #[test]
     fn storage_filled() {
         let mut fdh = Fdh::init_gpv(5, 1024, 10);

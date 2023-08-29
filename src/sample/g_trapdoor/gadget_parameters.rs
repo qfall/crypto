@@ -192,7 +192,7 @@ mod test_default_parameter {
     use crate::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     use qfall_math::{integer::Z, integer_mod_q::Modulus, traits::Pow};
 
-    /// Ensure that this test fails, if the default parameters are changed
+    /// Ensure that this test fails, if the default parameters are changed.
     #[test]
     fn default_unchanged() {
         for n in [5, 10, 50, 100] {
