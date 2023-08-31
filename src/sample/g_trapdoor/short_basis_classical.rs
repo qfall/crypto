@@ -117,25 +117,10 @@ fn compute_s(params: &GadgetParameters) -> MatZ {
 
 /// Computes `W` with `GW = -H^{-1}A [ I | 0 ] mod q`
 fn compute_w(params: &GadgetParameters, tag: &MatZq, a: &MatZq) -> MatZ {
-    let tag_inv = invert_tag(tag);
+    let tag_inv = tag.inverse().unwrap();
 
     let rhs = Z::MINUS_ONE * tag_inv * (a * MatZ::identity(a.get_num_columns(), &params.m_bar));
     find_solution_gadget_mat(&rhs, &params.k, &params.base)
-}
-
-/// Inverts a tag matrix (inefficiently using solve)
-fn invert_tag(tag: &MatZq) -> MatZq {
-    if tag.is_identity() {
-        return tag.clone();
-    }
-    let identity = MatZq::identity(tag.get_num_rows(), tag.get_num_columns(), tag.get_mod());
-    let mut res = MatZq::new(tag.get_num_rows(), tag.get_num_columns(), tag.get_mod());
-    for i in 0..tag.get_num_rows() {
-        let target = identity.get_column(i).unwrap();
-        let sol = tag.solve_gaussian_elimination(&target).unwrap();
-        res.set_column(i, &sol, 0).unwrap();
-    }
-    res
 }
 
 #[cfg(test)]
