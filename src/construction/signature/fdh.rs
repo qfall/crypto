@@ -14,7 +14,7 @@
 //! see [`Fdh::init_gpv`] that works with every PSF and a corresponding hash function
 
 use super::SignatureScheme;
-use crate::{primitive::hash::HashInto, sample::distribution::psf::PSF};
+use crate::primitive::{hash::HashInto, psf::PSF};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, marker::PhantomData};
 
@@ -39,7 +39,7 @@ pub mod serialize;
 /// - `hash`: The hash-function which has to map a string into the correct domain
 ///
 /// # Example
-/// ## Signature Scheme from [`PSFGPV`](crate::sample::distribution::psf::gpv::PSFGPV)
+/// ## Signature Scheme from [`PSFGPV`](crate::primitive::psf::gpv::PSFGPV)
 /// ```
 /// use qfall_crypto::construction::signature::{fdh::Fdh, SignatureScheme};
 ///

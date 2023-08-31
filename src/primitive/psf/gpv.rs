@@ -33,10 +33,10 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::sample::distribution::psf::gpv::PSFGPV;
+/// use qfall_crypto::primitive::psf::gpv::PSFGPV;
 /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
 /// use qfall_math::rational::Q;
-/// use crate::qfall_crypto::sample::distribution::psf::PSF;
+/// use qfall_crypto::primitive::psf::PSF;
 ///
 /// let psf = PSFGPV {
 ///     gp: GadgetParameters::init_default(8, 64),
@@ -63,10 +63,10 @@ impl PSF<MatZq, (MatZ, MatQ), MatZ, MatZq> for PSFGPV {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::sample::distribution::psf::gpv::PSFGPV;
+    /// use qfall_crypto::primitive::psf::gpv::PSFGPV;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     /// use qfall_math::rational::Q;
-    /// use crate::qfall_crypto::sample::distribution::psf::PSF;
+    /// use qfall_crypto::primitive::psf::PSF;
     ///
     /// let psf = PSFGPV {
     ///     gp: GadgetParameters::init_default(8, 64),
@@ -92,10 +92,10 @@ impl PSF<MatZq, (MatZ, MatQ), MatZ, MatZq> for PSFGPV {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::sample::distribution::psf::gpv::PSFGPV;
+    /// use qfall_crypto::primitive::psf::gpv::PSFGPV;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     /// use qfall_math::rational::Q;
-    /// use crate::qfall_crypto::sample::distribution::psf::PSF;
+    /// use qfall_crypto::primitive::psf::PSF;
     ///
     /// let psf = PSFGPV {
     ///     gp: GadgetParameters::init_default(8, 64),
@@ -119,7 +119,7 @@ impl PSF<MatZq, (MatZ, MatQ), MatZ, MatZq> for PSFGPV {
     ///
     /// Parameters:
     /// - `a`: The parity-check matrix
-    /// - `short_base`: The short base for `\Lambda^\perp(A)`
+    /// - `short_base`: The short base for `Λ^⟂(A)`
     /// - `short_base_gso`: The precomputed GSO of the short_base
     /// - `u`: The syndrome from the range
     ///
@@ -128,10 +128,10 @@ impl PSF<MatZq, (MatZ, MatQ), MatZ, MatZq> for PSFGPV {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::sample::distribution::psf::gpv::PSFGPV;
+    /// use qfall_crypto::primitive::psf::gpv::PSFGPV;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     /// use qfall_math::rational::Q;
-    /// use crate::qfall_crypto::sample::distribution::psf::PSF;
+    /// use qfall_crypto::primitive::psf::PSF;
     ///
     /// let psf = PSFGPV {
     ///     gp: GadgetParameters::init_default(8, 64),
@@ -170,10 +170,10 @@ impl PSF<MatZq, (MatZ, MatQ), MatZ, MatZq> for PSFGPV {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::sample::distribution::psf::gpv::PSFGPV;
+    /// use qfall_crypto::primitive::psf::gpv::PSFGPV;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     /// use qfall_math::rational::Q;
-    /// use crate::qfall_crypto::sample::distribution::psf::PSF;
+    /// use qfall_crypto::primitive::psf::PSF;
     ///
     /// let psf = PSFGPV {
     ///     gp: GadgetParameters::init_default(8, 64),
@@ -200,10 +200,10 @@ impl PSF<MatZq, (MatZ, MatQ), MatZ, MatZq> for PSFGPV {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::sample::distribution::psf::gpv::PSFGPV;
+    /// use qfall_crypto::primitive::psf::PSF;
+    /// use qfall_crypto::primitive::psf::gpv::PSFGPV;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     /// use qfall_math::rational::Q;
-    /// use crate::qfall_crypto::sample::distribution::psf::PSF;
     ///
     /// let psf = PSFGPV {
     ///     gp: GadgetParameters::init_default(8, 64),
@@ -225,8 +225,8 @@ impl PSF<MatZq, (MatZ, MatQ), MatZ, MatZq> for PSFGPV {
 
 #[cfg(test)]
 mod test_gpv_psf {
+    use super::super::gpv::PSFGPV;
     use super::PSF;
-    use crate::sample::distribution::psf::gpv::PSFGPV;
     use crate::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     use qfall_math::integer::MatZ;
     use qfall_math::rational::Q;

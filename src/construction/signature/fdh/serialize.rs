@@ -8,7 +8,7 @@
 
 //! Allows to Deserialize an arbitrary [`Fdh`] instantiation
 
-use crate::{primitive::hash::HashInto, sample::distribution::psf::PSF};
+use crate::primitive::{hash::HashInto, psf::PSF};
 use serde::{
     de::{Error, MapAccess, Visitor},
     Deserialize, Serialize,
@@ -117,8 +117,7 @@ where
 mod test_deserialization {
     use crate::{
         construction::signature::{fdh::Fdh, SignatureScheme},
-        primitive::hash::HashMatZq,
-        sample::distribution::psf::gpv::PSFGPV,
+        primitive::{hash::HashMatZq, psf::gpv::PSFGPV},
     };
     use qfall_math::{integer::MatZ, integer_mod_q::MatZq, rational::MatQ};
 

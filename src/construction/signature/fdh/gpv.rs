@@ -11,8 +11,8 @@
 
 use super::Fdh;
 use crate::{
-    primitive::hash::HashMatZq,
-    sample::{distribution::psf::gpv::PSFGPV, g_trapdoor::gadget_parameters::GadgetParameters},
+    primitive::{hash::HashMatZq, psf::gpv::PSFGPV},
+    sample::g_trapdoor::gadget_parameters::GadgetParameters,
 };
 use qfall_math::{
     integer::{MatZ, Z},
@@ -76,11 +76,8 @@ impl Fdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
 
 #[cfg(test)]
 mod text_fdh {
-    use super::Fdh;
-    use crate::{
-        construction::signature::SignatureScheme, primitive::hash::HashMatZq,
-        sample::distribution::psf::gpv::PSFGPV,
-    };
+    use super::{Fdh, PSFGPV};
+    use crate::{construction::signature::SignatureScheme, primitive::hash::HashMatZq};
     use qfall_math::{
         integer::{MatZ, Z},
         integer_mod_q::MatZq,
@@ -93,8 +90,8 @@ mod text_fdh {
     fn ensure_valid_signature_is_generated() {
         let n = Z::from(4);
         let k = Z::from(6);
-        // `s >= ||\tilde short_base|| * omega(\sqrt{\log m})`,
-        // here `\log(2*n*k) = omega(\sqrt{\log m}))` (Theorem 4.1 - GPV08)
+        // `s >= ||\tilde short_base|| * omega(sqrt{log m})`,
+        // here `log(2*n*k) = omega(sqrt{log m}))` (Theorem 4.1 - GPV08)
         let s: Q = ((&n * &k).sqrt() + 1) * Q::from(2) * (Z::from(2) * &n * &k).log(2).unwrap();
         let modulus = Z::from(2).pow(&k).unwrap();
 

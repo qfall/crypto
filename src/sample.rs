@@ -7,9 +7,6 @@
 // Mozilla Foundation. See <https://mozilla.org/en-US/MPL/2.0/>.
 
 //! This module contains anything that should be easily samplable for lattice-based
-//! cryptography. This includes distributions like `DiscreteGauss`, instances of
-//! lattice problems like `LWE`, and trapdoors.
+//! cryptography.
 
-pub mod distribution;
 pub mod g_trapdoor;
-pub mod lattice_problem;

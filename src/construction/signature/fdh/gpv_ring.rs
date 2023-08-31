@@ -11,11 +11,8 @@
 
 use super::Fdh;
 use crate::{
-    primitive::hash::HashMatPolynomialRingZq,
-    sample::{
-        distribution::psf::gpv_ring::PSFGPVRing,
-        g_trapdoor::gadget_parameters::GadgetParametersRing,
-    },
+    primitive::{hash::HashMatPolynomialRingZq, psf::gpv_ring::PSFGPVRing},
+    sample::g_trapdoor::gadget_parameters::GadgetParametersRing,
 };
 use qfall_math::{
     integer::{MatPolyOverZ, Z},
@@ -92,10 +89,9 @@ impl
 
 #[cfg(test)]
 mod test_fdh {
-    use super::Fdh;
+    use super::{Fdh, PSFGPVRing};
     use crate::{
         construction::signature::SignatureScheme, primitive::hash::HashMatPolynomialRingZq,
-        sample::distribution::psf::gpv_ring::PSFGPVRing,
     };
     use qfall_math::{integer::MatPolyOverZ, integer_mod_q::MatPolynomialRingZq, rational::Q};
 

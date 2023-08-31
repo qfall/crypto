@@ -326,7 +326,7 @@ mod test_gen_trapdoor {
         let modulus = Modulus::from(32);
         let params = GadgetParameters::init_default(42, &modulus);
         let a_bar = MatZq::sample_uniform(42, &params.m_bar, &params.q);
-        // calculate an invertible tag in Z_q^{n \times n}
+        // calculate an invertible tag in Z_q^{n × n}
         let tag = calculate_invertible_tag(42, &modulus);
 
         // call gen_trapdoor to get matrix a and its 'trapdoor' r

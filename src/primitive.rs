@@ -11,4 +11,4 @@
 //! confidentiality, integrity, ...
 
 pub mod hash;
-mod psf;
+pub mod psf;

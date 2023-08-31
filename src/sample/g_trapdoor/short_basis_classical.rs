@@ -32,7 +32,7 @@ use qfall_math::{
 /// - `a`: the parity check matrix
 /// - `r`: the trapdoor for `a`
 ///
-/// Returns a short basis for the lattice `\Lambda^\perp(a)` using the trapdoor `r`
+/// Returns a short basis for the lattice `Λ^⟂(a)` using the trapdoor `r`
 ///
 /// # Examples
 /// ```
@@ -146,7 +146,7 @@ mod test_gen_short_basis_for_trapdoor {
         traits::{GetNumColumns, GetNumRows, Pow, SetEntry},
     };
 
-    /// Ensure that every vector within the returned basis is in `\Lambda^\perp(A)`.
+    /// Ensure that every vector within the returned basis is in `Λ^⟂(A)`.
     #[test]
     fn is_basis_not_power_tag_identity() {
         for n in [1, 5, 10, 12] {
@@ -166,7 +166,7 @@ mod test_gen_short_basis_for_trapdoor {
         }
     }
 
-    /// Ensures that the trapdoor generated is actually a base for `\Lambda^\perp(A)`
+    /// Ensures that the trapdoor generated is actually a base for `Λ^⟂(A)`
     /// included with an actual tag, here `a*I_n`.
     #[test]
     fn is_basis_with_tag_factor_identity() {
@@ -188,7 +188,7 @@ mod test_gen_short_basis_for_trapdoor {
         }
     }
 
-    /// Ensures that the trapdoor generated is actually a base for `\Lambda^\perp(A)`
+    /// Ensures that the trapdoor generated is actually a base for `Λ^⟂(A)`
     /// included with an actual tag.
     #[test]
     fn is_basis_with_tag_arbitrarily() {

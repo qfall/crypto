@@ -89,8 +89,8 @@ impl GadgetParameters {
     /// Theorem 1.
     /// - `w = n * k`: As it is required to match the dimension of the gadget matrix,
     /// hence it has to  equal to `n * size of gadget_vec`
-    /// - `m_bar = n * k + \log(n)^2`: is taken from [\[1\]](<../index.html#:~:text=[1]>)
-    /// as a function satisfying `m_bar = n \log q + \omega(\log n)`
+    /// - `m_bar = n * k + log(n)^2`: is taken from [\[1\]](<../index.html#:~:text=[1]>)
+    /// as a function satisfying `m_bar = n log q + ω(log n)`
     /// - the distribution is taken as [`PlusMinusOneZero`],
     /// see the example from [\[1\]](<../index.html#:~:text=[1]>): after statistical instantiation in section 3.2
     ///

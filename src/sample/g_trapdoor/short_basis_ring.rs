@@ -25,13 +25,13 @@ use qfall_math::{
 /// The matrix is generated as:
 /// `[ 1 | 0 | e,  0 | 1 | r, 0_{2xn} | I_{kxk} ] * [ 0 | I_2', S' | W' ]`
 /// with
-/// - `W' := [X^0 | X^1 | ... | X^{n-1}] \otimes W`,
-/// - `I_2' := [X^0 | X^1 | ... | X^{n-1}] \otimes I_2` and
-/// - `S':= [X^0 | X^1 | ... | X^{n-1}] \otimes S`.
-/// Here `W` is a solution of `g^tW = -A [ I_2 | 0 ] mod q`,
+/// - `W' := [X^0 | X^1 | ... | X^{n-1}] ⊗ W`,
+/// - `I_2' := [X^0 | X^1 | ... | X^{n-1}] ⊗ I_2` and
+/// - `S':= [X^0 | X^1 | ... | X^{n-1}] ⊗ S`.
+/// Here `W` is a solution of `g^t W = -A [ I_2 | 0 ] mod q`,
 /// `S` is a reordered (if `base^k=q` then reversed, otherwise the same as before)
-/// short base of `\Lambda^\perp(g^t)`, i.e. `S''` is a reordered short base of `g^t`
-/// in the classical case and `S':= [X^0 | X^1 | ... | X^{n-1}] \otimes S''`.
+/// short base of `Λ^⟂(g^t)`, i.e. `S''` is a reordered short base of `g^t`
+/// in the classical case and `S':= [X^0 | X^1 | ... | X^{n-1}] ⊗ S''`.
 ///
 /// The appropriate reordering comes from
 /// [\[1\]](<../index.html#:~:text=[1]>) and Lemma 3.2 from
@@ -43,7 +43,7 @@ use qfall_math::{
 /// - `r`: the first part of the trapdoor for `a`
 /// - `e`: the second part of the trapdoor for `a`
 ///
-/// Returns a short basis for the lattice `\Lambda^\perp(a)` using the trapdoor `r,e`
+/// Returns a short basis for the lattice `Λ^⟂(a)` using the trapdoor `r,e`
 ///
 /// # Examples
 /// ```
@@ -90,7 +90,7 @@ fn gen_sa_l(e: &MatPolyOverZ, r: &MatPolyOverZ) -> MatPolyOverZ {
     identity_left.concat_horizontal(&out).unwrap()
 }
 
-/// Computes `pd \tensor [0_{2xk}, S''] || pd \tensor [I_{2x2}, w]` where
+/// Computes `pd ⊗ [0_{2xk}, S''] || pd ⊗ [I_{2x2}, w]` where
 /// `pd := [X^0 | X^1 | ... | X^{n-1}]`.
 /// Finally, the sa_r must have `n*m = n*(k+2)` columns.
 fn gen_sa_r(params: &GadgetParametersRing, a: &MatPolynomialRingZq) -> MatPolyOverZ {
@@ -102,9 +102,9 @@ fn gen_sa_r(params: &GadgetParametersRing, a: &MatPolynomialRingZq) -> MatPolyOv
         poly_degrees.set_entry(0, i, x_i).unwrap();
     }
 
-    // compute a short base for `\Lambda^\perp(g^t)` in the classical but interpreted in
+    // compute a short base for `Λ^⟂(g^t)` in the classical but interpreted in
     // the ring and by applying the tensor product lift it to a short base for
-    // `\Lambda^\perp(g^t)` in the ring.
+    // `Λ^⟂(g^t)` in the ring.
     let mut s = compute_s(params);
     if params.base.pow(&params.k).unwrap() == Z::from(&params.q) {
         s.reverse_columns();
@@ -123,8 +123,8 @@ fn gen_sa_r(params: &GadgetParametersRing, a: &MatPolynomialRingZq) -> MatPolyOv
     left.concat_horizontal(&right).unwrap()
 }
 
-/// Computes `w` with `g^tw = - a[I_2|0] mod qR` This is equivalent to finding solutions
-/// for `g^tw_0 = -a_0 mod qR` and `g^tw_1 = -a_1 mod qR` and concatenating them after.
+/// Computes `w` with `g^t w = - a[I_2|0] mod qR` This is equivalent to finding solutions
+/// for `g^tw_0 = -a_0 mod qR` and `g^t w_1 = -a_1 mod qR` and concatenating them after.
 fn compute_w(params: &GadgetParametersRing, a: &MatPolynomialRingZq) -> MatPolyOverZ {
     let minus_one = PolynomialRingZq::from((&PolyOverZ::from(-1), &params.modulus));
     let rhs_0: PolynomialRingZq = a.get_entry(0, 0).unwrap();
@@ -178,7 +178,7 @@ mod test_gen_short_basis_for_trapdoor_ring {
         traits::{GetEntry, GetNumColumns, GetNumRows, Pow},
     };
 
-    /// Ensure that every vector within the returned basis is in `\Lambda^\perp(a)`.
+    /// Ensure that every vector within the returned basis is in `Λ^⟂(a)`.
     #[test]
     fn is_basis() {
         for n in [5, 10, 12] {
