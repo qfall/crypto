@@ -577,6 +577,6 @@ mod test_dual_regev_ibe {
         let id_sk_1 = cryptosystem.extract(&pk_1, &sk_1, &id);
         let id_sk_2 = cryptosystem.extract(&pk_2, &sk_2, &id);
 
-        assert!(id_sk_1 != id_sk_2)
+        assert_ne!(id_sk_1, id_sk_2)
     }
 }
