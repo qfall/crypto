@@ -62,7 +62,6 @@ use std::collections::HashMap;
 /// ```
 #[derive(Serialize, Deserialize)]
 pub struct DualRegevIBE {
-    r: Q, // gaussian parameter the [`PSF`]
     dual_regev: DualRegev,
     psf: PSFGPV,
     storage: HashMap<String, MatZ>,
@@ -102,7 +101,6 @@ impl DualRegevIBE {
             s: r.clone(),
         };
         Self {
-            r,
             psf,
             dual_regev: DualRegev::new(n, m, q, alpha),
             storage: HashMap::new(),
@@ -160,7 +158,6 @@ impl DualRegevIBE {
             s: r.clone(),
         };
         Self {
-            r,
             psf,
             dual_regev: DualRegev::new(n, m, q, alpha),
             storage: HashMap::new(),
@@ -197,14 +194,14 @@ impl DualRegevIBE {
 
         // Security requirements
         // q >= 5 * r * (m + 1)
-        if q < (5 * &self.r) * (&self.dual_regev.m + Q::ONE) {
+        if q < (5 * &self.psf.s) * (&self.dual_regev.m + Q::ONE) {
             return Err(MathError::InvalidIntegerInput(String::from(
                 "Security is not guaranteed as q < 5 * r * (m + 1), but q >= 5 * r * (m + 1) is required.",
             )));
         }
 
         // r >= sqrt(m)
-        if self.r < self.dual_regev.m.sqrt() {
+        if self.psf.s < self.dual_regev.m.sqrt() {
             return Err(MathError::InvalidIntegerInput(String::from(
                 "Security is not guaranteed as r < sqrt(m), but r >= sqrt(m) is required.",
             )));
@@ -252,9 +249,9 @@ impl DualRegevIBE {
             )));
         }
 
-        // α <= 1/(r * sqrt(m) * log(n))
+        // α <= 1/(2 * r * sqrt(m) * log(n))
         if self.dual_regev.alpha
-            > 1 / (2 * &self.r * (&self.dual_regev.m + Z::ONE).sqrt())
+            > 1 / (2 * &self.psf.s * (&self.dual_regev.m + Z::ONE).sqrt())
                 * self.dual_regev.n.log(2).unwrap()
         {
             return Err(MathError::InvalidIntegerInput(String::from(
@@ -355,7 +352,10 @@ impl IBE for DualRegevIBE {
 
     /// Generates an encryption of `message mod 2` for the provided public key
     /// and identity by by calling [`DualRegev::enc()`] on
-    /// pk = [master_pk | H(id)].
+    /// pk = [master_pk | H(id)] which corresponds to to [A | u] in
+    /// [GPV08 - eprint](https://eprint.iacr.org/2007/432.pdf).
+    /// Constructing the public key this way yields a identity based public key
+    /// which secret key can be extracted by the [`PSF`].
     ///
     /// Then, `cipher = [u | c]` is output.
     ///
