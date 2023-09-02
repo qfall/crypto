@@ -311,6 +311,10 @@ impl IBE for DualRegevIBE {
     /// Given an identity it extracts a corresponding secret key by using samp_p
     /// of the given [`PSF`].
     ///
+    /// **WARNING:** Because extract only used a single hashmap which does not
+    /// differentiate between public keys, on should use a new [`DualRegevIBE`]
+    /// instance for each public and secret key pair.
+    ///
     /// Parameters:
     /// - `master_pk`: The master public key for the encryption scheme
     /// - `master_sk`: Zhe master secret key of the encryption scheme, namely
@@ -345,7 +349,7 @@ impl IBE for DualRegevIBE {
         let secret_key = self.psf.samp_p(master_pk, master_sk, &u);
 
         // insert secret key in HashMap
-        self.storage.insert(identity.clone(), secret_key.clone()); //todo insert for different pk and sk
+        self.storage.insert(identity.clone(), secret_key.clone());
 
         secret_key
     }
