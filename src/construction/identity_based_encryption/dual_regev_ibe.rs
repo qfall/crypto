@@ -24,7 +24,7 @@ use qfall_math::{
     integer::{MatZ, Z},
     integer_mod_q::{MatZq, Modulus},
     rational::{MatQ, Q},
-    traits::{Concatenate, Pow},
+    traits::{Concatenate, GetNumRows, Pow},
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -311,10 +311,6 @@ impl IBE for DualRegevIBE {
     /// Given an identity it extracts a corresponding secret key by using samp_p
     /// of the given [`PSF`].
     ///
-    /// **WARNING:** Because extract only used a single hashmap which does not
-    /// differentiate between public keys, on should use a new [`DualRegevIBE`]
-    /// instance for each public and secret key pair.
-    ///
     /// Parameters:
     /// - `master_pk`: The master public key for the encryption scheme
     /// - `master_sk`: Zhe master secret key of the encryption scheme, namely
@@ -341,7 +337,10 @@ impl IBE for DualRegevIBE {
         identity: &Self::Identity,
     ) -> Self::SecretKey {
         // check if it is in the HashMap
-        if let Some(value) = self.storage.get(identity) {
+        if let Some(value) = self.storage.get(&format!(
+            "{master_pk} {} {} {identity}",
+            master_sk.0, master_sk.1
+        )) {
             return value.clone();
         }
 
@@ -349,7 +348,10 @@ impl IBE for DualRegevIBE {
         let secret_key = self.psf.samp_p(master_pk, master_sk, &u);
 
         // insert secret key in HashMap
-        self.storage.insert(identity.clone(), secret_key.clone());
+        self.storage.insert(
+            format!("{master_pk} {} {} {identity}", master_sk.0, master_sk.1),
+            secret_key.clone(),
+        );
 
         secret_key
     }
@@ -386,7 +388,7 @@ impl IBE for DualRegevIBE {
         message: impl Into<Z>,
     ) -> Self::Cipher {
         let identity_based_pk =
-            hash_to_mat_zq_sha256(identity, &self.dual_regev.n, 1, &self.dual_regev.q);
+            hash_to_mat_zq_sha256(identity, master_pk.get_num_rows(), 1, &master_pk.get_mod());
         self.dual_regev.enc(
             &master_pk.concat_horizontal(&identity_based_pk).unwrap(),
             message,
@@ -552,7 +554,7 @@ mod test_dual_regev_ibe {
 
     /// checking whether the storage works properly
     #[test]
-    fn extract_storage() {
+    fn extract_storage_same_identity_mk_pk() {
         let id = String::from(format!("Hello World!"));
         let mut cryptosystem = DualRegevIBE::default();
         let (pk, sk) = cryptosystem.setup();
@@ -561,5 +563,20 @@ mod test_dual_regev_ibe {
         let id_sk_2 = cryptosystem.extract(&pk, &sk, &id);
 
         assert_eq!(id_sk_1, id_sk_2)
+    }
+
+    /// checking whether the storage works properly for different master secret and public key
+    /// may fail with small probability
+    #[test]
+    fn extract_storage_same_identity_different_mk_pk() {
+        let id = String::from(format!("Hello World!"));
+        let mut cryptosystem = DualRegevIBE::default();
+        let (pk_1, sk_1) = cryptosystem.setup();
+        let (pk_2, sk_2) = cryptosystem.setup();
+
+        let id_sk_1 = cryptosystem.extract(&pk_1, &sk_1, &id);
+        let id_sk_2 = cryptosystem.extract(&pk_2, &sk_2, &id);
+
+        assert!(id_sk_1 != id_sk_2)
     }
 }
