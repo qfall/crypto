@@ -165,8 +165,8 @@ impl GadgetParametersRing {
     pub fn init_default(n: impl Into<Z>, modulus: impl Into<Modulus>) -> Self {
         // panic if n < 1 (security parameter must be positive) and not larger than
         // [`i64`] because downstream matrices can be at most that size
-        let n = n.into();
         let modulus = modulus.into();
+        let n = n.into();
         assert!(n >= Z::ONE && n <= Z::from(i64::MAX));
 
         let base = Z::from(2);

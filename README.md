@@ -28,7 +28,7 @@ qfall_crypto = { git = "https://github.com/qfall/crypto", branch="dev" }
 ```
 
 Be aware that the external libraries in our project have to be compiled at the first installation,
-which may take about 30 minutes. After the first installation it should be working fine.
+which may take about 10-30 minutes (depending on the used hardware and operating system). After the first installation, it should be working fine.
 
 <!-- TODO ## What does qFALL-crypto offer? -->
 

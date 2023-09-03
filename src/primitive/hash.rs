@@ -8,6 +8,7 @@
 
 //! This module contains hashes into different domains.
 
+use qfall_math::utils::index::evaluate_indices;
 use qfall_math::{
     integer::{MatPolyOverZ, Z},
     integer_mod_q::{MatPolynomialRingZq, MatZq, Modulus, ModulusPolynomialRingZq, Zq},
@@ -103,21 +104,18 @@ pub fn hash_to_zq_sha256(string: &str, modulus: impl Into<Modulus>) -> Zq {
 /// ```
 ///
 /// # Panics ...
-/// - if the number of rows or columns is less or equal to `0`.
 /// - if `modulus <= 1`.
+/// - if the number of rows or columns is less or equal to `0` or does not fit into an [`i64`].
 pub fn hash_to_mat_zq_sha256(
     string: &str,
-    num_rows: impl Into<i64> + Display,
-    num_cols: impl Into<i64> + Display,
+    num_rows: impl TryInto<i64> + Display,
+    num_cols: impl TryInto<i64> + Display,
     modulus: impl Into<Modulus>,
 ) -> MatZq {
     let modulus = modulus.into();
-    let num_rows_new: i64 = num_rows.into();
-    let num_cols_new: i64 = num_cols.into();
-    if num_cols_new <= 0 || num_rows_new <= 0 {
-        panic!("The number of rows and number of columns must be at least one.");
-    }
-    let mut matrix = MatZq::new(num_rows_new, num_cols_new, &modulus);
+    let (num_rows_new, num_cols_new) = evaluate_indices(num_rows, num_cols).unwrap();
+    let mut matrix = MatZq::new(num_rows_new, num_cols_new, modulus.clone());
+
     let new_string = format!("{num_rows_new} {num_cols_new} {string}");
     for i in 0..num_rows_new {
         for j in 0..num_cols_new {
