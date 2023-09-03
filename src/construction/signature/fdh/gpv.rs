@@ -46,7 +46,7 @@ impl Fdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
     ///
     /// let sigma = fdh.sign(m.to_string(), &sk, &pk);
     ///
-    /// assert!(fdh.vfy(m.to_string(), &sigma, &pk))
+    /// assert!(fdh.vfy(m.to_string(), &sigma, &pk));
     /// ```
     ///
     /// # Panics ...

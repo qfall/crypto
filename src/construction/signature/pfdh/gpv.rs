@@ -47,7 +47,7 @@ impl Pfdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
     /// let (pk, sk) = pfdh.gen();
     /// let sigma = pfdh.sign(m.to_owned(), &sk, &pk);
     ///
-    /// assert!(pfdh.vfy(m.to_owned(), &sigma, &pk))
+    /// assert!(pfdh.vfy(m.to_owned(), &sigma, &pk));
     /// ```
     ///
     /// # Panics ...

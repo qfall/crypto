@@ -50,7 +50,7 @@ pub mod serialize;
 /// let (pk, sk) = fdh.gen();
 /// let sigma = fdh.sign(m.to_owned(), &sk, &pk);
 ///
-/// assert!(fdh.vfy(m.to_owned(), &sigma, &pk))
+/// assert!(fdh.vfy(m.to_owned(), &sigma, &pk));
 /// ```
 #[derive(Serialize)]
 pub struct Fdh<
