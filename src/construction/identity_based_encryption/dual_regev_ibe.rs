@@ -29,7 +29,7 @@ use qfall_math::{
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// This struct manages and stores the public parameters of a [`IBE`]
+/// This struct manages and stores the public parameters of a [`IdentityBasedEncryption`]
 /// public key encryption instance based on [\[1\]](<index.html#:~:text=[1]>).
 ///
 /// Attributes:
@@ -41,7 +41,7 @@ use std::collections::HashMap;
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::construction::identity_based_encryption::{DualRegevIBE, IBE};
+/// use qfall_crypto::construction::identity_based_encryption::{DualRegevIBE, IdentityBasedEncryption};
 /// use qfall_math::integer::Z;
 /// // setup public parameters and key pair
 /// let mut ibe = DualRegevIBE::default();
@@ -62,8 +62,8 @@ use std::collections::HashMap;
 /// ```
 #[derive(Serialize, Deserialize)]
 pub struct DualRegevIBE {
-    dual_regev: DualRegev,
-    psf: PSFGPV,
+    pub dual_regev: DualRegev,
+    pub psf: PSFGPV,
     storage: HashMap<String, MatZ>,
 }
 
@@ -293,7 +293,7 @@ impl IdentityBasedEncryption for DualRegevIBE {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::identity_based_encryption::{DualRegevIBE, IBE};
+    /// use qfall_crypto::construction::identity_based_encryption::{DualRegevIBE, IdentityBasedEncryption};
     /// let ibe = DualRegevIBE::default();
     ///
     /// let (pk, sk) = ibe.setup();
@@ -317,7 +317,7 @@ impl IdentityBasedEncryption for DualRegevIBE {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::identity_based_encryption::{IBE, DualRegevIBE};
+    /// use qfall_crypto::construction::identity_based_encryption::{IdentityBasedEncryption, DualRegevIBE};
     /// let mut ibe = DualRegevIBE::default();
     /// let (master_pk, master_sk) = ibe.setup();
     ///
@@ -368,7 +368,7 @@ impl IdentityBasedEncryption for DualRegevIBE {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::identity_based_encryption::{DualRegevIBE, IBE};
+    /// use qfall_crypto::construction::identity_based_encryption::{DualRegevIBE, IdentityBasedEncryption};
     /// let ibe = DualRegevIBE::default();
     /// let (pk, sk) = ibe.setup();
     ///
@@ -400,7 +400,7 @@ impl IdentityBasedEncryption for DualRegevIBE {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::identity_based_encryption::{DualRegevIBE, IBE};
+    /// use qfall_crypto::construction::identity_based_encryption::{DualRegevIBE, IdentityBasedEncryption};
     /// use qfall_math::integer::Z;
     /// // setup public parameters and key pair
     /// let mut ibe = DualRegevIBE::default();

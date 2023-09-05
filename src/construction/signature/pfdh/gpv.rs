@@ -83,7 +83,7 @@ impl Pfdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
 }
 
 #[cfg(test)]
-mod text_fdh {
+mod test_pfdh {
     use super::Pfdh;
     use crate::construction::signature::SignatureScheme;
     use qfall_math::{integer::Z, rational::Q, traits::Pow};

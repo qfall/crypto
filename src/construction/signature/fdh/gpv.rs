@@ -75,7 +75,7 @@ impl Fdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
 }
 
 #[cfg(test)]
-mod text_fdh {
+mod test_fdh {
     use super::{Fdh, HashMatZq, PSFGPV};
     use crate::construction::signature::SignatureScheme;
     use qfall_math::{

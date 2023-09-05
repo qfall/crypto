@@ -28,7 +28,15 @@ pub mod dual_regev_ibe_pfdh;
 ///
 /// # Examples
 /// ```
-/// todo!();
+/// use qfall_crypto::construction::pk_encryption::{CCSfromIBE, PKEncryptionMut};
+/// use qfall_math::integer::Z;
+/// let mut scheme = CCSfromIBE::init_dr_pfdh_from_n(4);
+///
+/// let (pk, sk) = scheme.gen();
+/// let cipher = scheme.enc(&pk, 0);
+/// let m = scheme.dec(&sk, &cipher);
+///
+/// assert_eq!(Z::ZERO, m);
 /// ```
 #[derive(Serialize, Deserialize, Clone)]
 pub struct CCSfromIBE<IBE: IdentityBasedEncryption, Signature: SignatureScheme>
@@ -59,7 +67,10 @@ where
     ///
     /// # Examples
     /// ```
-    /// todo!();
+    /// use qfall_crypto::construction::pk_encryption::{CCSfromIBE, PKEncryptionMut};
+    /// let mut scheme = CCSfromIBE::init_dr_pfdh_from_n(4);
+    ///
+    /// let (pk, sk) = scheme.gen();
     /// ```
     fn gen(&mut self) -> (Self::PublicKey, Self::SecretKey) {
         let (pk, sk) = self.ibe.setup();
@@ -81,7 +92,11 @@ where
     ///
     /// # Examples
     /// ```
-    /// todo!();
+    /// use qfall_crypto::construction::pk_encryption::{CCSfromIBE, PKEncryptionMut};
+    /// let mut scheme = CCSfromIBE::init_dr_pfdh_from_n(4);
+    ///
+    /// let (pk, sk) = scheme.gen();
+    /// let cipher = scheme.enc(&pk, 1);
     /// ```
     fn enc(&mut self, pk: &Self::PublicKey, message: impl Into<Z>) -> Self::Cipher {
         let message = message.into().modulo(2);
@@ -108,7 +123,15 @@ where
     ///
     /// # Examples
     /// ```
-    /// todo!();
+    /// use qfall_crypto::construction::pk_encryption::{CCSfromIBE, PKEncryptionMut};
+    /// use qfall_math::integer::Z;
+    /// let mut scheme = CCSfromIBE::init_dr_pfdh_from_n(4);
+    ///
+    /// let (pk, sk) = scheme.gen();
+    /// let cipher = scheme.enc(&pk, 1);
+    /// let m = scheme.dec(&sk, &cipher);
+    ///
+    /// assert_eq!(Z::ONE, m);
     /// ```
     fn dec(&mut self, sk: &Self::SecretKey, cipher: &Self::Cipher) -> Z {
         if !self
