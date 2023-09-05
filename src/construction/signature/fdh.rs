@@ -6,12 +6,12 @@
 // the terms of the Mozilla Public License Version 2.0 as published by the
 // Mozilla Foundation. See <https://mozilla.org/en-US/MPL/2.0/>.
 
-//! This Module contains a general implementation of the [`Fdh`] scheme,
+//! This Module contains a general implementation of the [`FDH`] scheme,
 //! which only has to be instantiated with a corresponding PSF, a storage and
 //! a corresponding hash function.
 //!
-//! Implementation of a [`Fdh`]-signature scheme are thereby fairly easy,
-//! see [`Fdh::init_gpv`] that works with every PSF and a corresponding hash function
+//! Implementation of a [`FDH`]-signature scheme are thereby fairly easy,
+//! see [`FDH::init_gpv`] that works with every PSF and a corresponding hash function
 
 use super::SignatureScheme;
 use crate::{construction::hash::HashInto, primitive::psf::PSF};
@@ -25,7 +25,7 @@ pub mod serialize;
 /// This struct captures the general definition of a hash-then-sign signature scheme
 /// that uses a hash function as in [\[1\]](<../index.html#:~:text=[1]>) and a PSF.
 /// An explicit instantiation for defined types makes understanding this struct much
-/// easier, compare [`Fdh::init_gpv`].
+/// easier, compare [`FDH::init_gpv`].
 ///
 /// Implementing a function for a specific set of types(replacing the generic types)
 /// allows for easy implementation of the signature scheme. Any PSF and a corresponding
@@ -41,9 +41,9 @@ pub mod serialize;
 /// # Example
 /// ## Signature Scheme from [`PSFGPV`](crate::primitive::psf::gpv::PSFGPV)
 /// ```
-/// use qfall_crypto::construction::signature::{fdh::Fdh, SignatureScheme};
+/// use qfall_crypto::construction::signature::{fdh::FDH, SignatureScheme};
 ///
-/// let mut fdh = Fdh::init_gpv(4, 113, 17);
+/// let mut fdh = FDH::init_gpv(4, 113, 17);
 ///
 /// let m = "Hello World!";
 ///
@@ -53,7 +53,7 @@ pub mod serialize;
 /// assert!(fdh.vfy(m.to_owned(), &sigma, &pk));
 /// ```
 #[derive(Serialize)]
-pub struct Fdh<
+pub struct FDH<
     A,
     Trapdoor,
     Domain: Serialize + for<'a> Deserialize<'a>,
@@ -75,7 +75,7 @@ pub struct Fdh<
 }
 
 impl<A, Trapdoor, Domain, Range, T, Hash> SignatureScheme
-    for Fdh<A, Trapdoor, Domain, Range, T, Hash>
+    for FDH<A, Trapdoor, Domain, Range, T, Hash>
 where
     Domain: Clone + Serialize + for<'a> Deserialize<'a>,
     Range: PartialEq<Range>,

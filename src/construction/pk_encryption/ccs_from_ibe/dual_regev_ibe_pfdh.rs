@@ -7,12 +7,12 @@
 // Mozilla Foundation. See <https://mozilla.org/en-US/MPL/2.0/>.
 
 //! A classical implementation of the [`CCSfromIBE`] scheme using
-//! the [`DualRegevIBE`] and [`Pfdh`].
+//! the [`DualRegevIBE`] and [`PFDH`].
 
 use super::CCSfromIBE;
 use crate::{
     construction::{
-        hash::sha256::HashMatZq, identity_based_encryption::DualRegevIBE, signature::pfdh::Pfdh,
+        hash::sha256::HashMatZq, identity_based_encryption::DualRegevIBE, signature::pfdh::PFDH,
     },
     primitive::psf::gpv::PSFGPV,
 };
@@ -22,13 +22,13 @@ use qfall_math::{
     rational::{MatQ, Q},
 };
 
-impl CCSfromIBE<DualRegevIBE, Pfdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq>> {
-    /// Initializes a [`CCSfromIBE`] PK encryption scheme from a [`DualRegevIBE`] and a [`Pfdh`] signature.
+impl CCSfromIBE<DualRegevIBE, PFDH<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq>> {
+    /// Initializes a [`CCSfromIBE`] PK encryption scheme from a [`DualRegevIBE`] and a [`PFDH`] signature.
     ///
     /// Parameters:
     /// - `n`: specifies the security parameter
     /// - `modulus`: specifies the modulus
-    /// - `r`: specifies the Gaussian parameter used for the [`PSFGPV`] for the [`Pfdh`]
+    /// - `r`: specifies the Gaussian parameter used for the [`PSFGPV`] for the [`PFDH`]
     /// - `randomness_length`: specifies the number of bits added to the message before signing
     /// - `alpha`: specifies the Gaussian parameter used for encryption in
     /// [`DualRegev`](crate::construction::pk_encryption::DualRegev) in the [`DualRegevIBE`]
@@ -57,7 +57,7 @@ impl CCSfromIBE<DualRegevIBE, Pfdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, Has
         let r = r.into();
 
         let dr_ibe = DualRegevIBE::new(&n, &modulus, &r, alpha);
-        let pfdh = Pfdh::init_gpv(n, modulus, r, randomness_length);
+        let pfdh = PFDH::init_gpv(n, modulus, r, randomness_length);
 
         Self {
             ibe: dr_ibe,
@@ -65,7 +65,7 @@ impl CCSfromIBE<DualRegevIBE, Pfdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, Has
         }
     }
 
-    /// Initializes a [`CCSfromIBE`] PK encryption scheme from a [`DualRegevIBE`] and a [`Pfdh`] signature
+    /// Initializes a [`CCSfromIBE`] PK encryption scheme from a [`DualRegevIBE`] and a [`PFDH`] signature
     /// from a given `n > 0`.
     ///
     /// Parameters:
@@ -91,7 +91,7 @@ impl CCSfromIBE<DualRegevIBE, Pfdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, Has
         );
 
         let ibe = DualRegevIBE::new_from_n(&n);
-        let pfdh = Pfdh::init_gpv(&n, &ibe.dual_regev.q, &ibe.psf.s, &n);
+        let pfdh = PFDH::init_gpv(&n, &ibe.dual_regev.q, &ibe.psf.s, &n);
 
         Self {
             ibe,

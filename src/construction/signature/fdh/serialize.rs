@@ -6,7 +6,7 @@
 // the terms of the Mozilla Public License Version 2.0 as published by the
 // Mozilla Foundation. See <https://mozilla.org/en-US/MPL/2.0/>.
 
-//! Allows to Deserialize an arbitrary [`Fdh`] instantiation
+//! Allows to Deserialize an arbitrary [`FDH`] instantiation
 
 use crate::{construction::hash::HashInto, primitive::psf::PSF};
 use serde::{
@@ -15,9 +15,9 @@ use serde::{
 };
 use std::{fmt, marker::PhantomData};
 
-use super::Fdh;
+use super::FDH;
 impl<'de, A, Trapdoor, Domain, Range, T, Hash> Deserialize<'de>
-    for Fdh<A, Trapdoor, Domain, Range, T, Hash>
+    for FDH<A, Trapdoor, Domain, Range, T, Hash>
 where
     Domain: Serialize + for<'a> Deserialize<'a>,
     T: PSF<A, Trapdoor, Domain, Range> + Serialize + for<'a> Deserialize<'a>,
@@ -54,7 +54,7 @@ where
             T: PSF<A, Trapdoor, Domain, Range> + Serialize + for<'a> Deserialize<'a>,
             Hash: HashInto<Range> + Serialize + for<'a> Deserialize<'a>,
         {
-            type Value = Fdh<A, Trapdoor, Domain, Range, T, Hash>;
+            type Value = FDH<A, Trapdoor, Domain, Range, T, Hash>;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                 formatter.write_str("struct $type")
@@ -90,7 +90,7 @@ where
                     }
                 }
 
-                Ok(Fdh {
+                Ok(FDH {
                     psf: Box::new(psf.unwrap()),
                     storage: storage.unwrap(),
                     hash: Box::new(hash.unwrap()),
@@ -109,7 +109,7 @@ where
             t: PhantomData,
             hash: PhantomData,
         };
-        deserializer.deserialize_struct("Fdh", FIELDS, struct_visitor)
+        deserializer.deserialize_struct("FDH", FIELDS, struct_visitor)
     }
 }
 
@@ -118,7 +118,7 @@ mod test_deserialization {
     use crate::{
         construction::{
             hash::sha256::HashMatZq,
-            signature::{fdh::Fdh, SignatureScheme},
+            signature::{fdh::FDH, SignatureScheme},
         },
         primitive::psf::gpv::PSFGPV,
     };
@@ -128,7 +128,7 @@ mod test_deserialization {
     #[allow(clippy::type_complexity)]
     #[test]
     fn deserialize_gpv() {
-        let mut fdh = Fdh::init_gpv(2, 127, 20);
+        let mut fdh = FDH::init_gpv(2, 127, 20);
 
         // fill one entry in the HashMap
         let m = "Hello World!";
@@ -136,7 +136,7 @@ mod test_deserialization {
         let _ = fdh.sign(m.to_owned(), &sk, &pk);
 
         let fdh_string = serde_json::to_string(&fdh).expect("Unable to create a json object");
-        let fdh_2: Result<Fdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq>, _> =
+        let fdh_2: Result<FDH<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq>, _> =
             serde_json::from_str(&fdh_string);
 
         assert!(fdh_2.is_ok());
