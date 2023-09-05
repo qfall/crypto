@@ -12,11 +12,13 @@
 use super::trapdoor_distribution::{
     PlusMinusOneZero, TrapdoorDistribution, TrapdoorDistributionRing,
 };
-use crate::sample::g_trapdoor::trapdoor_distribution::SampleZ;
+use crate::{
+    sample::g_trapdoor::trapdoor_distribution::SampleZ, utils::common_moduli::new_anticyclic,
+};
 use qfall_math::{
     integer::Z,
-    integer_mod_q::{Modulus, ModulusPolynomialRingZq, PolyOverZq},
-    traits::{Pow, SetCoefficient},
+    integer_mod_q::{Modulus, ModulusPolynomialRingZq},
+    traits::Pow,
 };
 use serde::{Deserialize, Serialize};
 
@@ -177,16 +179,15 @@ impl GadgetParametersRing {
 
         let base = Z::from(2);
         let log_q = Z::from(&modulus).log_ceil(&base).unwrap();
-        let mut cycl_poly = PolyOverZq::from(&modulus);
-        cycl_poly.set_coeff(0, 1).unwrap();
-        cycl_poly.set_coeff(&n, 1).unwrap();
+
+        let poly_mod = new_anticyclic(&n, &modulus).unwrap();
 
         Self {
             n,
             k: log_q.clone(),
             m_bar: log_q + 2,
             base,
-            modulus: ModulusPolynomialRingZq::try_from(&cycl_poly).unwrap(),
+            modulus: poly_mod,
             q: modulus,
             distribution: Box::new(SampleZ),
         }

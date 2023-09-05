@@ -9,11 +9,13 @@
 //! This module contains an implementation of the IND-CPA secure
 //! public key Ring-LPR encryption scheme.
 
+use crate::utils::common_moduli::new_anticyclic;
+
 use super::PKEncryption;
 use qfall_math::{
     error::MathError,
     integer::{PolyOverZ, Z},
-    integer_mod_q::{Modulus, ModulusPolynomialRingZq, PolyOverZq, PolynomialRingZq, Zq},
+    integer_mod_q::{Modulus, ModulusPolynomialRingZq, PolynomialRingZq, Zq},
     rational::Q,
     traits::{Distance, GetCoefficient, Pow, SetCoefficient},
 };
@@ -84,13 +86,12 @@ impl RingLPR {
     ///
     /// # Panics ...
     /// - if the given modulus `q <= 1`.
+    /// - if `n < 0`.
     pub fn new(n: impl Into<Z>, q: impl Into<Modulus>, alpha: impl Into<Q>) -> Self {
         let n: Z = n.into();
 
         // mod = (X^n + 1) mod q
-        let mut q = PolyOverZq::from((1, q));
-        q.set_coeff(&n, 1).unwrap();
-        let q = ModulusPolynomialRingZq::from(&q);
+        let q = new_anticyclic(&n, q).unwrap();
 
         let alpha: Q = alpha.into();
 
@@ -191,9 +192,7 @@ impl RingLPR {
         let alpha = 1 / (factor * n.sqrt() * n.log(2).unwrap().pow(3).unwrap());
 
         // mod = (X^n + 1) mod q
-        let mut q = PolyOverZq::from((1, q));
-        q.set_coeff(n, 1).unwrap();
-        let q = ModulusPolynomialRingZq::from(&q);
+        let q = new_anticyclic(n, q).unwrap();
 
         (q, alpha)
     }
