@@ -80,6 +80,37 @@ pub trait PKEncryption {
     fn dec(&self, sk: &Self::SecretKey, cipher: &Self::Cipher) -> Z;
 }
 
+/// This trait just exists s.t. we can pass `self` in as mutable for more advanced constructions, which use a storage.
+/// Otherwise, it does exactly the same as [`PKEncryption`].
+pub trait PKEncryptionMut {
+    type PublicKey;
+    type SecretKey;
+    type Cipher;
+
+    /// Generates a public key pair `(pk, sk)` suitable for the specific scheme.
+    ///
+    /// Returns a tuple `(pk, sk)` consisting of [`Self::PublicKey`] and [`Self::SecretKey`].
+    fn gen(&mut self) -> (Self::PublicKey, Self::SecretKey);
+
+    /// Encrypts the provided `message` using the public key `pk`.
+    ///
+    /// Parameters:
+    /// - `pk`: specifies the public key used for encryption
+    /// - `message`: specifies the message to be encrypted
+    ///
+    /// Returns the encryption of `message` as a [`Self::Cipher`] instance.
+    fn enc(&mut self, pk: &Self::PublicKey, message: impl Into<Z>) -> Self::Cipher;
+
+    /// Decrypts the provided `cipher` using the secret key `sk`.
+    ///
+    /// Parameters:
+    /// - `sk`: specifies the secret key used for decryption
+    /// - `cipher`: specifies the ciphertext to be decrypted
+    ///
+    /// Returns the decryption of `cipher` as a [`Z`] instance.
+    fn dec(&mut self, sk: &Self::SecretKey, cipher: &Self::Cipher) -> Z;
+}
+
 /// This trait generically implements multi-bit encryption
 /// for any scheme implementing the [`PKEncryption`] trait.
 ///
