@@ -10,5 +10,17 @@
 //! instance of a hash function. Furthermore, it contains cryptographic functions
 //! implementing the `HashFunction` trait.
 
+pub mod sha256;
 mod sis;
 pub use sis::SISHash;
+
+/// This trait should be implemented by hashes with domain [`str`].
+pub trait HashInto<DigestSpace> {
+    /// Hashes a given String literal.
+    ///
+    /// Paramters:
+    /// - `m`: specifies the string message to be hashed
+    ///
+    /// Returns a hash of type Domain.
+    fn hash(&self, m: &str) -> DigestSpace;
+}

@@ -36,10 +36,9 @@ use std::fmt::Display;
 /// # Examples
 /// ```
 /// use qfall_crypto::sample::g_trapdoor::{gadget_parameters::GadgetParameters, gadget_classical::gen_trapdoor};
-/// use qfall_math::integer::Z;
-/// use qfall_math::integer_mod_q::{Modulus, MatZq};
+/// use qfall_math::integer_mod_q::MatZq;
 ///
-/// let params = GadgetParameters::init_default(42, &Modulus::from(42));
+/// let params = GadgetParameters::init_default(42, 42);
 /// let a_bar = MatZq::sample_uniform(42, &params.m_bar, &params.q);
 /// let tag = MatZq::identity(42, 42, &params.q);
 ///
@@ -79,7 +78,7 @@ pub fn gen_trapdoor(
 /// use qfall_crypto::sample::g_trapdoor::gadget_classical::gen_gadget_mat;
 /// use qfall_math::integer::Z;
 ///
-/// let g = gen_gadget_mat(&Z::from(3), &Z::from(4), &Z::from(2));
+/// let g = gen_gadget_mat(4, 4, &Z::from(2));
 /// ```
 /// # Errors and Failures
 /// - Returns a [`MathError`] of type [`InvalidMatrix`](MathError::InvalidMatrix)
@@ -228,7 +227,7 @@ mod test_gen_gadget_vec {
     use qfall_math::integer::{MatZ, Z};
     use std::str::FromStr;
 
-    /// Assure that the gadget vector with base `2` and length `5` works correctly
+    /// Assure that the gadget vector with base `2` and length `5` works correctly.
     #[test]
     fn correctness_base_2() {
         let gadget_vec = gen_gadget_vec(5, &Z::from(2)).unwrap();
@@ -237,7 +236,7 @@ mod test_gen_gadget_vec {
         assert_eq!(vec, gadget_vec);
     }
 
-    /// Assure that the gadget vector with base `5` and length `4` works correctly
+    /// Assure that the gadget vector with base `5` and length `4` works correctly.
     #[test]
     fn correctness_base_5() {
         let gadget_vec = gen_gadget_vec(4, &Z::from(5)).unwrap();
@@ -254,7 +253,7 @@ mod test_gen_gadget_mat {
     use std::str::FromStr;
 
     /// Assure that the gadget matrix with gadget vector `[1, 2, 4]^t`(base 3) and
-    /// `I_3` works correctly
+    /// `I_3` works correctly.
     #[test]
     fn correctness_base_2_3x3() {
         let gadget_mat = gen_gadget_mat(3, 3, &Z::from(2)).unwrap();
@@ -268,7 +267,7 @@ mod test_gen_gadget_mat {
     }
 
     /// Assure that the gadget matrix with gadget vector `[1, 3, 9, 27, 81]^t`(base 3) and
-    /// `I_2` works correctly
+    /// `I_2` works correctly.
     #[test]
     fn correctness_base_3_2x5() {
         let gadget_mat = gen_gadget_mat(2, 5, &Z::from(3)).unwrap();
@@ -294,11 +293,10 @@ mod test_gen_trapdoor {
     };
 
     /// Assure that the trapdoor `r` returned from [`gen_trapdoor`] is actually a
-    /// trapdoor for `a`
+    /// trapdoor for `a`.
     #[test]
     fn is_trapdoor_without_tag() {
-        let modulus = Modulus::from(32);
-        let params = GadgetParameters::init_default(42, &modulus);
+        let params = GadgetParameters::init_default(42, 32);
         let a_bar = MatZq::sample_uniform(42, &params.m_bar, &params.q);
         let tag = MatZq::identity(42, 42, &params.q);
 
@@ -316,19 +314,19 @@ mod test_gen_trapdoor {
         // ensure G = A*trapdoor (definition of a trapdoor)
         let gadget_mat = gen_gadget_mat(&params.n, &params.k, &Z::from(2)).unwrap();
         assert_eq!(
-            MatZq::from((&gadget_mat, &modulus)),
-            a * MatZq::from((&trapdoor, &modulus))
+            MatZq::from((&gadget_mat, &params.q)),
+            a * MatZq::from((&trapdoor, &params.q))
         );
     }
 
     /// Assure that the trapdoor `r` returned from [`gen_trapdoor`] is actually a
-    /// trapdoor for `a`
+    /// trapdoor for `a`.
     #[test]
     fn is_trapdoor_with_tag() {
         let modulus = Modulus::from(32);
         let params = GadgetParameters::init_default(42, &modulus);
         let a_bar = MatZq::sample_uniform(42, &params.m_bar, &params.q);
-        // calculate an invertible tag in Z_q^{n \times n}
+        // calculate an invertible tag in Z_q^{n × n}
         let tag = calculate_invertible_tag(42, &modulus);
 
         // call gen_trapdoor to get matrix a and its 'trapdoor' r
@@ -381,7 +379,7 @@ mod test_find_solution_gadget {
     };
     use std::str::FromStr;
 
-    /// Ensure that the found solution is actually correct
+    /// Ensure that the found solution is actually correct.
     #[test]
     fn returns_correct_solution_vec() {
         let k = Z::from(5);
@@ -400,7 +398,7 @@ mod test_find_solution_gadget {
         }
     }
 
-    /// Ensure that the found solution is actually correct
+    /// Ensure that the found solution is actually correct.
     #[test]
     fn returns_correct_solution_mat() {
         let k = Z::from(5);

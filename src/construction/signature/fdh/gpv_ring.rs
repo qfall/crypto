@@ -11,11 +11,8 @@
 
 use super::Fdh;
 use crate::{
-    primitive::hash::HashMatPolynomialRingZq,
-    sample::{
-        distribution::psf::gpv_ring::PSFGPVRing,
-        g_trapdoor::gadget_parameters::GadgetParametersRing,
-    },
+    construction::hash::sha256::HashMatPolynomialRingZq, primitive::psf::gpv_ring::PSFGPVRing,
+    sample::g_trapdoor::gadget_parameters::GadgetParametersRing,
 };
 use qfall_math::{
     integer::{MatPolyOverZ, Z},
@@ -52,17 +49,7 @@ impl
     ///
     /// # Example
     /// ```
-    /// use qfall_crypto::{
-    ///     construction::signature::SignatureScheme,
-    ///     construction::signature::fdh::Fdh,
-    ///     primitive::hash::HashMatPolynomialRingZq,
-    ///     sample::distribution::psf::gpv_ring::PSFGPVRing,
-    /// };
-    /// use qfall_math::{
-    ///     integer::MatPolyOverZ,
-    ///     integer_mod_q::MatPolynomialRingZq,
-    ///     rational::Q
-    /// };
+    /// use qfall_crypto::construction::signature::{fdh::Fdh, SignatureScheme};
     ///
     /// let mut fdh = Fdh::init_gpv_ring(8, 512, 100);
     /// let (pk, sk) = fdh.gen();
@@ -70,10 +57,11 @@ impl
     /// let m = &format!("Hello World!");
     ///
     /// let sigma = fdh.sign(m.to_owned(), &sk, &pk);
-    /// assert!(
-    ///     fdh.vfy(m.to_owned(), &sigma, &pk)
-    /// )
+    /// assert!(fdh.vfy(m.to_owned(), &sigma, &pk));
     /// ```
+    ///
+    /// # Panics ...
+    /// - if `modulus <= 1`.
     pub fn init_gpv_ring(n: impl Into<Z>, modulus: impl Into<Modulus>, s: impl Into<Q>) -> Self {
         let n = n.into();
         let modulus = modulus.into();
@@ -101,10 +89,10 @@ impl
 
 #[cfg(test)]
 mod test_fdh {
-    use super::Fdh;
+    use super::{Fdh, PSFGPVRing};
     use crate::{
-        construction::signature::SignatureScheme, primitive::hash::HashMatPolynomialRingZq,
-        sample::distribution::psf::gpv_ring::PSFGPVRing,
+        construction::hash::sha256::HashMatPolynomialRingZq,
+        construction::signature::SignatureScheme,
     };
     use qfall_math::{integer::MatPolyOverZ, integer_mod_q::MatPolynomialRingZq, rational::Q};
 

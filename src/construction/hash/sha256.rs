@@ -8,6 +8,7 @@
 
 //! This module contains hashes into different domains.
 
+use super::HashInto;
 use qfall_math::utils::index::evaluate_indices;
 use qfall_math::{
     integer::{MatPolyOverZ, Z},
@@ -27,7 +28,7 @@ use std::fmt::Display;
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::primitive::hash::sha256;
+/// use qfall_crypto::construction::hash::sha256::sha256;
 ///
 /// let string = "Hello World!";
 /// let hash = sha256(string);
@@ -50,18 +51,20 @@ pub fn sha256(string: &str) -> String {
 ///
 ///  # Examples
 /// ```
-/// use qfall_crypto::primitive::hash::hash_to_zq_sha256;
-/// use qfall_math::{integer::Z, integer_mod_q::{Modulus, Zq}};
+/// use qfall_crypto::construction::hash::sha256::hash_to_zq_sha256;
+/// use qfall_math::integer_mod_q::Zq;
 ///
 /// let string = "Hello World!";
-/// let modulus = Modulus::from(7);
 ///
-/// let hash: Zq = hash_to_zq_sha256("Hello World!", &modulus);
+/// let hash: Zq = hash_to_zq_sha256("Hello World!", 7);
 /// assert_eq!(Zq::from((2, 7)), hash)
 /// ```
+///
+/// # Panics ...
+/// - if `modulus <= 1`.
 pub fn hash_to_zq_sha256(string: &str, modulus: impl Into<Modulus>) -> Zq {
     let modulus = modulus.into();
-    let modulus_new: Z = (&modulus).into();
+    let modulus_new = Z::from(&modulus);
     let bitsize = modulus_new.bits();
     let mut hex = "".to_string();
     let string2 = format!("{modulus_new} {string}");
@@ -91,18 +94,18 @@ pub fn hash_to_zq_sha256(string: &str, modulus: impl Into<Modulus>) -> Zq {
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::primitive::hash::hash_to_mat_zq_sha256;
-/// use qfall_math::{integer::Z, integer_mod_q::{Modulus, MatZq}};
+/// use qfall_crypto::construction::hash::sha256::hash_to_mat_zq_sha256;
+/// use qfall_math::integer_mod_q::MatZq;
 /// use std::str::FromStr;
 ///
 /// let string = "Hello World!";
-/// let modulus = Modulus::from(7);
 ///
-/// let hash: MatZq = hash_to_mat_zq_sha256(string, 2, 2, &modulus);
+/// let hash: MatZq = hash_to_mat_zq_sha256(string, 2, 2, 7);
 /// assert_eq!(MatZq::from_str("[[6, 3],[5, 2]] mod 7").unwrap(), hash);
 /// ```
 ///
 /// # Panics ...
+/// - if `modulus <= 1`.
 /// - if the number of rows or columns is less or equal to `0` or does not fit into an [`i64`].
 pub fn hash_to_mat_zq_sha256(
     string: &str,
@@ -131,14 +134,14 @@ pub fn hash_to_mat_zq_sha256(
 
 #[cfg(test)]
 mod tests_sha {
-    use crate::primitive::hash::{hash_to_mat_zq_sha256, hash_to_zq_sha256, sha256, Z};
+    use super::{hash_to_mat_zq_sha256, hash_to_zq_sha256, sha256, Z};
     use qfall_math::{
-        integer_mod_q::{MatZq, Modulus, Zq},
+        integer_mod_q::{MatZq, Zq},
         traits::{Distance, Pow},
     };
     use std::str::FromStr;
 
-    // ensure sha256 works
+    /// Ensure sha256 works.
     #[test]
     fn test_sha256() {
         let str1 = "Hello World!";
@@ -157,31 +160,28 @@ mod tests_sha {
         );
     }
 
-    // ensure hashing into [`Zq`] works as intended
+    /// Ensure hashing into [`Zq`] works as intended.
     #[test]
     fn test_hash_to_zq_sha256() {
         let str1 = "Hello World!";
         let str2 = "qfall";
 
-        let hash1 = hash_to_zq_sha256(str1, &Modulus::from(256));
-        let hash2 = hash_to_zq_sha256(str2, &Modulus::from(16));
+        let hash1 = hash_to_zq_sha256(str1, 256);
+        let hash2 = hash_to_zq_sha256(str2, 16);
 
         assert_eq!(Zq::from((150, 256)), hash1);
         assert_eq!(Zq::from((12, 16)), hash2);
     }
 
-    // ensure hashing into [`Zq`] hits the whole domain not just the first 256 bit
+    /// Ensure hashing into [`Zq`] hits the whole domain not just the first 256 bit.
     #[test]
     fn test_hash_to_zq_sha256_large() {
         let str1 = "Hello World!";
 
         let mut large = false;
         for i in 0..5 {
-            if hash_to_zq_sha256(
-                &(i.to_string() + str1),
-                &Modulus::from(&Z::from(271).pow(100).unwrap()),
-            )
-            .distance(Z::ZERO)
+            if hash_to_zq_sha256(&(i.to_string() + str1), Z::from(271).pow(100).unwrap())
+                .distance(Z::ZERO)
                 > Z::from(u64::MAX)
             {
                 large = true;
@@ -191,14 +191,14 @@ mod tests_sha {
         assert!(large);
     }
 
-    // ensure hashing into [`MatZq`] works as intended
+    /// Ensure hashing into [`MatZq`] works as intended.
     #[test]
     fn test_hash_to_mat_zq_sha256() {
         let str1 = "Hello World!";
         let str2 = "qfall";
 
-        let hash1 = hash_to_mat_zq_sha256(str1, 2, 2, &Modulus::from(256));
-        let hash2 = hash_to_mat_zq_sha256(str2, 2, 2, &Modulus::from(16));
+        let hash1 = hash_to_mat_zq_sha256(str1, 2, 2, 256);
+        let hash2 = hash_to_mat_zq_sha256(str2, 2, 2, 16);
 
         assert_eq!(
             MatZq::from_str("[[159, 26],[249, 141]] mod 256").unwrap(),
@@ -207,13 +207,13 @@ mod tests_sha {
         assert_eq!(MatZq::from_str("[[3, 12],[9, 12]] mod 16").unwrap(), hash2);
     }
 
-    // ensure hashing into [`MatZq`] works as intended
+    /// Ensure hashing into [`MatZq`] works as intended.
     #[test]
     #[should_panic]
     fn test_hash_to_mat_zq_sha256_negative_dimensions() {
         let str1 = "Hello World!";
 
-        let _ = hash_to_mat_zq_sha256(str1, 0, 0, &Modulus::from(16));
+        let _ = hash_to_mat_zq_sha256(str1, 0, 0, 16);
     }
 }
 
@@ -229,15 +229,14 @@ mod tests_sha {
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::primitive::hash::{HashMatZq, HashInto};
-/// use qfall_crypto::primitive::hash::hash_to_mat_zq_sha256;
-/// use qfall_math::{integer::Z, integer_mod_q::{Modulus, MatZq}};
+/// use qfall_crypto::construction::hash::{HashInto, sha256::{HashMatZq, hash_to_mat_zq_sha256}};
+/// use qfall_math::integer_mod_q::{Modulus, MatZq};
 /// use std::str::FromStr;
 ///
 /// let modulus = Modulus::from(7);
 ///
 /// let hasher = HashMatZq {
-///     modulus: modulus,
+///     modulus,
 ///     rows: 17,
 ///     cols: 3,
 /// };
@@ -249,9 +248,7 @@ pub struct HashMatZq {
     pub rows: i64,
     pub cols: i64,
 }
-pub trait HashInto<Domain> {
-    fn hash(&self, m: &str) -> Domain;
-}
+
 impl HashInto<MatZq> for HashMatZq {
     /// Hashes a given String literal into a [`MatZq`].
     /// The dimensions and the modulus is fixed by the hash object.
@@ -263,15 +260,14 @@ impl HashInto<MatZq> for HashMatZq {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::primitive::hash::{HashMatZq, HashInto};
-    /// use qfall_crypto::primitive::hash::hash_to_mat_zq_sha256;
-    /// use qfall_math::{integer::Z, integer_mod_q::{Modulus, MatZq}};
+    /// use qfall_crypto::construction::hash::{HashInto, sha256::{HashMatZq, hash_to_mat_zq_sha256}};
+    /// use qfall_math::integer_mod_q::{Modulus, MatZq};
     /// use std::str::FromStr;
     ///
     /// let modulus = Modulus::from(7);
     ///
     /// let hasher = HashMatZq {
-    ///     modulus: modulus,
+    ///     modulus,
     ///     rows: 17,
     ///     cols: 3,
     /// };
@@ -294,14 +290,10 @@ impl HashInto<MatZq> for HashMatZq {
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::primitive::hash::{HashMatPolynomialRingZq, HashInto};
+/// use qfall_crypto::construction::hash::{HashInto, sha256::HashMatPolynomialRingZq};
 /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
-/// use qfall_math::{
-///     integer_mod_q::Modulus,
-///     traits::{GetNumColumns, GetNumRows},
-/// };
 ///
-/// let gp = GadgetParametersRing::init_default(10, &Modulus::from(99));
+/// let gp = GadgetParametersRing::init_default(10, 99);
 ///
 /// let hasher = HashMatPolynomialRingZq {
 ///     modulus: gp.modulus,
@@ -327,14 +319,10 @@ impl HashInto<MatPolynomialRingZq> for HashMatPolynomialRingZq {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::primitive::hash::{HashMatPolynomialRingZq, HashInto};
+    /// use qfall_crypto::construction::hash::{HashInto, sha256::{HashMatPolynomialRingZq}};
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
-    /// use qfall_math::{
-    ///     integer_mod_q::Modulus,
-    ///     traits::{GetNumColumns, GetNumRows},
-    /// };
     ///
-    /// let gp = GadgetParametersRing::init_default(10, &Modulus::from(99));
+    /// let gp = GadgetParametersRing::init_default(10, 99);
     ///
     /// let hasher = HashMatPolynomialRingZq {
     ///     modulus: gp.modulus,
@@ -359,7 +347,6 @@ mod hash_into_mat_polynomial_ring_zq {
     use crate::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
     use qfall_math::{
         integer::PolyOverZ,
-        integer_mod_q::Modulus,
         traits::{GetEntry, GetNumColumns, GetNumRows},
     };
 
@@ -367,7 +354,7 @@ mod hash_into_mat_polynomial_ring_zq {
     /// static, i.e. the same value is returned, when the same value  is hashed.
     #[test]
     fn correct_dimensions() {
-        let gp = GadgetParametersRing::init_default(10, &Modulus::from(99));
+        let gp = GadgetParametersRing::init_default(10, 99);
 
         let hasher = HashMatPolynomialRingZq {
             modulus: gp.modulus,

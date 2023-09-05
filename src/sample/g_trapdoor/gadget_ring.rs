@@ -13,7 +13,7 @@ use super::{gadget_classical::find_solution_gadget_mat, gadget_parameters::Gadge
 use qfall_math::{
     error::MathError,
     integer::{MatPolyOverZ, PolyOverZ, Z},
-    integer_mod_q::{MatPolynomialRingZq, MatZq, Modulus, PolynomialRingZq},
+    integer_mod_q::{MatPolynomialRingZq, MatZq, PolynomialRingZq},
     rational::Q,
     traits::{Concatenate, GetEntry, IntoCoefficientEmbedding, Pow, SetCoefficient, SetEntry},
 };
@@ -39,9 +39,7 @@ use std::fmt::Display;
 /// # Examples
 /// ```
 /// use qfall_crypto::sample::g_trapdoor::{gadget_parameters::GadgetParametersRing, gadget_ring::gen_trapdoor_ring_lwe};
-/// use qfall_math::integer::{Z, PolyOverZ};
-/// use qfall_math::integer_mod_q::Modulus;
-/// use qfall_math::rational::Q;
+/// use qfall_math::integer::PolyOverZ;
 ///
 /// let params = GadgetParametersRing::init_default(8, 17);
 /// let a_bar = PolyOverZ::sample_uniform(&params.n, 0, &params.q).unwrap();
@@ -119,13 +117,12 @@ pub fn gen_gadget_ring(
 ///
 /// # Examples
 /// ```
-/// use qfall_math::integer::{Z, MatZ, PolyOverZ};
-/// use qfall_math::integer_mod_q::{Zq, Modulus, PolynomialRingZq};
+/// use qfall_math::integer::PolyOverZ;
+/// use qfall_math::integer_mod_q::PolynomialRingZq;
 /// use qfall_crypto::sample::g_trapdoor::gadget_ring::gen_gadget_ring;
 /// use qfall_crypto::sample::g_trapdoor::gadget_ring::find_solution_gadget_ring;
 /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
 /// use qfall_math::integer_mod_q::MatPolynomialRingZq;
-/// use qfall_math::traits::GetEntry;
 /// use std::str::FromStr;
 ///
 /// let gp = GadgetParametersRing::init_default(10, 128);
@@ -148,7 +145,7 @@ pub fn find_solution_gadget_ring(u: &PolynomialRingZq, k: &Z, base: &Z) -> MatPo
     let modulus = u.get_mod();
     let size = modulus.get_degree();
     let value = u.get_poly().into_coefficient_embedding(size);
-    let value = MatZq::from((&value, &Modulus::from(modulus.get_q())));
+    let value = MatZq::from((&value, modulus.get_q()));
 
     let classical_sol = find_solution_gadget_mat(&value, k, base);
 
@@ -184,7 +181,7 @@ mod test_gen_trapdoor_ring {
     }
 
     /// Assure that the trapdoor `r` returned from [`gen_trapdoor`] is actually a
-    /// trapdoor for `a`
+    /// trapdoor for `a`.
     #[test]
     fn is_trapdoor() {
         let params = GadgetParametersRing::init_default(6, 32);
@@ -220,7 +217,7 @@ mod test_find_solution_gadget_ring {
     };
     use std::str::FromStr;
 
-    /// Ensures that the algorithm finds a correct solution such that `<g^t, x> = u`
+    /// Ensures that the algorithm finds a correct solution such that `<g^t, x> = u`.
     #[test]
     fn is_correct_solution() {
         let gp = GadgetParametersRing::init_default(3, 32);

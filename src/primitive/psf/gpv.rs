@@ -33,10 +33,10 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::sample::distribution::psf::gpv::PSFGPV;
+/// use qfall_crypto::primitive::psf::gpv::PSFGPV;
 /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
 /// use qfall_math::rational::Q;
-/// use crate::qfall_crypto::sample::distribution::psf::PSF;
+/// use qfall_crypto::primitive::psf::PSF;
 ///
 /// let psf = PSFGPV {
 ///     gp: GadgetParameters::init_default(8, 64),
@@ -63,10 +63,10 @@ impl PSF<MatZq, (MatZ, MatQ), MatZ, MatZq> for PSFGPV {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::sample::distribution::psf::gpv::PSFGPV;
+    /// use qfall_crypto::primitive::psf::gpv::PSFGPV;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     /// use qfall_math::rational::Q;
-    /// use crate::qfall_crypto::sample::distribution::psf::PSF;
+    /// use qfall_crypto::primitive::psf::PSF;
     ///
     /// let psf = PSFGPV {
     ///     gp: GadgetParameters::init_default(8, 64),
@@ -92,10 +92,10 @@ impl PSF<MatZq, (MatZ, MatQ), MatZ, MatZq> for PSFGPV {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::sample::distribution::psf::gpv::PSFGPV;
+    /// use qfall_crypto::primitive::psf::gpv::PSFGPV;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     /// use qfall_math::rational::Q;
-    /// use crate::qfall_crypto::sample::distribution::psf::PSF;
+    /// use qfall_crypto::primitive::psf::PSF;
     ///
     /// let psf = PSFGPV {
     ///     gp: GadgetParameters::init_default(8, 64),
@@ -119,7 +119,7 @@ impl PSF<MatZq, (MatZ, MatQ), MatZ, MatZq> for PSFGPV {
     ///
     /// Parameters:
     /// - `a`: The parity-check matrix
-    /// - `short_base`: The short base for `\Lambda^\perp(A)`
+    /// - `short_base`: The short base for `Λ^⟂(A)`
     /// - `short_base_gso`: The precomputed GSO of the short_base
     /// - `u`: The syndrome from the range
     ///
@@ -128,10 +128,10 @@ impl PSF<MatZq, (MatZ, MatQ), MatZ, MatZq> for PSFGPV {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::sample::distribution::psf::gpv::PSFGPV;
+    /// use qfall_crypto::primitive::psf::gpv::PSFGPV;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     /// use qfall_math::rational::Q;
-    /// use crate::qfall_crypto::sample::distribution::psf::PSF;
+    /// use qfall_crypto::primitive::psf::PSF;
     ///
     /// let psf = PSFGPV {
     ///     gp: GadgetParameters::init_default(8, 64),
@@ -170,10 +170,10 @@ impl PSF<MatZq, (MatZ, MatQ), MatZ, MatZq> for PSFGPV {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::sample::distribution::psf::gpv::PSFGPV;
+    /// use qfall_crypto::primitive::psf::gpv::PSFGPV;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     /// use qfall_math::rational::Q;
-    /// use crate::qfall_crypto::sample::distribution::psf::PSF;
+    /// use qfall_crypto::primitive::psf::PSF;
     ///
     /// let psf = PSFGPV {
     ///     gp: GadgetParameters::init_default(8, 64),
@@ -200,12 +200,10 @@ impl PSF<MatZq, (MatZ, MatQ), MatZ, MatZq> for PSFGPV {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::sample::distribution::psf::gpv::PSFGPV;
+    /// use qfall_crypto::primitive::psf::PSF;
+    /// use qfall_crypto::primitive::psf::gpv::PSFGPV;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     /// use qfall_math::rational::Q;
-    /// use crate::qfall_crypto::sample::distribution::psf::PSF;
-    /// use qfall_math::integer::MatZ;
-    /// use qfall_math::traits::GetNumColumns;
     ///
     /// let psf = PSFGPV {
     ///     gp: GadgetParameters::init_default(8, 64),
@@ -227,11 +225,10 @@ impl PSF<MatZq, (MatZ, MatQ), MatZ, MatZq> for PSFGPV {
 
 #[cfg(test)]
 mod test_gpv_psf {
+    use super::super::gpv::PSFGPV;
     use super::PSF;
-    use crate::sample::distribution::psf::gpv::PSFGPV;
     use crate::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     use qfall_math::integer::MatZ;
-    use qfall_math::integer_mod_q::Modulus;
     use qfall_math::rational::Q;
     use qfall_math::traits::{GetNumColumns, GetNumRows, SetEntry};
 
@@ -239,9 +236,8 @@ mod test_gpv_psf {
     #[test]
     fn samp_d_samples_from_dn() {
         for (n, modulus) in [(5, 256), (10, 128), (15, 157)] {
-            let modulus = Modulus::from(modulus);
             let psf = PSFGPV {
-                gp: GadgetParameters::init_default(n, &modulus),
+                gp: GadgetParameters::init_default(n, modulus),
                 s: Q::from(10),
             };
 
@@ -256,9 +252,8 @@ mod test_gpv_psf {
     #[test]
     fn samp_p_preimage_and_domain() {
         for (n, modulus) in [(5, 256), (6, 128)] {
-            let modulus = Modulus::from(modulus);
             let psf = PSFGPV {
-                gp: GadgetParameters::init_default(n, &modulus),
+                gp: GadgetParameters::init_default(n, modulus),
                 s: Q::from(10),
             };
             let (a, r) = psf.trap_gen();
@@ -275,9 +270,8 @@ mod test_gpv_psf {
     #[test]
     fn f_a_works_as_expected() {
         for (n, modulus) in [(5, 256), (6, 128)] {
-            let modulus = Modulus::from(modulus);
             let psf = PSFGPV {
-                gp: GadgetParameters::init_default(n, &modulus),
+                gp: GadgetParameters::init_default(n, modulus),
                 s: Q::from(10),
             };
             let (a, _) = psf.trap_gen();
@@ -292,9 +286,8 @@ mod test_gpv_psf {
     #[test]
     #[should_panic]
     fn f_a_sigma_not_in_domain_matrix() {
-        let modulus = Modulus::from(128);
         let psf = PSFGPV {
-            gp: GadgetParameters::init_default(8, &modulus),
+            gp: GadgetParameters::init_default(8, 128),
             s: Q::from(10),
         };
         let (a, _) = psf.trap_gen();
@@ -308,9 +301,8 @@ mod test_gpv_psf {
     #[test]
     #[should_panic]
     fn f_a_sigma_not_in_domain_incorrect_length() {
-        let modulus = Modulus::from(128);
         let psf = PSFGPV {
-            gp: GadgetParameters::init_default(8, &modulus),
+            gp: GadgetParameters::init_default(8, 128),
             s: Q::from(10),
         };
         let (a, _) = psf.trap_gen();
@@ -324,9 +316,8 @@ mod test_gpv_psf {
     #[test]
     #[should_panic]
     fn f_a_sigma_not_in_domain_too_long() {
-        let modulus = Modulus::from(128);
         let psf = PSFGPV {
-            gp: GadgetParameters::init_default(8, &modulus),
+            gp: GadgetParameters::init_default(8, 128),
             s: Q::from(10),
         };
         let (a, _) = psf.trap_gen();
@@ -339,9 +330,8 @@ mod test_gpv_psf {
     /// Ensures that `check_domain` works for vectors with the correct length.
     #[test]
     fn check_domain_as_expected() {
-        let modulus = Modulus::from(128);
         let psf = PSFGPV {
-            gp: GadgetParameters::init_default(8, &modulus),
+            gp: GadgetParameters::init_default(8, 128),
             s: Q::from(10),
         };
         let (a, _) = psf.trap_gen();
@@ -358,9 +348,8 @@ mod test_gpv_psf {
     /// Ensures that `check_domain` returns false for values that are not in the domain.
     #[test]
     fn check_domain_not_in_dn() {
-        let modulus = Modulus::from(128);
         let psf = PSFGPV {
-            gp: GadgetParameters::init_default(8, &modulus),
+            gp: GadgetParameters::init_default(8, 128),
             s: Q::from(10),
         };
         let (a, _) = psf.trap_gen();

@@ -13,7 +13,7 @@
 //! works with every PSF and a corresponding hash function.
 
 use super::SignatureScheme;
-use crate::{primitive::hash::HashInto, sample::distribution::psf::PSF};
+use crate::{construction::hash::HashInto, primitive::psf::PSF};
 use qfall_math::{integer::Z, traits::Pow};
 use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;

@@ -8,7 +8,7 @@
 
 //! Allows to Deserialize an arbitrary [`Fdh`] instantiation
 
-use crate::{primitive::hash::HashInto, sample::distribution::psf::PSF};
+use crate::{construction::hash::HashInto, primitive::psf::PSF};
 use serde::{
     de::{Error, MapAccess, Visitor},
     Deserialize, Serialize,
@@ -116,24 +116,19 @@ where
 #[cfg(test)]
 mod test_deserialization {
     use crate::{
-        construction::signature::{fdh::Fdh, SignatureScheme},
-        primitive::hash::HashMatZq,
-        sample::distribution::psf::gpv::PSFGPV,
+        construction::{
+            hash::sha256::HashMatZq,
+            signature::{fdh::Fdh, SignatureScheme},
+        },
+        primitive::psf::gpv::PSFGPV,
     };
-    use qfall_math::{
-        integer::{MatZ, Z},
-        integer_mod_q::{MatZq, Modulus},
-        rational::{MatQ, Q},
-    };
+    use qfall_math::{integer::MatZ, integer_mod_q::MatZq, rational::MatQ};
 
     /// Ensure that deserialization works.
+    #[allow(clippy::type_complexity)]
     #[test]
     fn deserialize_gpv() {
-        let s = Q::from(20);
-        let n = Z::from(2);
-        let modulus = Modulus::try_from(&Z::from(127)).unwrap();
-
-        let mut fdh = Fdh::init_gpv(&n, &modulus, &s);
+        let mut fdh = Fdh::init_gpv(2, 127, 20);
 
         // fill one entry in the HashMap
         let m = "Hello World!";

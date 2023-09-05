@@ -28,7 +28,7 @@ use serde::{Deserialize, Serialize};
 
 /// A lattice-based implementation of a [`PSF`] according to
 /// [\[1\]](<../index.html#:~:text=[1]>) and [\[3\]](<../index.html#:~:text=[3]>)
-/// using G-Trapdoors where D_n = {e ∈ R^m | |iota(e)| <= s sqrt(m*n) }
+/// using G-Trapdoors where D_n = {e ∈ R^m | |ι(e)| <= s sqrt(m*n) }
 /// and R_n = R_q.
 ///
 /// Attributes
@@ -38,17 +38,13 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::sample::distribution::psf::gpv_ring::PSFGPVRing;
+/// use qfall_crypto::primitive::psf::gpv_ring::PSFGPVRing;
 /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
 /// use qfall_math::rational::Q;
-/// use qfall_math::integer_mod_q::Modulus;
-/// use crate::qfall_crypto::sample::distribution::psf::PSF;
-/// use qfall_math::integer::MatZ;
-/// use qfall_math::traits::GetNumColumns;
+/// use qfall_crypto::primitive::psf::PSF;
 ///
-/// let modulus = Modulus::from(512);
 /// let psf = PSFGPVRing {
-///     gp: GadgetParametersRing::init_default(8, &modulus),
+///     gp: GadgetParametersRing::init_default(8, 512),
 ///     s: Q::from(100),
 ///     s_td: Q::from(1.005_f64),
 /// };
@@ -75,17 +71,13 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::sample::distribution::psf::gpv_ring::PSFGPVRing;
+    /// use qfall_crypto::primitive::psf::gpv_ring::PSFGPVRing;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
     /// use qfall_math::rational::Q;
-    /// use qfall_math::integer_mod_q::Modulus;
-    /// use crate::qfall_crypto::sample::distribution::psf::PSF;
-    /// use qfall_math::integer::MatZ;
-    /// use qfall_math::traits::GetNumColumns;
+    /// use qfall_crypto::primitive::psf::PSF;
     ///
-    /// let modulus = Modulus::from(512);
     /// let psf = PSFGPVRing {
-    ///     gp: GadgetParametersRing::init_default(8, &modulus),
+    ///     gp: GadgetParametersRing::init_default(8, 512),
     ///     s: Q::from(100),
     ///     s_td: Q::from(1.005_f64),
     /// };
@@ -103,17 +95,13 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::sample::distribution::psf::gpv_ring::PSFGPVRing;
+    /// use qfall_crypto::primitive::psf::gpv_ring::PSFGPVRing;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
     /// use qfall_math::rational::Q;
-    /// use qfall_math::integer_mod_q::Modulus;
-    /// use crate::qfall_crypto::sample::distribution::psf::PSF;
-    /// use qfall_math::integer::MatZ;
-    /// use qfall_math::traits::GetNumColumns;
+    /// use qfall_crypto::primitive::psf::PSF;
     ///
-    /// let modulus = Modulus::from(512);
     /// let psf = PSFGPVRing {
-    ///     gp: GadgetParametersRing::init_default(8, &modulus),
+    ///     gp: GadgetParametersRing::init_default(8, 512),
     ///     s: Q::from(100),
     ///     s_td: Q::from(1.005_f64),
     /// };
@@ -131,7 +119,7 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
     /// from the G-Trapdoor from the conditioned conditioned
     /// discrete gaussian with `f_a(a,e) = u` for a provided syndrome `u`.
     ///
-    /// *Note*: the provided parameters `a,r,e,u` must fit together,
+    /// *Note*: the provided parameters `a, r, e, u` must fit together,
     /// otherwise unexpected behavior such as panics may occur.
     ///
     /// Parameters:
@@ -145,17 +133,13 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::sample::distribution::psf::gpv_ring::PSFGPVRing;
+    /// use qfall_crypto::primitive::psf::gpv_ring::PSFGPVRing;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
     /// use qfall_math::rational::Q;
-    /// use qfall_math::integer_mod_q::Modulus;
-    /// use crate::qfall_crypto::sample::distribution::psf::PSF;
-    /// use qfall_math::integer::MatZ;
-    /// use qfall_math::traits::GetNumColumns;
+    /// use qfall_crypto::primitive::psf::PSF;
     ///
-    /// let modulus = Modulus::from(512);
     /// let psf = PSFGPVRing {
-    ///     gp: GadgetParametersRing::init_default(8, &modulus),
+    ///     gp: GadgetParametersRing::init_default(8, 512),
     ///     s: Q::from(100),
     ///     s_td: Q::from(1.005_f64),
     /// };
@@ -174,11 +158,11 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
         u: &MatPolynomialRingZq,
     ) -> MatPolyOverZ {
         // compute solution to `a*x = u`
-        // the same as `Rot^-(\iota(a)) \iota(x) = \iota(u)`
+        // the same as `Rot^-(ι(a)) ι(x) = ι(u)`
 
         let short_basis = gen_short_basis_for_trapdoor_ring(&self.gp, a, &r.0, &r.1);
 
-        // solve `rot^-(\iota(a)) \iota(x) = \iota(u)` to get solution
+        // solve `rot^-(ι(a)) ι(x) = ι(u)` to get solution
         let u_embedded = u
             .get_mat()
             .into_coefficient_embedding_from_matrix(self.gp.modulus.get_degree());
@@ -230,17 +214,13 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::sample::distribution::psf::gpv_ring::PSFGPVRing;
+    /// use qfall_crypto::primitive::psf::gpv_ring::PSFGPVRing;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
     /// use qfall_math::rational::Q;
-    /// use qfall_math::integer_mod_q::Modulus;
-    /// use crate::qfall_crypto::sample::distribution::psf::PSF;
-    /// use qfall_math::integer::MatZ;
-    /// use qfall_math::traits::GetNumColumns;
+    /// use qfall_crypto::primitive::psf::PSF;
     ///
-    /// let modulus = Modulus::from(512);
     /// let psf = PSFGPVRing {
-    ///     gp: GadgetParametersRing::init_default(8, &modulus),
+    ///     gp: GadgetParametersRing::init_default(8, 512),
     ///     s: Q::from(100),
     ///     s_td: Q::from(1.005_f64),
     /// };
@@ -258,7 +238,7 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
         a * sigma
     }
 
-    /// Checks whether a value `sigma` is in D_n = {e ∈ R^m | |iota(e)| <= s sqrt(m*n) }.
+    /// Checks whether a value `sigma` is in D_n = {e ∈ R^m | |ι(e)| <= s sqrt(m*n) }.
     ///
     /// Parameters:
     /// - `sigma`: The value for which is checked, if it is in the domain
@@ -267,17 +247,13 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::sample::distribution::psf::gpv_ring::PSFGPVRing;
+    /// use qfall_crypto::primitive::psf::gpv_ring::PSFGPVRing;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
     /// use qfall_math::rational::Q;
-    /// use qfall_math::integer_mod_q::Modulus;
-    /// use crate::qfall_crypto::sample::distribution::psf::PSF;
-    /// use qfall_math::integer::MatZ;
-    /// use qfall_math::traits::GetNumColumns;
+    /// use qfall_crypto::primitive::psf::PSF;
     ///
-    /// let modulus = Modulus::from(512);
     /// let psf = PSFGPVRing {
-    ///     gp: GadgetParametersRing::init_default(8, &modulus),
+    ///     gp: GadgetParametersRing::init_default(8, 512),
     ///     s: Q::from(100),
     ///     s_td: Q::from(1.005_f64),
     /// };
@@ -301,8 +277,8 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
 
 #[cfg(test)]
 mod test_gpv_psf {
+    use super::super::gpv_ring::PSFGPVRing;
     use super::PSF;
-    use crate::sample::distribution::psf::gpv_ring::PSFGPVRing;
     use crate::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
     use qfall_math::integer::{MatPolyOverZ, PolyOverZ};
     use qfall_math::integer_mod_q::MatPolynomialRingZq;

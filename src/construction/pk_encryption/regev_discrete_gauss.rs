@@ -398,7 +398,7 @@ impl PKEncryption for RegevWithDiscreteGaussianRegularity {
     ///
     /// Parameters:
     /// - `pk`: specifies the public key, which contains two matrices `pk = (A, p)`
-    /// - `message`: specifies the message that should be encryted
+    /// - `message`: specifies the message that should be encrypted
     ///
     /// Returns a cipher of the form `cipher = (u, c)` for [`MatZq`] `u` and [`Zq`] `c`.
     ///
@@ -539,7 +539,8 @@ mod test_pp_generation {
         RegevWithDiscreteGaussianRegularity::new_from_n(1);
     }
 
-    /// Checks whether `secure128` outputs a new instance with correct and secure parameters.
+    /// Checks whether `secure128` outputs a new instance with correct and secure
+    /// parameters.
     #[test]
     fn secure128_validity() {
         let dr = RegevWithDiscreteGaussianRegularity::secure128();
@@ -621,7 +622,7 @@ mod test_regev {
         for msg in messages {
             let msg_mod = Z::from(msg.rem_euclid(2));
 
-            let cipher = regev.enc(&pk, &msg);
+            let cipher = regev.enc(&pk, msg);
             let m = regev.dec(&sk, &cipher);
 
             assert_eq!(msg_mod, m);

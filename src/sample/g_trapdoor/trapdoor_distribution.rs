@@ -120,7 +120,7 @@ mod test_pm_one_zero {
     use qfall_math::integer::Z;
     use qfall_math::traits::GetEntry;
 
-    /// ensure that the distribution samples in its correct range
+    /// Ensure that the distribution samples in its correct range.
     #[test]
     fn correct_range() {
         let sample = PlusMinusOneZero.sample(&10.into(), &5.into());

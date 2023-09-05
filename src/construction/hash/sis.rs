@@ -24,7 +24,7 @@ use qfall_math::{
 use serde::{Deserialize, Serialize};
 
 /// This struct keeps an instance of the [`SISHash`] including
-/// its key and public parameters implicitely stored as `n = key.#rows()`,
+/// its key and public parameters implicitly stored as `n = key.#rows()`,
 /// `m = key.#columns`, and `q = key.modulus`.
 ///
 /// Attributes:
@@ -50,7 +50,7 @@ use serde::{Deserialize, Serialize};
 /// ```
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SISHash {
-    key: MatZq, // implicitely contains n = nrows, m = ncols, q = modulus
+    key: MatZq, // implicitly contains n = nrows, m = ncols, q = modulus
 }
 
 impl SISHash {

@@ -210,7 +210,7 @@ impl Regev {
     /// **WARNING:** Some requirements are missing to ensure
     /// overwhelming correctness of the scheme for small `n`.
     ///
-    /// Returns an empty resultif the public parameters guarantee correctness
+    /// Returns an empty result if the public parameters guarantee correctness
     /// with overwhelming probability or a [`MathError`] if the instance would
     /// not be correct.
     ///
@@ -381,7 +381,7 @@ impl PKEncryption for Regev {
     ///
     /// Parameters:
     /// - `pk`: specifies the public key `pk = A`
-    /// - `message`: specifies the message that should be encryted
+    /// - `message`: specifies the message that should be encrypted
     ///
     /// Returns a cipher `c` of type [`MatZq`].
     ///
@@ -525,7 +525,8 @@ mod test_pp_generation {
         Regev::new_from_n(9);
     }
 
-    /// Checks whether `secure128` outputs a new instance with correct and secure parameters.
+    /// Checks whether `secure128` outputs a new instance with correct and secure
+    /// parameters.
     #[test]
     fn secure128_validity() {
         let regev = Regev::secure128();
@@ -603,7 +604,7 @@ mod test_regev {
         for msg in messages {
             let msg_mod = Z::from(msg.rem_euclid(2));
 
-            let cipher = regev.enc(&pk, &msg);
+            let cipher = regev.enc(&pk, msg);
             let m = regev.dec(&sk, &cipher);
 
             assert_eq!(msg_mod, m);

@@ -14,7 +14,7 @@
 //! see [`Fdh::init_gpv`] that works with every PSF and a corresponding hash function
 
 use super::SignatureScheme;
-use crate::{primitive::hash::HashInto, sample::distribution::psf::PSF};
+use crate::{construction::hash::HashInto, primitive::psf::PSF};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, marker::PhantomData};
 
@@ -39,27 +39,18 @@ pub mod serialize;
 /// - `hash`: The hash-function which has to map a string into the correct domain
 ///
 /// # Example
-/// ## Signature Scheme from [`PSFGPV`](crate::sample::distribution::psf::gpv::PSFGPV)
+/// ## Signature Scheme from [`PSFGPV`](crate::primitive::psf::gpv::PSFGPV)
 /// ```
-/// use qfall_crypto::construction::signature::fdh::Fdh;
-/// use qfall_math::integer::Z;
-/// use qfall_math::integer_mod_q::Modulus;
-/// use qfall_math::rational::Q;
-/// use crate::qfall_crypto::construction::signature::SignatureScheme;
+/// use qfall_crypto::construction::signature::{fdh::Fdh, SignatureScheme};
 ///
-/// let s = Q::from(17);
-/// let n = Z::from(4);
-/// let modulus = Modulus::try_from(&Z::from(113)).unwrap();
-///
-/// let mut fdh = Fdh::init_gpv(n, &modulus, &s);
+/// let mut fdh = Fdh::init_gpv(4, 113, 17);
 ///
 /// let m = "Hello World!";
 ///
 /// let (pk, sk) = fdh.gen();
 /// let sigma = fdh.sign(m.to_owned(), &sk, &pk);
 ///
-/// assert_eq!(&sigma, &fdh.sign(m.to_owned(), &sk, &pk));
-/// assert!(fdh.vfy(m.to_owned(), &sigma, &pk))
+/// assert!(fdh.vfy(m.to_owned(), &sigma, &pk));
 /// ```
 #[derive(Serialize)]
 pub struct Fdh<

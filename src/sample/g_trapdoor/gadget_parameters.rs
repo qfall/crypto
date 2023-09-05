@@ -36,8 +36,6 @@ use serde::{Deserialize, Serialize};
 /// # Examples
 /// ```
 /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
-/// use qfall_math::integer::Z;
-/// use qfall_math::integer_mod_q::Modulus;
 ///
 /// let params = GadgetParameters::init_default(42, 42);
 /// ```
@@ -68,10 +66,8 @@ pub struct GadgetParameters {
 /// # Examples
 /// ```
 /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
-/// use qfall_math::integer::Z;
-/// use qfall_math::integer_mod_q::Modulus;
 ///
-/// let params = GadgetParametersRing::init_default(42, &Modulus::from(42));
+/// let params = GadgetParametersRing::init_default(42, 42);
 /// ```
 #[derive(Serialize, Deserialize)]
 pub struct GadgetParametersRing {
@@ -93,8 +89,8 @@ impl GadgetParameters {
     /// Theorem 1.
     /// - `w = n * k`: As it is required to match the dimension of the gadget matrix,
     /// hence it has to  equal to `n * size of gadget_vec`
-    /// - `m_bar = n * k + \log(n)^2`: is taken from [\[1\]](<../index.html#:~:text=[1]>)
-    /// as a function satisfying `m_bar = n \log q + \omega(\log n)`
+    /// - `m_bar = n * k + log(n)^2`: is taken from [\[1\]](<../index.html#:~:text=[1]>)
+    /// as a function satisfying `m_bar = n log q + ω(log n)`
     /// - the distribution is taken as [`PlusMinusOneZero`],
     /// see the example from [\[1\]](<../index.html#:~:text=[1]>): after statistical instantiation in section 3.2
     ///
@@ -107,14 +103,13 @@ impl GadgetParameters {
     /// # Examples
     /// ```
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
-    /// use qfall_math::integer::Z;
-    /// use qfall_math::integer_mod_q::Modulus;
     ///
     /// let params = GadgetParameters::init_default(42, 42);
     /// ```
     ///
     /// # Panics ...
     /// - if the security parameter `n` is not in `[1, i64::MAX]`.
+    /// - if `modulus <= 1`.
     pub fn init_default(n: impl Into<Z>, modulus: impl Into<Modulus>) -> Self {
         // panic if n < 1 (security parameter must be positive) and not larger than
         // [`i64`] because downstream matrices can be at most that size
@@ -160,14 +155,13 @@ impl GadgetParametersRing {
     /// # Examples
     /// ```
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
-    /// use qfall_math::integer::Z;
-    /// use qfall_math::integer_mod_q::Modulus;
     ///
     /// let params = GadgetParametersRing::init_default(42, 42);
     /// ```
     ///
     /// # Panics ...
     /// - if the security parameter `n` is not in `[1, i64::MAX]`.
+    /// - if `modulus <= 1`.
     pub fn init_default(n: impl Into<Z>, modulus: impl Into<Modulus>) -> Self {
         // panic if n < 1 (security parameter must be positive) and not larger than
         // [`i64`] because downstream matrices can be at most that size
@@ -198,7 +192,7 @@ mod test_default_parameter {
     use crate::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     use qfall_math::{integer::Z, integer_mod_q::Modulus, traits::Pow};
 
-    /// Ensure that this test fails, if the default parameters are changed
+    /// Ensure that this test fails, if the default parameters are changed.
     #[test]
     fn default_unchanged() {
         for n in [5, 10, 50, 100] {
@@ -208,7 +202,7 @@ mod test_default_parameter {
                 let n_log_2_pow_2 = Z::from(n).log_ceil(2).unwrap().pow(2).unwrap();
                 let m_bar = n * k + n_log_2_pow_2;
 
-                let gp = GadgetParameters::init_default(n, &Modulus::from(q));
+                let gp = GadgetParameters::init_default(n, q);
 
                 assert_eq!(Z::from(2), gp.base);
                 assert_eq!(Z::from(k), gp.k);

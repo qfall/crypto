@@ -389,7 +389,7 @@ impl PKEncryption for DualRegevWithDiscreteGaussianRegularity {
     ///
     /// Parameters:
     /// - `pk`: specifies the public key, which contains two matrices `pk = (A, u)`
-    /// - `message`: specifies the message that should be encryted
+    /// - `message`: specifies the message that should be encrypted
     ///
     /// Returns a cipher of the form `cipher = (p, c)` for [`MatZq`] `u` and [`Zq`] `c`.
     ///
@@ -544,7 +544,8 @@ mod test_pp_generation {
         DualRegevWithDiscreteGaussianRegularity::new_from_n(1);
     }
 
-    /// Checks whether `secure128` outputs a new instance with correct and secure parameters.
+    /// Checks whether `secure128` outputs a new instance with correct and secure
+    /// parameters.
     #[test]
     fn secure128_validity() {
         let dr = DualRegevWithDiscreteGaussianRegularity::secure128();
@@ -626,7 +627,7 @@ mod test_dual_regev {
         for msg in messages {
             let msg_mod = Z::from(msg.rem_euclid(2));
 
-            let cipher = dr.enc(&pk, &msg);
+            let cipher = dr.enc(&pk, msg);
             let m = dr.dec(&sk, &cipher);
 
             assert_eq!(msg_mod, m);

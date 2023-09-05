@@ -12,12 +12,12 @@
 
 use super::IBE;
 use crate::{
-    construction::pk_encryption::{DualRegev, PKEncryption},
-    primitive::hash::hash_to_mat_zq_sha256,
-    sample::{
-        distribution::psf::{gpv::PSFGPV, PSF},
-        g_trapdoor::gadget_parameters::GadgetParameters,
+    construction::{
+        hash::sha256::hash_to_mat_zq_sha256,
+        pk_encryption::{DualRegev, PKEncryption},
     },
+    primitive::psf::{gpv::PSFGPV, PSF},
+    sample::g_trapdoor::gadget_parameters::GadgetParameters,
 };
 use qfall_math::{
     error::MathError,
@@ -96,10 +96,7 @@ impl DualRegevIBE {
         let n_log_q = &n * &log_q;
         let m = &gadget.m_bar + n_log_q;
 
-        let psf = PSFGPV {
-            gp: gadget,
-            s: r.clone(),
-        };
+        let psf = PSFGPV { gp: gadget, s: r };
         Self {
             psf,
             dual_regev: DualRegev::new(n, m, q, alpha),
@@ -153,10 +150,7 @@ impl DualRegevIBE {
         let r: Q = m.sqrt();
         let alpha = 1 / (&r * 2 * (&m + Z::ONE).sqrt() * (n).log(2).unwrap());
 
-        let psf = PSFGPV {
-            gp: gadget,
-            s: r.clone(),
-        };
+        let psf = PSFGPV { gp: gadget, s: r };
         Self {
             psf,
             dual_regev: DualRegev::new(n, m, q, alpha),

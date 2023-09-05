@@ -179,7 +179,7 @@ impl RingLPR {
 
         // Found out by experience as the bound is not tight enough to ensure correctness for large n.
         // Hence, a small factor roughly of max(log n - 4, 1) has to be applied.
-        // Checked for 100 parameter sets with 10 cyles each and no mismatching decryptions occurred.
+        // Checked for 100 parameter sets with 10 cycles each and no mismatching decryptions occurred.
         let factor = match n_i64 {
             1..=20 => 1,
             21..=40 => 2,
@@ -207,7 +207,7 @@ impl RingLPR {
     ///
     /// **WARNING**: This bound is not tight. Hence, we added a small factor
     /// loosely corresponding to max(log n - 4, 1) below to ensure correctness
-    /// with overwhelming proability.
+    /// with overwhelming probability.
     ///
     /// Returns an empty result if the public parameters guarantee correctness
     /// with overwhelming probability or a [`MathError`] if the instance would
@@ -252,7 +252,7 @@ impl RingLPR {
 
         // Found out by experience as the bound is not tight enough to ensure correctness for large n.
         // Hence, a small factor roughly of max(log n - 4, 1) has to be applied.
-        // Checked for 100 parameter sets with 10 cyles each and no mismatching decryptions occurred.
+        // Checked for 100 parameter sets with 10 cycles each and no mismatching decryptions occurred.
         let factor = match n_i64 {
             1..=20 => 1,
             21..=40 => 2,
@@ -409,7 +409,7 @@ impl PKEncryption for RingLPR {
     ///
     /// Parameters:
     /// - `pk`: specifies the public key `pk = (a, b)`
-    /// - `message`: specifies the message that should be encryted
+    /// - `message`: specifies the message that should be encrypted
     ///
     /// Returns a cipher `c = (u, v)` of types [`PolynomialRingZq`].
     ///
@@ -557,7 +557,8 @@ mod test_pp_generation {
         }
     }
 
-    /// Ensure that `n` chosen as a non-power of two does not result in a provably correct scheme.
+    /// Ensure that `n` chosen as a non-power of two does not result in a provably
+    /// correct scheme.
     #[test]
     fn non_power_of_2_n() {
         let scheme = RingLPR::new(7, 17, 0.01);
@@ -587,7 +588,8 @@ mod test_pp_generation {
         RingLPR::new_from_n(9);
     }
 
-    /// Checks whether `secure128` outputs a new instance with correct and secure parameters.
+    /// Checks whether `secure128` outputs a new instance with correct and secure
+    /// parameters.
     #[test]
     fn secure128_validity() {
         let scheme = RingLPR::secure128();

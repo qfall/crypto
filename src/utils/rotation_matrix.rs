@@ -8,7 +8,7 @@
 
 //! This module includes a specialized implementation called rotation matrices,
 //! which find application in ring-based implementations for the special rings of the form
-//! `\Z[X]/(X^n + 1)`.
+//! `Z[X]/(X^n + 1)`.
 
 use qfall_math::{
     integer::MatZ,
@@ -68,7 +68,7 @@ pub fn rot_minus(vec: &MatZ) -> MatZ {
 
 /// Takes in a matrix, splits the matrix into separate columns and concatenates the
 /// rotation matrices as:
-/// `[rot^-(a_1)|rot^-(a_2)||...||rot^-(a_m)]`
+/// `[rot^-(a_1) | rot^-(a_2) | ... | rot^-(a_m)]`
 ///
 /// It takes in both a column vector or a row vector, but the format of the matrix
 /// remains as described above.

@@ -523,7 +523,8 @@ mod test_pp_generation {
         DualRegev::new_from_n(9);
     }
 
-    /// Checks whether `secure128` outputs a new instance with correct and secure parameters.
+    /// Checks whether `secure128` outputs a new instance with correct and secure
+    /// parameters.
     #[test]
     fn secure128_validity() {
         let dr = DualRegev::secure128();
@@ -601,7 +602,7 @@ mod test_dual_regev {
         for msg in messages {
             let msg_mod = Z::from(msg.rem_euclid(2));
 
-            let cipher = dr.enc(&pk, &msg);
+            let cipher = dr.enc(&pk, msg);
             let m = dr.dec(&sk, &cipher);
 
             assert_eq!(msg_mod, m);
