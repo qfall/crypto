@@ -77,9 +77,9 @@ where
         (pk.clone(), (pk, sk))
     }
 
-    /// Generates an encryption of `message mod 2` for the provided public key by following these steps:
+    /// Generates an encryption of `message` for the provided public key by following these steps:
     /// - (vrfy_key, sign_key) = signature.gen()
-    /// - c = ibe.enc(mpk, vrfy_key, message), i.e. encrypt `message mod 2` with respect to identity `vrfy_key`
+    /// - c = ibe.enc(mpk, vrfy_key, message), i.e. encrypt `message` with respect to identity `vrfy_key`
     /// - sigma = signature.sign(c, sign_key, vrfy_key), i.e. sign message `c`
     ///
     /// Then, the ciphertext `(vrfy_key, c, sigma)` is returned.
@@ -99,8 +99,6 @@ where
     /// let cipher = scheme.enc(&pk, 1);
     /// ```
     fn enc(&mut self, pk: &Self::PublicKey, message: impl Into<Z>) -> Self::Cipher {
-        let message = message.into().modulo(2);
-
         let (vrfy_key, sign_key) = self.signature.gen();
 
         let c = self.ibe.enc(pk, &vrfy_key.clone().into(), message);
@@ -141,9 +139,6 @@ where
             return Z::MINUS_ONE;
         }
 
-        // as this secret key is never computed or seen by anybody else than the owner of the master secret key,
-        // it does not hurt the security premises of the scheme to ignore the storage of the IBE's key extraction,
-        // which is required in order to not make `self` mutable accross all public key encryption schemes
         let secret = self.ibe.extract(&sk.0, &sk.1, &cipher.0.clone().into());
         self.ibe.dec(&secret, &cipher.1)
     }

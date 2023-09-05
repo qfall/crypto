@@ -44,7 +44,7 @@ impl CCSfromIBE<DualRegevIBE, Pfdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, Has
     ///
     /// # Panics ...
     /// - if `modulus <= 1`.
-    /// - if `n < 1`.
+    /// - if `n < 1` or `n` does not fit into an [`i64`].
     pub fn init_dr_pfdh(
         n: impl Into<Z>, // security parameter
         modulus: impl Into<Modulus>,
@@ -82,7 +82,7 @@ impl CCSfromIBE<DualRegevIBE, Pfdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, Has
     /// ```
     ///
     /// # Panics ...
-    /// - if `n < 4`.
+    /// - if `n < 4` or `n` does not fit into an [`i64`].
     pub fn init_dr_pfdh_from_n(n: impl Into<Z>) -> Self {
         let n = n.into();
         assert!(
