@@ -14,7 +14,7 @@
 //! see [`Fdh::init_gpv`] that works with every PSF and a corresponding hash function
 
 use super::SignatureScheme;
-use crate::primitive::{hash::HashInto, psf::PSF};
+use crate::{construction::hash::HashInto, primitive::psf::PSF};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, marker::PhantomData};
 

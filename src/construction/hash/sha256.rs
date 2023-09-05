@@ -8,6 +8,7 @@
 
 //! This module contains hashes into different domains.
 
+use super::HashInto;
 use qfall_math::utils::index::evaluate_indices;
 use qfall_math::{
     integer::{MatPolyOverZ, Z},
@@ -27,7 +28,7 @@ use std::fmt::Display;
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::primitive::hash::sha256;
+/// use qfall_crypto::construction::hash::sha256::sha256;
 ///
 /// let string = "Hello World!";
 /// let hash = sha256(string);
@@ -50,7 +51,7 @@ pub fn sha256(string: &str) -> String {
 ///
 ///  # Examples
 /// ```
-/// use qfall_crypto::primitive::hash::hash_to_zq_sha256;
+/// use qfall_crypto::construction::hash::sha256::hash_to_zq_sha256;
 /// use qfall_math::integer_mod_q::Zq;
 ///
 /// let string = "Hello World!";
@@ -93,7 +94,7 @@ pub fn hash_to_zq_sha256(string: &str, modulus: impl Into<Modulus>) -> Zq {
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::primitive::hash::hash_to_mat_zq_sha256;
+/// use qfall_crypto::construction::hash::sha256::hash_to_mat_zq_sha256;
 /// use qfall_math::integer_mod_q::MatZq;
 /// use std::str::FromStr;
 ///
@@ -133,7 +134,7 @@ pub fn hash_to_mat_zq_sha256(
 
 #[cfg(test)]
 mod tests_sha {
-    use crate::primitive::hash::{hash_to_mat_zq_sha256, hash_to_zq_sha256, sha256, Z};
+    use super::{hash_to_mat_zq_sha256, hash_to_zq_sha256, sha256, Z};
     use qfall_math::{
         integer_mod_q::{MatZq, Zq},
         traits::{Distance, Pow},
@@ -228,8 +229,7 @@ mod tests_sha {
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::primitive::hash::{HashMatZq, HashInto};
-/// use qfall_crypto::primitive::hash::hash_to_mat_zq_sha256;
+/// use qfall_crypto::construction::hash::{HashInto, sha256::{HashMatZq, hash_to_mat_zq_sha256}};
 /// use qfall_math::integer_mod_q::{Modulus, MatZq};
 /// use std::str::FromStr;
 ///
@@ -248,9 +248,7 @@ pub struct HashMatZq {
     pub rows: i64,
     pub cols: i64,
 }
-pub trait HashInto<Domain> {
-    fn hash(&self, m: &str) -> Domain;
-}
+
 impl HashInto<MatZq> for HashMatZq {
     /// Hashes a given String literal into a [`MatZq`].
     /// The dimensions and the modulus is fixed by the hash object.
@@ -262,8 +260,7 @@ impl HashInto<MatZq> for HashMatZq {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::primitive::hash::{HashMatZq, HashInto};
-    /// use qfall_crypto::primitive::hash::hash_to_mat_zq_sha256;
+    /// use qfall_crypto::construction::hash::{HashInto, sha256::{HashMatZq, hash_to_mat_zq_sha256}};
     /// use qfall_math::integer_mod_q::{Modulus, MatZq};
     /// use std::str::FromStr;
     ///
@@ -293,7 +290,7 @@ impl HashInto<MatZq> for HashMatZq {
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::primitive::hash::{HashMatPolynomialRingZq, HashInto};
+/// use qfall_crypto::construction::hash::{HashInto, sha256::HashMatPolynomialRingZq};
 /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
 ///
 /// let gp = GadgetParametersRing::init_default(10, 99);
@@ -322,7 +319,7 @@ impl HashInto<MatPolynomialRingZq> for HashMatPolynomialRingZq {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::primitive::hash::{HashMatPolynomialRingZq, HashInto};
+    /// use qfall_crypto::construction::hash::{HashInto, sha256::{HashMatPolynomialRingZq}};
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
     ///
     /// let gp = GadgetParametersRing::init_default(10, 99);

@@ -11,7 +11,7 @@
 
 use super::Pfdh;
 use crate::{
-    primitive::{hash::HashMatZq, psf::gpv::PSFGPV},
+    construction::hash::sha256::HashMatZq, primitive::psf::gpv::PSFGPV,
     sample::g_trapdoor::gadget_parameters::GadgetParameters,
 };
 use qfall_math::{

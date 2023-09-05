@@ -11,7 +11,7 @@
 
 use super::Fdh;
 use crate::{
-    primitive::{hash::HashMatZq, psf::gpv::PSFGPV},
+    construction::hash::sha256::HashMatZq, primitive::psf::gpv::PSFGPV,
     sample::g_trapdoor::gadget_parameters::GadgetParameters,
 };
 use qfall_math::{
@@ -76,8 +76,8 @@ impl Fdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
 
 #[cfg(test)]
 mod text_fdh {
-    use super::{Fdh, PSFGPV};
-    use crate::{construction::signature::SignatureScheme, primitive::hash::HashMatZq};
+    use super::{Fdh, HashMatZq, PSFGPV};
+    use crate::construction::signature::SignatureScheme;
     use qfall_math::{
         integer::{MatZ, Z},
         integer_mod_q::MatZq,
