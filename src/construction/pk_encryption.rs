@@ -27,13 +27,19 @@
 //! Better key sizes (and attacks) for LWE-based encryption.
 //! In: Topics in Cryptology -  RSA Conference 2011, Springer.
 //! <https://eprint.iacr.org/2010/613.pdf>
+//! - \[5\] Canetti, R., Halevi, S., and Katz, J. (2004).
+//! Chosen-ciphertext security from identity-based encryption.
+//! In: Advances in Cryptology - EUROCRYPT 2004.
+//! <https://link.springer.com/content/pdf/10.1007/b97182.pdf>
 
+mod ccs_from_ibe;
 mod dual_regev;
 mod dual_regev_discrete_gauss;
 mod lpr;
 mod regev;
 mod regev_discrete_gauss;
 mod ring_lpr;
+pub use ccs_from_ibe::CCSfromIBE;
 pub use dual_regev::DualRegev;
 pub use dual_regev_discrete_gauss::DualRegevWithDiscreteGaussianRegularity;
 pub use lpr::LPR;

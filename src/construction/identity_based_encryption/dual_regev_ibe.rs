@@ -10,7 +10,7 @@
 //! identity based public key encryption scheme. The encryption scheme is based
 //! on [`DualRegevIBE`].
 
-use super::IBE;
+use super::IdentityBasedEncryption;
 use crate::{
     construction::{
         hash::sha256::hash_to_mat_zq_sha256,
@@ -275,7 +275,7 @@ impl Default for DualRegevIBE {
     }
 }
 
-impl IBE for DualRegevIBE {
+impl IdentityBasedEncryption for DualRegevIBE {
     type Cipher = MatZq;
     type MasterPublicKey = MatZq;
     type MasterSecretKey = (MatZ, MatQ);
@@ -427,7 +427,7 @@ impl IBE for DualRegevIBE {
 #[cfg(test)]
 mod test_dual_regev_ibe {
     use super::DualRegevIBE;
-    use crate::construction::identity_based_encryption::IBE;
+    use crate::construction::identity_based_encryption::IdentityBasedEncryption;
     use qfall_math::integer::Z;
 
     /// Checks whether `new` is available for types implementing [`Into<Z>`].

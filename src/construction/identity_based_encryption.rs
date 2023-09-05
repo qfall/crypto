@@ -25,7 +25,7 @@ pub use dual_regev_ibe::DualRegevIBE;
 
 use qfall_math::integer::Z;
 
-pub trait IBE {
+pub trait IdentityBasedEncryption {
     type MasterPublicKey;
     type MasterSecretKey;
     type SecretKey;
