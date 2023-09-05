@@ -9,9 +9,8 @@
 //! This module contains an implementation of the IND-CPA secure
 //! public key Ring-LPR encryption scheme.
 
-use crate::utils::common_moduli::new_anticyclic;
-
 use super::PKEncryption;
+use crate::utils::common_moduli::new_anticyclic;
 use qfall_math::{
     error::MathError,
     integer::{PolyOverZ, Z},
