@@ -6,10 +6,10 @@
 // the terms of the Mozilla Public License Version 2.0 as published by the
 // Mozilla Foundation. See <https://mozilla.org/en-US/MPL/2.0/>.
 
-//! A ring implementation of the [`Fdh`] scheme using the [`PSFGPVRing`]
+//! A ring implementation of the [`FDH`] scheme using the [`PSFGPVRing`]
 //! according to [\[1\]](<../index.html#:~:text=[1]>).
 
-use super::Fdh;
+use super::FDH;
 use crate::{
     construction::hash::sha256::HashMatPolynomialRingZq, primitive::psf::gpv_ring::PSFGPVRing,
     sample::g_trapdoor::gadget_parameters::GadgetParametersRing,
@@ -22,7 +22,7 @@ use qfall_math::{
 use std::{collections::HashMap, marker::PhantomData};
 
 impl
-    Fdh<
+    FDH<
         MatPolynomialRingZq,
         (MatPolyOverZ, MatPolyOverZ),
         MatPolyOverZ,
@@ -49,9 +49,9 @@ impl
     ///
     /// # Example
     /// ```
-    /// use qfall_crypto::construction::signature::{fdh::Fdh, SignatureScheme};
+    /// use qfall_crypto::construction::signature::{fdh::FDH, SignatureScheme};
     ///
-    /// let mut fdh = Fdh::init_gpv_ring(8, 512, 100);
+    /// let mut fdh = FDH::init_gpv_ring(8, 512, 100);
     /// let (pk, sk) = fdh.gen();
     ///
     /// let m = &format!("Hello World!");
@@ -89,7 +89,7 @@ impl
 
 #[cfg(test)]
 mod test_fdh {
-    use super::{Fdh, PSFGPVRing};
+    use super::{PSFGPVRing, FDH};
     use crate::{
         construction::hash::sha256::HashMatPolynomialRingZq,
         construction::signature::SignatureScheme,
@@ -105,7 +105,7 @@ mod test_fdh {
     /// Ensure that the generated signature is valid.
     #[test]
     fn ensure_valid_signature_is_generated() {
-        let mut fdh = Fdh::init_gpv_ring(N, MODULUS, &compute_s());
+        let mut fdh = FDH::init_gpv_ring(N, MODULUS, &compute_s());
         let (pk, sk) = fdh.gen();
 
         for i in 0..10 {
@@ -125,7 +125,7 @@ mod test_fdh {
     /// Ensure that an entry is actually added to the local storage.
     #[test]
     fn storage_filled() {
-        let mut fdh = Fdh::init_gpv_ring(N, MODULUS, &compute_s());
+        let mut fdh = FDH::init_gpv_ring(N, MODULUS, &compute_s());
 
         let m = "Hello World!";
         let (pk, sk) = fdh.gen();
@@ -139,7 +139,7 @@ mod test_fdh {
     /// Ensure that after deserialization the HashMap still contains all entries.
     #[test]
     fn reload_hashmap() {
-        let mut fdh = Fdh::init_gpv_ring(N, MODULUS, &compute_s());
+        let mut fdh = FDH::init_gpv_ring(N, MODULUS, &compute_s());
 
         // fill one entry in the HashMap
         let m = "Hello World!";
@@ -148,7 +148,7 @@ mod test_fdh {
 
         let fdh_string = serde_json::to_string(&fdh).expect("Unable to create a json object");
 
-        let fdh_2: Fdh<
+        let fdh_2: FDH<
             MatPolynomialRingZq,
             (MatPolyOverZ, MatPolyOverZ),
             MatPolyOverZ,

@@ -6,10 +6,10 @@
 // the terms of the Mozilla Public License Version 2.0 as published by the
 // Mozilla Foundation. See <https://mozilla.org/en-US/MPL/2.0/>.
 
-//! A classical implementation of the [`Pfdh`] scheme using the [`PSFGPV`]
+//! A classical implementation of the [`PFDH`] scheme using the [`PSFGPV`]
 //! according to [\[1\]](<../index.html#:~:text=[1]>).
 
-use super::Pfdh;
+use super::PFDH;
 use crate::{
     construction::hash::sha256::HashMatZq, primitive::psf::gpv::PSFGPV,
     sample::g_trapdoor::gadget_parameters::GadgetParameters,
@@ -21,7 +21,7 @@ use qfall_math::{
 };
 use std::marker::PhantomData;
 
-impl Pfdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
+impl PFDH<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
     /// Initializes an PFDH signature scheme from a [`PSFGPV`].
     ///
     /// This function corresponds to an implementation of an PFDH-signature
@@ -38,9 +38,9 @@ impl Pfdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
     ///
     /// # Example
     /// ```
-    /// use qfall_crypto::construction::signature::{pfdh::Pfdh, SignatureScheme};
+    /// use qfall_crypto::construction::signature::{pfdh::PFDH, SignatureScheme};
     ///
-    /// let mut pfdh = Pfdh::init_gpv(4, 113, 17, 128);
+    /// let mut pfdh = PFDH::init_gpv(4, 113, 17, 128);
     ///
     /// let m = "Hello World!";
     ///
@@ -83,8 +83,8 @@ impl Pfdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
 }
 
 #[cfg(test)]
-mod text_fdh {
-    use super::Pfdh;
+mod test_pfdh {
+    use super::PFDH;
     use crate::construction::signature::SignatureScheme;
     use qfall_math::{integer::Z, rational::Q, traits::Pow};
 
@@ -98,7 +98,7 @@ mod text_fdh {
         let s: Q = ((&n * &k).sqrt() + 1) * Q::from(2) * (Z::from(2) * &n * &k).log(2).unwrap();
         let modulus = Z::from(2).pow(&k).unwrap();
 
-        let mut pfdh = Pfdh::init_gpv(n, &modulus, &s, 128);
+        let mut pfdh = PFDH::init_gpv(n, &modulus, &s, 128);
         let (pk, sk) = pfdh.gen();
 
         for i in 0..10 {

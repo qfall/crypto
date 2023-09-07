@@ -6,10 +6,10 @@
 // the terms of the Mozilla Public License Version 2.0 as published by the
 // Mozilla Foundation. See <https://mozilla.org/en-US/MPL/2.0/>.
 
-//! This Module contains a general implementation of the [`Pfdh`] scheme.
+//! This Module contains a general implementation of the [`PFDH`] scheme.
 //!
-//! Implementation of a [`Pfdh`]-signature scheme are thereby fairly easy,
-//! see [`Pfdh::init_gpv`](crate::construction::signature::pfdh::gpv) that
+//! Implementation of a [`PFDH`]-signature scheme are thereby fairly easy,
+//! see [`PFDH::init_gpv`](crate::construction::signature::pfdh::gpv) that
 //! works with every PSF and a corresponding hash function.
 
 use super::SignatureScheme;
@@ -22,7 +22,7 @@ pub mod gpv;
 pub mod serialize;
 
 #[derive(Serialize)]
-pub struct Pfdh<
+pub struct PFDH<
     A,
     Trapdoor,
     Domain: Serialize + for<'a> Deserialize<'a>,
@@ -46,7 +46,7 @@ pub struct Pfdh<
 }
 
 impl<A, Trapdoor, Domain, Range, T, Hash> SignatureScheme
-    for Pfdh<A, Trapdoor, Domain, Range, T, Hash>
+    for PFDH<A, Trapdoor, Domain, Range, T, Hash>
 where
     Domain: Clone + Serialize + for<'a> Deserialize<'a>,
     Range: PartialEq<Range>,

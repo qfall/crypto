@@ -6,10 +6,10 @@
 // the terms of the Mozilla Public License Version 2.0 as published by the
 // Mozilla Foundation. See <https://mozilla.org/en-US/MPL/2.0/>.
 
-//! A classical implementation of the [`Fdh`] scheme using the [`PSFGPV`]
+//! A classical implementation of the [`FDH`] scheme using the [`PSFGPV`]
 //! according to [\[1\]](<../index.html#:~:text=[1]>).
 
-use super::Fdh;
+use super::FDH;
 use crate::{
     construction::hash::sha256::HashMatZq, primitive::psf::gpv::PSFGPV,
     sample::g_trapdoor::gadget_parameters::GadgetParameters,
@@ -21,7 +21,7 @@ use qfall_math::{
 };
 use std::{collections::HashMap, marker::PhantomData};
 
-impl Fdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
+impl FDH<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
     /// Initializes an FDH signature scheme from a [`PSFGPV`].
     ///
     /// This function corresponds to an implementation of an FDH-signature
@@ -37,11 +37,11 @@ impl Fdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
     ///
     /// # Example
     /// ```
-    /// use qfall_crypto::construction::signature::{fdh::Fdh, SignatureScheme};
+    /// use qfall_crypto::construction::signature::{fdh::FDH, SignatureScheme};
     ///
     /// let m = "Hello World!";
     ///
-    /// let mut fdh = Fdh::init_gpv(4, 113, 17);
+    /// let mut fdh = FDH::init_gpv(4, 113, 17);
     /// let (pk, sk) = fdh.gen();
     ///
     /// let sigma = fdh.sign(m.to_string(), &sk, &pk);
@@ -75,8 +75,8 @@ impl Fdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
 }
 
 #[cfg(test)]
-mod text_fdh {
-    use super::{Fdh, HashMatZq, PSFGPV};
+mod test_fdh {
+    use super::{HashMatZq, FDH, PSFGPV};
     use crate::construction::signature::SignatureScheme;
     use qfall_math::{
         integer::{MatZ, Z},
@@ -95,7 +95,7 @@ mod text_fdh {
         let s: Q = ((&n * &k).sqrt() + 1) * Q::from(2) * (Z::from(2) * &n * &k).log(2).unwrap();
         let modulus = Z::from(2).pow(&k).unwrap();
 
-        let mut fdh = Fdh::init_gpv(n, &modulus, &s);
+        let mut fdh = FDH::init_gpv(n, &modulus, &s);
         let (pk, sk) = fdh.gen();
 
         for i in 0..10 {
@@ -111,7 +111,7 @@ mod text_fdh {
     /// Ensure that an entry is actually added to the local storage.
     #[test]
     fn storage_filled() {
-        let mut fdh = Fdh::init_gpv(5, 1024, 10);
+        let mut fdh = FDH::init_gpv(5, 1024, 10);
 
         let m = "Hello World!";
         let (pk, sk) = fdh.gen();
@@ -123,7 +123,7 @@ mod text_fdh {
     /// Ensure that after deserialization the HashMap still contains all entries.
     #[test]
     fn reload_hashmap() {
-        let mut fdh = Fdh::init_gpv(5, 1024, 10);
+        let mut fdh = FDH::init_gpv(5, 1024, 10);
 
         // fill one entry in the HashMap
         let m = "Hello World!";
@@ -131,7 +131,7 @@ mod text_fdh {
         let _ = fdh.sign(m.to_owned(), &sk, &pk);
 
         let fdh_string = serde_json::to_string(&fdh).expect("Unable to create a json object");
-        let fdh_2: Fdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> =
+        let fdh_2: FDH<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> =
             serde_json::from_str(&fdh_string).unwrap();
 
         assert_eq!(fdh.storage, fdh_2.storage);

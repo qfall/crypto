@@ -6,9 +6,9 @@
 // the terms of the Mozilla Public License Version 2.0 as published by the
 // Mozilla Foundation. See <https://mozilla.org/en-US/MPL/2.0/>.
 
-//! Allows to Deserialize an arbitrary [`Pfdh`] instantiation
+//! Allows to Deserialize an arbitrary [`PFDH`] instantiation
 
-use super::Pfdh;
+use super::PFDH;
 use crate::{construction::hash::HashInto, primitive::psf::PSF};
 use serde::{
     de::{Error, MapAccess, Visitor},
@@ -17,7 +17,7 @@ use serde::{
 use std::{fmt, marker::PhantomData};
 
 impl<'de, A, Trapdoor, Domain, Range, T, Hash> Deserialize<'de>
-    for Pfdh<A, Trapdoor, Domain, Range, T, Hash>
+    for PFDH<A, Trapdoor, Domain, Range, T, Hash>
 where
     Domain: Serialize + for<'a> Deserialize<'a>,
     T: PSF<A, Trapdoor, Domain, Range> + Serialize + for<'a> Deserialize<'a>,
@@ -55,7 +55,7 @@ where
             T: PSF<A, Trapdoor, Domain, Range> + Serialize + for<'a> Deserialize<'a>,
             Hash: HashInto<Range> + Serialize + for<'a> Deserialize<'a>,
         {
-            type Value = Pfdh<A, Trapdoor, Domain, Range, T, Hash>;
+            type Value = PFDH<A, Trapdoor, Domain, Range, T, Hash>;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                 formatter.write_str("struct $type")
@@ -91,7 +91,7 @@ where
                     }
                 }
 
-                Ok(Pfdh {
+                Ok(PFDH {
                     psf: Box::new(psf.unwrap()),
                     hash: Box::new(hash.unwrap()),
                     randomness_length: randomness_length.unwrap(),
@@ -111,7 +111,7 @@ where
             t: PhantomData,
             hash: PhantomData,
         };
-        deserializer.deserialize_struct("Pfdh", FIELDS, struct_visitor)
+        deserializer.deserialize_struct("PFDH", FIELDS, struct_visitor)
     }
 }
 
@@ -120,7 +120,7 @@ mod test_deserialization {
     use crate::{
         construction::{
             hash::sha256::HashMatZq,
-            signature::{pfdh::Pfdh, SignatureScheme},
+            signature::{pfdh::PFDH, SignatureScheme},
         },
         primitive::psf::gpv::PSFGPV,
     };
@@ -130,14 +130,14 @@ mod test_deserialization {
     #[allow(clippy::type_complexity)]
     #[test]
     fn deserialize_gpv() {
-        let mut pfdh = Pfdh::init_gpv(2, 127, 20, 1233);
+        let mut pfdh = PFDH::init_gpv(2, 127, 20, 1233);
 
         let m = "Hello World!";
         let (pk, sk) = pfdh.gen();
         let signature = pfdh.sign(m.to_owned(), &sk, &pk);
 
         let pfdh_string = serde_json::to_string(&pfdh).expect("Unable to create a json object");
-        let pfdh_2: Result<Pfdh<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq>, _> =
+        let pfdh_2: Result<PFDH<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq>, _> =
             serde_json::from_str(&pfdh_string);
 
         assert!(pfdh_2.is_ok());
