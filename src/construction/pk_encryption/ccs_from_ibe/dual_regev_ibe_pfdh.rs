@@ -48,7 +48,7 @@ impl CCSfromIBE<DualRegevIBE, PFDH<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, Has
     pub fn init_dr_pfdh(
         n: impl Into<Z>, // security parameter
         modulus: impl Into<Modulus>,
-        randomness_length: impl Into<Z>, // added for to the message before signing
+        randomness_length: impl Into<Z>, // added to the message before signing
         r: impl Into<Q>,                 // gaussian parameter for PSF
         alpha: impl Into<Q>,             // gaussian parameter for Dual Regev Encryption
     ) -> Self {
