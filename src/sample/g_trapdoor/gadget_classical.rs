@@ -44,17 +44,22 @@ use std::fmt::Display;
 ///
 /// let (a,r) = gen_trapdoor(&params, &a_bar, &tag).unwrap();
 /// ```
+///
 /// # Errors and Failures
-/// - Returns a [`MathError`] of type [`InvalidMatrix`](MathError::InvalidMatrix)
-/// or of type [`OutOfBounds`](MathError::OutOfBounds), if `params.k`
-/// or `params.n` is either `0`,
-/// it is negative or it does not fit into an [`i64`].
+/// - Returns a [`MathError`] of type [`MismatchingMatrixDimension`](MathError::MismatchingMatrixDimension)
+/// if the matrices can not be concatenated due to mismatching dimensions.
+/// - Returns a [`MathError`] of type [`MismatchingModulus`](MathError::MismatchingModulus)
+/// if the matrices can not be concatenated due to mismatching moduli.
+///
+/// # Panics ...
+/// - if `params.k < 1` or it does not fit into an [`i64`].
+/// - if `params.n < 1`.
 pub fn gen_trapdoor(
     params: &GadgetParameters,
     a_bar: &MatZq,
     tag: &MatZq,
 ) -> Result<(MatZq, MatZ), MathError> {
-    let g = gen_gadget_mat(&params.n, &params.k, &params.base)?;
+    let g = gen_gadget_mat(&params.n, &params.k, &params.base);
     let r = params
         .distribution
         .sample(&params.m_bar, &(&params.n * &params.k));
@@ -80,18 +85,18 @@ pub fn gen_trapdoor(
 ///
 /// let g = gen_gadget_mat(4, 4, &Z::from(2));
 /// ```
-/// # Errors and Failures
-/// - Returns a [`MathError`] of type [`InvalidMatrix`](MathError::InvalidMatrix)
-/// or of type [`OutOfBounds`](MathError::OutOfBounds), if `k` or `n` is either `0`,
-/// it is negative or it does not fit into an [`i64`].
+///
+/// # Panics ...
+/// - if `k < 1` or it does not fit into an [`i64`].
+/// - if `n < 1`.
 pub fn gen_gadget_mat(
     n: impl TryInto<i64> + Display + Clone,
     k: impl TryInto<i64> + Display,
     base: &Z,
-) -> Result<MatZ, MathError> {
+) -> MatZ {
     let gadget_vec = gen_gadget_vec(k, base);
     let identity = MatZ::identity(n.clone(), n);
-    Ok(identity.tensor_product(&gadget_vec?.transpose()))
+    identity.tensor_product(&gadget_vec.transpose())
 }
 
 /// Generates a gadget vector based on its definition in [\[1\]](<../index.html#:~:text=[1]>).
@@ -111,16 +116,14 @@ pub fn gen_gadget_mat(
 /// let g = gen_gadget_vec(4, &Z::from(2));
 /// ```
 ///
-/// # Errors and Failures
-/// - Returns a [`MathError`] of type [`InvalidMatrix`](MathError::InvalidMatrix)
-/// or of type [`OutOfBounds`](MathError::OutOfBounds), if `k` is either `0`,
-/// it is negative or it does not fit into an [`i64`].
-pub fn gen_gadget_vec(k: impl TryInto<i64> + Display, base: &Z) -> Result<MatZ, MathError> {
+/// # Panics ...
+/// - if `k < 1` or it does not fit into an [`i64`].
+pub fn gen_gadget_vec(k: impl TryInto<i64> + Display, base: &Z) -> MatZ {
     let mut out = MatZ::new(k, 1);
     for i in 0..out.get_num_rows() {
-        out.set_entry(i, 0, &base.pow(i)?)?;
+        out.set_entry(i, 0, &base.pow(i).unwrap()).unwrap();
     }
-    Ok(out)
+    out
 }
 
 /// Computes an arbitrary solution for `g^t x = value mod q`.
@@ -150,7 +153,7 @@ pub fn gen_gadget_vec(k: impl TryInto<i64> + Display, base: &Z) -> Result<MatZ, 
 ///
 /// assert_eq!(
 ///     value.get_value(),
-///     (gen_gadget_vec(&k, &base).unwrap().transpose() * sol)
+///     (gen_gadget_vec(&k, &base).transpose() * sol)
 ///         .get_entry(0, 0)
 ///         .unwrap()
 /// )
@@ -202,7 +205,7 @@ pub fn find_solution_gadget_vec(value: &Zq, k: &Z, base: &Z) -> MatZ {
 ///
 /// assert_eq!(
 ///     MatZ::from(&value),
-///     gen_gadget_mat(3, &k, &base).unwrap() * sol
+///     gen_gadget_mat(3, &k, &base) * sol
 /// )
 /// ```
 ///
@@ -230,7 +233,7 @@ mod test_gen_gadget_vec {
     /// Assure that the gadget vector with base `2` and length `5` works correctly.
     #[test]
     fn correctness_base_2() {
-        let gadget_vec = gen_gadget_vec(5, &Z::from(2)).unwrap();
+        let gadget_vec = gen_gadget_vec(5, &Z::from(2));
 
         let vec = MatZ::from_str("[[1],[2],[4],[8],[16]]").unwrap();
         assert_eq!(vec, gadget_vec);
@@ -239,7 +242,7 @@ mod test_gen_gadget_vec {
     /// Assure that the gadget vector with base `5` and length `4` works correctly.
     #[test]
     fn correctness_base_5() {
-        let gadget_vec = gen_gadget_vec(4, &Z::from(5)).unwrap();
+        let gadget_vec = gen_gadget_vec(4, &Z::from(5));
 
         let vec = MatZ::from_str("[[1],[5],[25],[125]]").unwrap();
         assert_eq!(vec, gadget_vec);
@@ -256,7 +259,7 @@ mod test_gen_gadget_mat {
     /// `I_3` works correctly.
     #[test]
     fn correctness_base_2_3x3() {
-        let gadget_mat = gen_gadget_mat(3, 3, &Z::from(2)).unwrap();
+        let gadget_mat = gen_gadget_mat(3, 3, &Z::from(2));
 
         let mat_str = "[[1, 2, 4, 0, 0, 0, 0, 0, 0],\
                             [0, 0, 0, 1, 2, 4, 0, 0, 0],\
@@ -270,7 +273,7 @@ mod test_gen_gadget_mat {
     /// `I_2` works correctly.
     #[test]
     fn correctness_base_3_2x5() {
-        let gadget_mat = gen_gadget_mat(2, 5, &Z::from(3)).unwrap();
+        let gadget_mat = gen_gadget_mat(2, 5, &Z::from(3));
 
         let mat_str = "[[1, 3, 9, 27, 81, 0, 0, 0, 0, 0],\
                             [ 0, 0, 0, 0, 0, 1, 3, 9, 27, 81]]";
@@ -312,7 +315,7 @@ mod test_gen_trapdoor {
             .unwrap();
 
         // ensure G = A*trapdoor (definition of a trapdoor)
-        let gadget_mat = gen_gadget_mat(&params.n, &params.k, &Z::from(2)).unwrap();
+        let gadget_mat = gen_gadget_mat(&params.n, &params.k, &Z::from(2));
         assert_eq!(
             MatZq::from((&gadget_mat, &params.q)),
             a * MatZq::from((&trapdoor, &params.q))
@@ -341,7 +344,7 @@ mod test_gen_trapdoor {
             .unwrap();
 
         // ensure tag*G = A*trapdoor (definition of a trapdoor)
-        let gadget_mat = gen_gadget_mat(&params.n, &params.k, &Z::from(2)).unwrap();
+        let gadget_mat = gen_gadget_mat(&params.n, &params.k, &Z::from(2));
         assert_eq!(
             tag * MatZq::from((&gadget_mat, &modulus)),
             a * MatZq::from((&trapdoor, &modulus))
@@ -391,7 +394,7 @@ mod test_find_solution_gadget {
 
             assert_eq!(
                 value.get_value(),
-                (gen_gadget_vec(&k, &base).unwrap().transpose() * sol)
+                (gen_gadget_vec(&k, &base).transpose() * sol)
                     .get_entry(0, 0)
                     .unwrap()
             )
@@ -408,11 +411,8 @@ mod test_find_solution_gadget {
         let sol = find_solution_gadget_mat(&value, &k, &base);
 
         println!("{sol}");
-        println!("{}", gen_gadget_mat(3, &k, &base).unwrap());
+        println!("{}", gen_gadget_mat(3, &k, &base));
 
-        assert_eq!(
-            MatZ::from(&value),
-            gen_gadget_mat(3, &k, &base).unwrap() * sol
-        )
+        assert_eq!(MatZ::from(&value), gen_gadget_mat(3, &k, &base) * sol)
     }
 }

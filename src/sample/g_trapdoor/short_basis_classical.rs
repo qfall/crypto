@@ -477,7 +477,7 @@ mod test_compute_w {
         .unwrap();
 
         let w = compute_w(&params, &tag, &a);
-        let g = gen_gadget_mat(&params.n, &params.k, &params.base).unwrap();
+        let g = gen_gadget_mat(&params.n, &params.k, &params.base);
 
         let gw = MatZq::from((&(g * w), &params.q));
         let rhs = &a * MatZ::identity(a.get_num_columns(), &params.m_bar);

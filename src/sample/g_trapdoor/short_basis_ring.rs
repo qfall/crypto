@@ -554,7 +554,7 @@ mod test_compute_w {
         let w = compute_w(&params, &a);
         let w = MatPolynomialRingZq::from((&w, &params.modulus));
 
-        let gadget = gen_gadget_ring(&params.k, &params.base).unwrap();
+        let gadget = gen_gadget_ring(&params.k, &params.base);
         let gadget = MatPolynomialRingZq::from((&gadget, &params.modulus));
 
         let gw = gadget.transpose() * w;

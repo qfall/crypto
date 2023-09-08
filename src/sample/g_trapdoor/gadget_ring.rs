@@ -46,11 +46,16 @@ use std::fmt::Display;
 ///
 /// let (a, r, e) = gen_trapdoor_ring_lwe(&params, &a_bar, 10).unwrap();
 /// ```
+///
 /// # Errors and Failures
-/// - Returns a [`MathError`] of type [`InvalidMatrix`](MathError::InvalidMatrix)
-/// or of type [`OutOfBounds`](MathError::OutOfBounds), if `params.k`
-/// or `params.n` is either `0`,
-/// it is negative or it does not fit into an [`i64`].
+/// - Returns a [`MathError`] of type [`MismatchingMatrixDimension`](MathError::MismatchingMatrixDimension)
+/// if the matrices can not be concatenated due to mismatching dimensions.
+/// - Returns a [`MathError`] of type [`OutOfBounds`](MathError::OutOfBounds)
+/// if row or column are greater than the matrix size.
+///
+/// # Panics ...
+/// - if `params.k < 1` or it does not fit into an [`i64`].
+/// - if `params.n < 1`.
 pub fn gen_trapdoor_ring_lwe(
     params: &GadgetParametersRing,
     a_bar: &PolyOverZ,
@@ -66,7 +71,7 @@ pub fn gen_trapdoor_ring_lwe(
     let mut big_a = MatPolyOverZ::new(1, 2);
     big_a.set_entry(0, 0, &PolyOverZ::from(1))?;
     big_a.set_entry(0, 1, a_bar)?;
-    let g = gen_gadget_ring(&params.k, &params.base)?;
+    let g = gen_gadget_ring(&params.k, &params.base);
     big_a = big_a.concat_horizontal(&(g.transpose() - (a_bar * &r + &e)))?;
 
     Ok((MatPolynomialRingZq::from((&big_a, &params.modulus)), r, e))
@@ -90,20 +95,18 @@ pub fn gen_trapdoor_ring_lwe(
 /// let g = gen_gadget_ring(4, &Z::from(2));
 /// ```
 ///
-/// # Errors and Failures
-/// - Returns a [`MathError`] of type [`InvalidMatrix`](MathError::InvalidMatrix)
-/// or of type [`OutOfBounds`](MathError::OutOfBounds), if `k` is either `0`,
-/// it is negative or it does not fit into an [`i64`].
-pub fn gen_gadget_ring(
-    k: impl TryInto<i64> + Display,
-    base: &Z,
-) -> Result<MatPolyOverZ, MathError> {
+/// # Panics ...
+/// - if `k < 1` or it does not fit into an [`i64`].
+pub fn gen_gadget_ring(k: impl TryInto<i64> + Display, base: &Z) -> MatPolyOverZ {
     let mut out = MatPolyOverZ::new(k, 1);
     let mut i: i64 = 0;
-    while out.set_entry(i, 0, &PolyOverZ::from(base.pow(i)?)).is_ok() {
+    while out
+        .set_entry(i, 0, &PolyOverZ::from(base.pow(i).unwrap()))
+        .is_ok()
+    {
         i += 1;
     }
-    Ok(out)
+    out
 }
 
 /// Computes an arbitrary solution for `<g^t,x> = value/(Modulus)`.
@@ -127,7 +130,7 @@ pub fn gen_gadget_ring(
 ///
 /// let gp = GadgetParametersRing::init_default(10, 128);
 ///
-/// let gadget = gen_gadget_ring(&gp.k, &gp.base).unwrap();
+/// let gadget = gen_gadget_ring(&gp.k, &gp.base);
 /// let gadget = MatPolynomialRingZq::from((&gadget, &gp.modulus));
 ///
 /// let u = PolyOverZ::from_str("10  5 124 12 14 14 1 2 4 1 5").unwrap();
@@ -222,7 +225,7 @@ mod test_find_solution_gadget_ring {
     fn is_correct_solution() {
         let gp = GadgetParametersRing::init_default(3, 32);
 
-        let gadget = gen_gadget_ring(&gp.k, &gp.base).unwrap();
+        let gadget = gen_gadget_ring(&gp.k, &gp.base);
         let gadget = MatPolynomialRingZq::from((&gadget, &gp.modulus));
 
         let u = PolyOverZ::from_str("10  5 124 12 14 14 1 2 4 1 5").unwrap();
