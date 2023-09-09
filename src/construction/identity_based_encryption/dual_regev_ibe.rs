@@ -528,7 +528,7 @@ mod test_dual_regev_ibe {
     fn new_from_n() {
         for i in 1..=5 {
             let msg = Z::ONE;
-            let id = String::from(format!("Hello World!{i}"));
+            let id = format!("Hello World!{i}");
             let mut cryptosystem = DualRegevIBE::default();
 
             cryptosystem.check_security().unwrap();
@@ -549,7 +549,7 @@ mod test_dual_regev_ibe {
     /// checking whether the storage works properly
     #[test]
     fn extract_storage_same_identity_mk_pk() {
-        let id = String::from(format!("Hello World!"));
+        let id = "Hello World!".to_string();
         let mut cryptosystem = DualRegevIBE::default();
         let (pk, sk) = cryptosystem.setup();
 
@@ -563,7 +563,7 @@ mod test_dual_regev_ibe {
     /// may fail with small probability
     #[test]
     fn extract_storage_same_identity_different_mk_pk() {
-        let id = String::from(format!("Hello World!"));
+        let id = "Hello World!".to_string();
         let mut cryptosystem = DualRegevIBE::default();
         let (pk_1, sk_1) = cryptosystem.setup();
         let (pk_2, sk_2) = cryptosystem.setup();
