@@ -410,9 +410,9 @@ mod test_find_solution_gadget {
 
         let sol = find_solution_gadget_mat(&value, &k, &base);
 
-        println!("{sol}");
-        println!("{}", gen_gadget_mat(3, &k, &base));
-
-        assert_eq!(MatZ::from(&value), gen_gadget_mat(3, &k, &base) * sol)
+        assert_eq!(
+            MatZ::from(&value),
+            gen_gadget_mat(3, &k, &base).unwrap() * sol
+        )
     }
 }
