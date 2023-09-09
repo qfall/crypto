@@ -7,7 +7,7 @@
 // Mozilla Foundation. See <https://mozilla.org/en-US/MPL/2.0/>.
 
 //! Implements a GPV PSF over the polynomial ring according to
-//! [\[1\]](<../index.html#:~:text=[1]>) and [\[3\]](<../index.html#:~:text=[3]>)
+//! [\[1\]](<../index.html#:~:text=[1]>) and [\[2\]](<../index.html#:~:text=[2]>)
 //! using G-Trapdoors to generate a short basis and corresponding trapdoor.
 
 use super::PSF;
@@ -27,7 +27,7 @@ use qfall_math::{
 use serde::{Deserialize, Serialize};
 
 /// A lattice-based implementation of a [`PSF`] according to
-/// [\[1\]](<../index.html#:~:text=[1]>) and [\[3\]](<../index.html#:~:text=[3]>)
+/// [\[1\]](<index.html#:~:text=[1]>) and [\[2\]](<index.html#:~:text=[2]>)
 /// using G-Trapdoors where D_n = {e ∈ R^m | |ι(e)| <= s sqrt(m*n) }
 /// and R_n = R_q.
 ///

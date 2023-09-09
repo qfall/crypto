@@ -40,7 +40,7 @@ pub mod serialize;
 /// - `hash`: The hash-function which has to map a string into the correct domain
 ///
 /// # Example
-/// ## Signature Scheme from [`PSFGPV`](crate::primitive::psf::gpv::PSFGPV)
+/// ## Signature Scheme from [`PSFGPV`](crate::primitive::psf::PSFGPV)
 /// ```
 /// use qfall_crypto::construction::signature::{FDH, SignatureScheme};
 ///

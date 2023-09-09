@@ -7,15 +7,30 @@
 // Mozilla Foundation. See <https://mozilla.org/en-US/MPL/2.0/>.
 
 //! Contains the [`PSF`] trait, which is then subsequently implemented by
-//! explicit constructions such as [`PSFGPV`](gpv::PSFGPV).
+//! explicit constructions such as [`PSFGPV`].
+//!
+//! The main references are listed in the following
+//! and will be further referenced in submodules by these numbers:
+//! - \[1\] Micciancio, D., Peikert, C. (2012).
+//! Trapdoors for Lattices: Simpler, Tighter, Faster, Smaller.
+//! In: Pointcheval, D., Johansson, T. (eds) Advances in Cryptology – EUROCRYPT 2012.
+//! EUROCRYPT 2012. Lecture Notes in Computer Science, vol 7237.
+//! Springer, Berlin, Heidelberg. <https://doi.org/10.1007/978-3-642-29011-4_41>
+//! - \[2\] Gür, K.D., Polyakov, Y., Rohloff, K., Ryan, G.W. and Savas, E., 2018,
+//! January. Implementation and evaluation of improved gaussian sampling for lattice
+//!  trapdoors. In Proceedings of the 6th Workshop on Encrypted Computing & Applied
+//! Homomorphic Cryptography (pp. 61-71). <https://dl.acm.org/doi/pdf/10.1145/3267973.3267975>
 
-pub mod gpv;
-pub mod gpv_ring;
+mod gpv;
+mod gpv_ring;
+
+pub use gpv::PSFGPV;
+pub use gpv_ring::PSFGPVRing;
 
 /// This trait should be implemented by all constructions that are
 /// actual implementations of a [`PSF`].
 /// A formal definition for these PSFs can be found in
-/// [\[1\]](<../index.html#:~:text=[1]>)
+/// [\[1\]](<index.html#:~:text=[1]>)
 pub trait PSF<A, Trapdoor, Domain, Range> {
     /// Samples a parity-check matrix and a trapdoor for that matrix
     fn trap_gen(&self) -> (A, Trapdoor);

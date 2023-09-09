@@ -41,7 +41,7 @@ pub mod serialize;
 /// hashing.
 ///
 /// # Example
-/// ## Signature Scheme from [`PSFGPV`](crate::primitive::psf::gpv::PSFGPV)
+/// ## Signature Scheme from [`PSFGPV`](crate::primitive::psf::PSFGPV)
 /// ```
 /// use qfall_crypto::construction::signature::{PFDH, SignatureScheme};
 ///

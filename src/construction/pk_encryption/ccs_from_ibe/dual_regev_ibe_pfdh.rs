@@ -14,7 +14,7 @@ use crate::{
     construction::{
         hash::sha256::HashMatZq, identity_based_encryption::DualRegevIBE, signature::PFDH,
     },
-    primitive::psf::gpv::PSFGPV,
+    primitive::psf::PSFGPV,
 };
 use qfall_math::{
     integer::{MatZ, Z},

@@ -120,7 +120,7 @@ mod test_deserialization {
             hash::sha256::HashMatZq,
             signature::{SignatureScheme, FDH},
         },
-        primitive::psf::gpv::PSFGPV,
+        primitive::psf::PSFGPV,
     };
     use qfall_math::{integer::MatZ, integer_mod_q::MatZq, rational::MatQ};
 

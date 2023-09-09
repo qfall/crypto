@@ -11,7 +11,7 @@
 
 use super::FDH;
 use crate::{
-    construction::hash::sha256::HashMatPolynomialRingZq, primitive::psf::gpv_ring::PSFGPVRing,
+    construction::hash::sha256::HashMatPolynomialRingZq, primitive::psf::PSFGPVRing,
     sample::g_trapdoor::gadget_parameters::GadgetParametersRing,
 };
 use qfall_math::{

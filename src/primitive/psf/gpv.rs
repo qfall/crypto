@@ -23,7 +23,7 @@ use qfall_math::{
 use serde::{Deserialize, Serialize};
 
 /// A lattice-based implementation of a [`PSF`] according to
-/// [\[1\]](<../index.html#:~:text=[1]>) using
+/// [\[1\]](<index.html#:~:text=[1]>) using
 /// G-Trapdoors where D_n = {e ∈ Z^m | |e| <= s sqrt(m)}
 /// and R_n = Z_q^n.
 ///
