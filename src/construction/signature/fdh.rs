@@ -23,7 +23,7 @@ pub mod gpv_ring;
 pub mod serialize;
 
 /// This struct captures the general definition of a hash-then-sign signature scheme
-/// that uses a hash function as in [\[1\]](<../index.html#:~:text=[1]>) and a PSF.
+/// that uses a hash function as in [\[1\]](<index.html#:~:text=[1]>) and a PSF.
 /// An explicit instantiation for defined types makes understanding this struct much
 /// easier, compare [`FDH::init_gpv`].
 /// This signature scheme uses a storage, so it is stateful.
