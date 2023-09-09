@@ -37,7 +37,7 @@ impl FDH<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
     ///
     /// # Example
     /// ```
-    /// use qfall_crypto::construction::signature::{fdh::FDH, SignatureScheme};
+    /// use qfall_crypto::construction::signature::{FDH, SignatureScheme};
     ///
     /// let m = "Hello World!";
     ///

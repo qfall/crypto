@@ -38,7 +38,7 @@ impl PFDH<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
     ///
     /// # Example
     /// ```
-    /// use qfall_crypto::construction::signature::{pfdh::PFDH, SignatureScheme};
+    /// use qfall_crypto::construction::signature::{PFDH, SignatureScheme};
     ///
     /// let mut pfdh = PFDH::init_gpv(4, 113, 17, 128);
     ///

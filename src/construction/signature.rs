@@ -14,8 +14,11 @@
 //! Proceedings of the fortieth annual ACM symposium on Theory of computing. 2008.
 //! <https://doi.org/10.1145/1374376.1374407>
 
-pub mod fdh;
-pub mod pfdh;
+mod fdh;
+mod pfdh;
+
+pub use fdh::FDH;
+pub use pfdh::PFDH;
 
 /// This trait captures the essential functionalities each signature scheme has to support.
 /// These include

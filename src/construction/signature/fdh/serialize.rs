@@ -118,7 +118,7 @@ mod test_deserialization {
     use crate::{
         construction::{
             hash::sha256::HashMatZq,
-            signature::{fdh::FDH, SignatureScheme},
+            signature::{SignatureScheme, FDH},
         },
         primitive::psf::gpv::PSFGPV,
     };

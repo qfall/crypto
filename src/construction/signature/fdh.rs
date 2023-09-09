@@ -26,6 +26,7 @@ pub mod serialize;
 /// that uses a hash function as in [\[1\]](<../index.html#:~:text=[1]>) and a PSF.
 /// An explicit instantiation for defined types makes understanding this struct much
 /// easier, compare [`FDH::init_gpv`].
+/// This signature scheme uses a storage, so it is stateful.
 ///
 /// Implementing a function for a specific set of types(replacing the generic types)
 /// allows for easy implementation of the signature scheme. Any PSF and a corresponding
@@ -41,7 +42,7 @@ pub mod serialize;
 /// # Example
 /// ## Signature Scheme from [`PSFGPV`](crate::primitive::psf::gpv::PSFGPV)
 /// ```
-/// use qfall_crypto::construction::signature::{fdh::FDH, SignatureScheme};
+/// use qfall_crypto::construction::signature::{FDH, SignatureScheme};
 ///
 /// let mut fdh = FDH::init_gpv(4, 113, 17);
 ///
