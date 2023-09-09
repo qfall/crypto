@@ -1,4 +1,4 @@
-// Copyright © 2023 Niklas Siemer
+// Copyright © 2023 Niklas Siemer, Marvin Beckmann
 //
 // This file is part of qFALL-crypto.
 //
@@ -8,6 +8,13 @@
 
 //! This module contains fundamental cryptographic constructions, on which other
 //! constructions can be build on.
+//! Among others these include encryption schemes and signature schemes.
+//! A construction is build the same way:
+//!
+//! 1. A trait that combines the common feature, e.g.
+//! [`public key encryption`](pk_encryption::PKEncryption).
+//! 2. Explicit implementations of the trait, e.g.
+//! [`RingLPR`](pk_encryption::RingLPR).
 
 pub mod hash;
 pub mod identity_based_encryption;
