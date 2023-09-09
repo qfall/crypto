@@ -38,7 +38,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::primitive::psf::gpv_ring::PSFGPVRing;
+/// use qfall_crypto::primitive::psf::PSFGPVRing;
 /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
 /// use qfall_math::rational::Q;
 /// use qfall_crypto::primitive::psf::PSF;
@@ -71,7 +71,7 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::primitive::psf::gpv_ring::PSFGPVRing;
+    /// use qfall_crypto::primitive::psf::PSFGPVRing;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
     /// use qfall_math::rational::Q;
     /// use qfall_crypto::primitive::psf::PSF;
@@ -95,7 +95,7 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::primitive::psf::gpv_ring::PSFGPVRing;
+    /// use qfall_crypto::primitive::psf::PSFGPVRing;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
     /// use qfall_math::rational::Q;
     /// use qfall_crypto::primitive::psf::PSF;
@@ -133,7 +133,7 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::primitive::psf::gpv_ring::PSFGPVRing;
+    /// use qfall_crypto::primitive::psf::PSFGPVRing;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
     /// use qfall_math::rational::Q;
     /// use qfall_crypto::primitive::psf::PSF;
@@ -214,7 +214,7 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::primitive::psf::gpv_ring::PSFGPVRing;
+    /// use qfall_crypto::primitive::psf::PSFGPVRing;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
     /// use qfall_math::rational::Q;
     /// use qfall_crypto::primitive::psf::PSF;
@@ -247,7 +247,7 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::primitive::psf::gpv_ring::PSFGPVRing;
+    /// use qfall_crypto::primitive::psf::PSFGPVRing;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParametersRing;
     /// use qfall_math::rational::Q;
     /// use qfall_crypto::primitive::psf::PSF;
