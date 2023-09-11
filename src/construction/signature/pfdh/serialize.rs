@@ -120,9 +120,9 @@ mod test_deserialization {
     use crate::{
         construction::{
             hash::sha256::HashMatZq,
-            signature::{pfdh::PFDH, SignatureScheme},
+            signature::{SignatureScheme, PFDH},
         },
-        primitive::psf::gpv::PSFGPV,
+        primitive::psf::PSFGPV,
     };
     use qfall_math::{integer::MatZ, integer_mod_q::MatZq, rational::MatQ};
 

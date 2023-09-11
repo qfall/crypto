@@ -11,7 +11,7 @@
 
 use super::PFDH;
 use crate::{
-    construction::hash::sha256::HashMatZq, primitive::psf::gpv::PSFGPV,
+    construction::hash::sha256::HashMatZq, primitive::psf::PSFGPV,
     sample::g_trapdoor::gadget_parameters::GadgetParameters,
 };
 use qfall_math::{
@@ -38,7 +38,7 @@ impl PFDH<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
     ///
     /// # Example
     /// ```
-    /// use qfall_crypto::construction::signature::{pfdh::PFDH, SignatureScheme};
+    /// use qfall_crypto::construction::signature::{PFDH, SignatureScheme};
     ///
     /// let mut pfdh = PFDH::init_gpv(4, 113, 17, 128);
     ///

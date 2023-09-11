@@ -21,6 +21,39 @@ use std::marker::PhantomData;
 pub mod gpv;
 pub mod serialize;
 
+/// This struct captures the general definition of a hash-then-sign signature scheme
+/// that uses a hash function as in [\[1\]](<index.html#:~:text=[1]>) and a PSF.
+/// An explicit instantiation for defined types makes understanding this struct much
+/// easier, compare [`PFDH::init_gpv`].
+/// This signature scheme also includes randomness into the hashed strings rather than
+/// using a storage, so it is stateless.
+///
+/// Implementing a function for a specific set of types(replacing the generic types)
+/// allows for easy implementation of the signature scheme. Any PSF and a corresponding
+/// hash-function can be directly translated to an implementation of this signature
+/// scheme.
+///
+/// Attributes
+/// - `psf`: The PSF which has to implement the [`PSF`] trait and must also be
+/// (de-)serializable.
+/// - `hash`: The hash-function which has to map a string into the correct domain.
+/// - `randomness_length`: The length of the salt that is added to the string before
+/// hashing.
+///
+/// # Example
+/// ## Signature Scheme from [`PSFGPV`](crate::primitive::psf::PSFGPV)
+/// ```
+/// use qfall_crypto::construction::signature::{PFDH, SignatureScheme};
+///
+/// let mut pfdh = PFDH::init_gpv(4, 113, 17, 128);
+///
+/// let m = "Hello World!";
+///
+/// let (pk, sk) = pfdh.gen();
+/// let sigma = pfdh.sign(m.to_owned(), &sk, &pk);
+///
+/// assert!(pfdh.vfy(m.to_owned(), &sigma, &pk));
+/// ```
 #[derive(Serialize)]
 pub struct PFDH<
     A,

@@ -25,6 +25,9 @@ pub use dual_regev_ibe::DualRegevIBE;
 
 use qfall_math::integer::Z;
 
+/// This trait should be implemented by every identity-based encryption scheme.
+/// It offers a simple interface to use and implements the main functions supported by
+/// IBEs.
 pub trait IdentityBasedEncryption {
     type MasterPublicKey;
     type MasterSecretKey;

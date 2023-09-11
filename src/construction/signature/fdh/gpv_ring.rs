@@ -11,7 +11,7 @@
 
 use super::FDH;
 use crate::{
-    construction::hash::sha256::HashMatPolynomialRingZq, primitive::psf::gpv_ring::PSFGPVRing,
+    construction::hash::sha256::HashMatPolynomialRingZq, primitive::psf::PSFGPVRing,
     sample::g_trapdoor::gadget_parameters::GadgetParametersRing,
 };
 use qfall_math::{
@@ -49,7 +49,7 @@ impl
     ///
     /// # Example
     /// ```
-    /// use qfall_crypto::construction::signature::{fdh::FDH, SignatureScheme};
+    /// use qfall_crypto::construction::signature::{FDH, SignatureScheme};
     ///
     /// let mut fdh = FDH::init_gpv_ring(8, 512, 100);
     /// let (pk, sk) = fdh.gen();

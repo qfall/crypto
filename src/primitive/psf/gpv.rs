@@ -23,7 +23,7 @@ use qfall_math::{
 use serde::{Deserialize, Serialize};
 
 /// A lattice-based implementation of a [`PSF`] according to
-/// [\[1\]](<../index.html#:~:text=[1]>) using
+/// [\[1\]](<index.html#:~:text=[1]>) using
 /// G-Trapdoors where D_n = {e ∈ Z^m | |e| <= s sqrt(m)}
 /// and R_n = Z_q^n.
 ///
@@ -33,7 +33,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::primitive::psf::gpv::PSFGPV;
+/// use qfall_crypto::primitive::psf::PSFGPV;
 /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
 /// use qfall_math::rational::Q;
 /// use qfall_crypto::primitive::psf::PSF;
@@ -63,7 +63,7 @@ impl PSF<MatZq, (MatZ, MatQ), MatZ, MatZq> for PSFGPV {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::primitive::psf::gpv::PSFGPV;
+    /// use qfall_crypto::primitive::psf::PSFGPV;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     /// use qfall_math::rational::Q;
     /// use qfall_crypto::primitive::psf::PSF;
@@ -92,7 +92,7 @@ impl PSF<MatZq, (MatZ, MatQ), MatZ, MatZq> for PSFGPV {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::primitive::psf::gpv::PSFGPV;
+    /// use qfall_crypto::primitive::psf::PSFGPV;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     /// use qfall_math::rational::Q;
     /// use qfall_crypto::primitive::psf::PSF;
@@ -128,7 +128,7 @@ impl PSF<MatZq, (MatZ, MatQ), MatZ, MatZq> for PSFGPV {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::primitive::psf::gpv::PSFGPV;
+    /// use qfall_crypto::primitive::psf::PSFGPV;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     /// use qfall_math::rational::Q;
     /// use qfall_crypto::primitive::psf::PSF;
@@ -170,7 +170,7 @@ impl PSF<MatZq, (MatZ, MatQ), MatZ, MatZq> for PSFGPV {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::primitive::psf::gpv::PSFGPV;
+    /// use qfall_crypto::primitive::psf::PSFGPV;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     /// use qfall_math::rational::Q;
     /// use qfall_crypto::primitive::psf::PSF;
@@ -201,7 +201,7 @@ impl PSF<MatZq, (MatZ, MatQ), MatZ, MatZq> for PSFGPV {
     /// # Examples
     /// ```
     /// use qfall_crypto::primitive::psf::PSF;
-    /// use qfall_crypto::primitive::psf::gpv::PSFGPV;
+    /// use qfall_crypto::primitive::psf::PSFGPV;
     /// use qfall_crypto::sample::g_trapdoor::gadget_parameters::GadgetParameters;
     /// use qfall_math::rational::Q;
     ///

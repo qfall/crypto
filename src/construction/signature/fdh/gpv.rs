@@ -11,7 +11,7 @@
 
 use super::FDH;
 use crate::{
-    construction::hash::sha256::HashMatZq, primitive::psf::gpv::PSFGPV,
+    construction::hash::sha256::HashMatZq, primitive::psf::PSFGPV,
     sample::g_trapdoor::gadget_parameters::GadgetParameters,
 };
 use qfall_math::{
@@ -37,7 +37,7 @@ impl FDH<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
     ///
     /// # Example
     /// ```
-    /// use qfall_crypto::construction::signature::{fdh::FDH, SignatureScheme};
+    /// use qfall_crypto::construction::signature::{FDH, SignatureScheme};
     ///
     /// let m = "Hello World!";
     ///

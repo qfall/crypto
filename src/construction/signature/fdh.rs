@@ -23,9 +23,10 @@ pub mod gpv_ring;
 pub mod serialize;
 
 /// This struct captures the general definition of a hash-then-sign signature scheme
-/// that uses a hash function as in [\[1\]](<../index.html#:~:text=[1]>) and a PSF.
+/// that uses a hash function as in [\[1\]](<index.html#:~:text=[1]>) and a PSF.
 /// An explicit instantiation for defined types makes understanding this struct much
 /// easier, compare [`FDH::init_gpv`].
+/// This signature scheme uses a storage, so it is stateful.
 ///
 /// Implementing a function for a specific set of types(replacing the generic types)
 /// allows for easy implementation of the signature scheme. Any PSF and a corresponding
@@ -39,9 +40,9 @@ pub mod serialize;
 /// - `hash`: The hash-function which has to map a string into the correct domain
 ///
 /// # Example
-/// ## Signature Scheme from [`PSFGPV`](crate::primitive::psf::gpv::PSFGPV)
+/// ## Signature Scheme from [`PSFGPV`](crate::primitive::psf::PSFGPV)
 /// ```
-/// use qfall_crypto::construction::signature::{fdh::FDH, SignatureScheme};
+/// use qfall_crypto::construction::signature::{FDH, SignatureScheme};
 ///
 /// let mut fdh = FDH::init_gpv(4, 113, 17);
 ///

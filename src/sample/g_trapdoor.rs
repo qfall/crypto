@@ -6,6 +6,11 @@
 // the terms of the Mozilla Public License Version 2.0 as published by the
 // Mozilla Foundation. See <https://mozilla.org/en-US/MPL/2.0/>.
 
+//! A G-Trapdoor is a form of a trapdoor for lattices
+//! that allows for very efficient sampling.
+//! This module contains implementations for G-Trapdoors in the classical and
+//! in the ring setting.
+//!
 //! The main references are listed in the following
 //! and will be further referenced in submodules by these numbers:
 //! - \[1\] Micciancio, D., Peikert, C. (2012).
