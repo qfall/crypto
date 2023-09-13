@@ -10,7 +10,8 @@
 //! instance of a public key encryption scheme. Furthermore, it contains
 //! cryptographic schemes implementing the `PKEncryption` trait.
 //!
-//! The main references are listed in the following:
+//! The main references are listed in the following
+//! and will be further referenced in submodules by these numbers:
 //! - \[1\] Peikert, Chris (2016).
 //! A decade of lattice cryptography.
 //! In: Theoretical Computer Science 10.4.

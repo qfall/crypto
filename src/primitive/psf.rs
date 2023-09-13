@@ -1,4 +1,4 @@
-// Copyright © 2023 Marvin Beckmann
+// Copyright © 2023 Marcel Luca Schmidt, Marvin Beckmann
 //
 // This file is part of qFALL-crypto.
 //
@@ -32,16 +32,41 @@ pub use gpv_ring::PSFGPVRing;
 /// A formal definition for these PSFs can be found in
 /// [\[1\]](<index.html#:~:text=[1]>)
 pub trait PSF<A, Trapdoor, Domain, Range> {
-    /// Samples a parity-check matrix and a trapdoor for that matrix
+    /// Samples a parity-check matrix and a trapdoor for that matrix.
+    ///
+    /// Returns the parity-check matrix and the trapdoor.
     fn trap_gen(&self) -> (A, Trapdoor);
-    /// Samples an element in the domain according to a specified distribution
+
+    /// Samples an element in the domain according to a specified distribution.
+    ///
+    /// Returns the sampled element.
     fn samp_d(&self) -> Domain;
+
     /// Samples an element `e` in the domain according to a specified distribution
-    /// conditioned on `f_a(a, e) = u`
+    /// conditioned on `f_a(a, e) = u`.
+    ///
+    /// Parameters:
+    /// - `a`: The parity-check matrix
+    /// - `r`: Together with `e` builds a G-Trapdoor for `a`
+    /// - `e`: Together with `r` builds a G-Trapdoor for `a`
+    /// - `u`: The syndrome from the range
+    ///
+    /// Returns a sample `e` from the domain on the conditioned discrete
+    /// Gaussian distribution `f_a(a,e) = u`.
     fn samp_p(&self, a: &A, r: &Trapdoor, u: &Range) -> Domain;
-    /// Implements the efficiently computable function `fa`
-    /// which is uniquely classified by `a`
+
+    /// Implements the efficiently computable function `f_a`,
+    /// which is uniquely classified by `a`.
+    ///
+    /// Parameters:
+    /// - `a`: The parity-check matrix of dimensions `n x m`
+    /// - `sigma`: A column vector of length `m`
+    ///
+    /// Returns the result of `f_a`.
     fn f_a(&self, a: &A, sigma: &Domain) -> Range;
-    /// Checks whether an element is in the correct domain (and not just the correct type)
+
+    /// Checks whether an element is in the correct domain (and not just the correct type).
+    ///
+    /// Returns the result of the check as a boolean.
     fn check_domain(&self, sigma: &Domain) -> bool;
 }
