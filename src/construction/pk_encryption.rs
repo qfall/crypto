@@ -8,7 +8,7 @@
 
 //! This module provides the trait a struct should implement if it is an
 //! instance of a public key encryption scheme. Furthermore, it contains
-//! cryptographic schemes implementing the `PKEncryption` trait.
+//! cryptographic schemes implementing the [`PKEncryptionScheme`] trait.
 //!
 //! The main references are listed in the following
 //! and will be further referenced in submodules by these numbers:
@@ -113,7 +113,7 @@ pub trait PKEncryptionSchemeMut {
 }
 
 /// This trait generically implements multi-bit encryption
-/// for any scheme implementing the [`PKEncryption`] trait.
+/// for any scheme implementing the [`PKEncryptionScheme`] trait.
 ///
 /// It splits the given ciphertext up into its bits and
 /// stores the individual encrypted bits as a vector of ciphertexts.
@@ -126,7 +126,7 @@ pub trait GenericMultiBitEncryption: PKEncryptionScheme {
     /// - `pk`: specifies the public key
     /// - `message`: specifies the message that should be encryted
     ///
-    /// Returns a cipher of type [`Vec`] containing [`PKEncryption::Cipher`].
+    /// Returns a cipher of type [`Vec`] containing [`PKEncryptionScheme::Cipher`].
     fn enc_multiple_bits(&self, pk: &Self::PublicKey, message: impl Into<Z>) -> Vec<Self::Cipher> {
         let message: Z = message.into().abs();
 
@@ -147,7 +147,7 @@ pub trait GenericMultiBitEncryption: PKEncryptionScheme {
     ///
     /// Parameters:
     /// - `sk`: specifies the secret key used for decryption
-    /// - `cipher`: specifies a slice of ciphers containing several [`PKEncryption::Cipher`] instances
+    /// - `cipher`: specifies a slice of ciphers containing several [`PKEncryptionScheme::Cipher`] instances
     /// to be decrypted
     ///
     /// Returns the decryption of `cipher` as a [`Z`] instance.

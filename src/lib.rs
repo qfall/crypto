@@ -13,8 +13,8 @@
 //! lattice-based cryptographic constructions and more.
 //!
 //! Currently qFALL-crypto supports 3 main construction types:
-//! - [Identity-Based Encryptions](construction::identity_based_encryption::IdentityBasedEncryption)
-//! - [Public-Key Encryptions](construction::pk_encryption::PKEncryption)
+//! - [Identity-Based Encryptions](construction::identity_based_encryption::IBEScheme)
+//! - [Public-Key Encryptions](construction::pk_encryption::PKEncryptionScheme)
 //! - [Signatures](construction::signature::SignatureScheme)
 //!
 //! These are identified by traits and then implemented for specific constructions, e.g.
