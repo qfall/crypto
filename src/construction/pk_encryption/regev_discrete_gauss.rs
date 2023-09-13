@@ -10,7 +10,7 @@
 //! public key Regev encryption scheme with an instantiation of the regularity lemma
 //! via a discrete Gaussian distribution.
 
-use super::{GenericMultiBitEncryption, PKEncryption};
+use super::{GenericMultiBitEncryption, PKEncryptionScheme};
 use qfall_math::{
     error::MathError,
     integer::Z,
@@ -34,7 +34,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::construction::pk_encryption::{RegevWithDiscreteGaussianRegularity, PKEncryption};
+/// use qfall_crypto::construction::pk_encryption::{RegevWithDiscreteGaussianRegularity, PKEncryptionScheme};
 /// use qfall_math::integer::Z;
 /// // setup public parameters and key pair
 /// let regev = RegevWithDiscreteGaussianRegularity::default();
@@ -344,7 +344,7 @@ impl Default for RegevWithDiscreteGaussianRegularity {
     }
 }
 
-impl PKEncryption for RegevWithDiscreteGaussianRegularity {
+impl PKEncryptionScheme for RegevWithDiscreteGaussianRegularity {
     type Cipher = (MatZq, Zq);
     type PublicKey = (MatZq, MatZq);
     type SecretKey = MatZq;
@@ -361,7 +361,7 @@ impl PKEncryption for RegevWithDiscreteGaussianRegularity {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, RegevWithDiscreteGaussianRegularity};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, RegevWithDiscreteGaussianRegularity};
     /// let regev = RegevWithDiscreteGaussianRegularity::default();
     ///
     /// let (pk, sk) = regev.gen();
@@ -404,7 +404,7 @@ impl PKEncryption for RegevWithDiscreteGaussianRegularity {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, RegevWithDiscreteGaussianRegularity};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, RegevWithDiscreteGaussianRegularity};
     /// let regev = RegevWithDiscreteGaussianRegularity::default();
     /// let (pk, sk) = regev.gen();
     ///
@@ -438,7 +438,7 @@ impl PKEncryption for RegevWithDiscreteGaussianRegularity {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, RegevWithDiscreteGaussianRegularity};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, RegevWithDiscreteGaussianRegularity};
     /// use qfall_math::integer::Z;
     /// let regev = RegevWithDiscreteGaussianRegularity::default();
     /// let (pk, sk) = regev.gen();
@@ -553,7 +553,7 @@ mod test_pp_generation {
 #[cfg(test)]
 mod test_regev {
     use super::RegevWithDiscreteGaussianRegularity;
-    use crate::construction::pk_encryption::PKEncryption;
+    use crate::construction::pk_encryption::PKEncryptionScheme;
     use qfall_math::integer::Z;
 
     /// Checks whether the full-cycle of gen, enc, dec works properly
@@ -632,7 +632,9 @@ mod test_regev {
 
 #[cfg(test)]
 mod test_multi_bits {
-    use super::{GenericMultiBitEncryption, PKEncryption, RegevWithDiscreteGaussianRegularity};
+    use super::{
+        GenericMultiBitEncryption, PKEncryptionScheme, RegevWithDiscreteGaussianRegularity,
+    };
     use qfall_math::integer::Z;
 
     /// Checks whether the multi-bit encryption cycle works properly

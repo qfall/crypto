@@ -103,7 +103,7 @@ impl CCSfromIBE<DualRegevIBE, PFDH<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, Has
 #[cfg(test)]
 mod test_ccs_from_ibe {
     use super::CCSfromIBE;
-    use crate::construction::pk_encryption::PKEncryptionMut;
+    use crate::construction::pk_encryption::PKEncryptionSchemeMut;
     use qfall_math::integer::Z;
 
     /// Checks whether the full-cycle of gen, enc, dec works properly

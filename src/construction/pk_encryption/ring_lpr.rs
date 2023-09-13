@@ -9,7 +9,7 @@
 //! This module contains an implementation of the IND-CPA secure
 //! public key Ring-LPR encryption scheme.
 
-use super::PKEncryption;
+use super::PKEncryptionScheme;
 use crate::utils::common_moduli::new_anticyclic;
 use qfall_math::{
     error::MathError,
@@ -33,7 +33,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::construction::pk_encryption::{RingLPR, PKEncryption};
+/// use qfall_crypto::construction::pk_encryption::{RingLPR, PKEncryptionScheme};
 /// use qfall_math::integer::Z;
 /// // setup public parameters and key pair
 /// let lpr = RingLPR::default();
@@ -345,7 +345,7 @@ impl Default for RingLPR {
     }
 }
 
-impl PKEncryption for RingLPR {
+impl PKEncryptionScheme for RingLPR {
     type Cipher = (PolynomialRingZq, PolynomialRingZq);
     type PublicKey = (PolynomialRingZq, PolynomialRingZq);
     type SecretKey = PolynomialRingZq;
@@ -362,7 +362,7 @@ impl PKEncryption for RingLPR {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, RingLPR};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, RingLPR};
     /// let lpr = RingLPR::default();
     ///
     /// let (pk, sk) = lpr.gen();
@@ -413,7 +413,7 @@ impl PKEncryption for RingLPR {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, RingLPR};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, RingLPR};
     /// let lpr = RingLPR::default();
     /// let (pk, sk) = lpr.gen();
     ///
@@ -476,7 +476,7 @@ impl PKEncryption for RingLPR {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, RingLPR};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, RingLPR};
     /// use qfall_math::integer::Z;
     /// let lpr = RingLPR::default();
     /// let (pk, sk) = lpr.gen();
@@ -600,7 +600,7 @@ mod test_pp_generation {
 #[cfg(test)]
 mod test_ring_lpr {
     use super::RingLPR;
-    use crate::construction::pk_encryption::PKEncryption;
+    use crate::construction::pk_encryption::PKEncryptionScheme;
     use qfall_math::integer::Z;
 
     /// Checks whether the full-cycle of gen, enc, dec works properly

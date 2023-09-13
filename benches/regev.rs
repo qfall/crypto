@@ -7,7 +7,7 @@
 // Mozilla Foundation. See <https://mozilla.org/en-US/MPL/2.0/>.
 
 use criterion::*;
-use qfall_crypto::construction::pk_encryption::PKEncryption;
+use qfall_crypto::construction::pk_encryption::PKEncryptionScheme;
 use qfall_crypto::construction::pk_encryption::Regev;
 use qfall_math::integer::Z;
 

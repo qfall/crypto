@@ -28,7 +28,7 @@ pub use gpv::PSFGPV;
 pub use gpv_ring::PSFGPVRing;
 
 /// This trait should be implemented by all constructions that are
-/// actual implementations of a [`PSF`].
+/// actual implementations of a preimage sampleable function.
 /// A formal definition for these PSFs can be found in
 /// [\[1\]](<index.html#:~:text=[1]>)
 pub trait PSF<A, Trapdoor, Domain, Range> {

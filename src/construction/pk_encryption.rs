@@ -39,19 +39,19 @@ mod lpr;
 mod regev;
 mod regev_discrete_gauss;
 mod ring_lpr;
+
 pub use ccs_from_ibe::CCSfromIBE;
 pub use dual_regev::DualRegev;
 pub use dual_regev_discrete_gauss::DualRegevWithDiscreteGaussianRegularity;
 pub use lpr::LPR;
+use qfall_math::integer::Z;
 pub use regev::Regev;
 pub use regev_discrete_gauss::RegevWithDiscreteGaussianRegularity;
 pub use ring_lpr::RingLPR;
 
-use qfall_math::integer::Z;
-
 /// This trait should be implemented by every public key encryption scheme.
 /// It offers a simple interface to use and implement PKEs.
-pub trait PKEncryption {
+pub trait PKEncryptionScheme {
     type PublicKey;
     type SecretKey;
     type Cipher;
@@ -81,8 +81,8 @@ pub trait PKEncryption {
 }
 
 /// This trait just exists s.t. we can pass `self` in as mutable for more advanced constructions, which use a storage.
-/// Otherwise, it does exactly the same as [`PKEncryption`].
-pub trait PKEncryptionMut {
+/// Otherwise, it does exactly the same as [`PKEncryptionScheme`].
+pub trait PKEncryptionSchemeMut {
     type PublicKey;
     type SecretKey;
     type Cipher;
@@ -116,7 +116,7 @@ pub trait PKEncryptionMut {
 ///
 /// It splits the given ciphertext up into its bits and
 /// stores the individual encrypted bits as a vector of ciphertexts.
-pub trait GenericMultiBitEncryption: PKEncryption {
+pub trait GenericMultiBitEncryption: PKEncryptionScheme {
     /// Encrypts multiple bits by appending several encryptions of single bits.
     /// The order of single ciphers is `[c0, c1, ..., cn]`, where `c0` is the least significant bit.
     /// Negative values are not allowed. Hence, the absolute value is being encrypted.

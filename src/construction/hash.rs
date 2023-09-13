@@ -12,6 +12,7 @@
 
 pub mod sha256;
 mod sis;
+
 pub use sis::SISHash;
 
 /// This trait should be implemented by hashes with domain [`str`].

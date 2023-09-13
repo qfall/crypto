@@ -9,7 +9,7 @@
 //! This module contains an implementation of the IND-CPA secure
 //! public key Dual Regev encryption scheme.
 
-use super::{GenericMultiBitEncryption, PKEncryption};
+use super::{GenericMultiBitEncryption, PKEncryptionScheme};
 use qfall_math::{
     error::MathError,
     integer::{MatZ, Z},
@@ -31,7 +31,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::construction::pk_encryption::{DualRegev, PKEncryption};
+/// use qfall_crypto::construction::pk_encryption::{DualRegev, PKEncryptionScheme};
 /// use qfall_math::integer::Z;
 /// // setup public parameters and key pair
 /// let dual_regev = DualRegev::default();
@@ -323,7 +323,7 @@ impl Default for DualRegev {
     }
 }
 
-impl PKEncryption for DualRegev {
+impl PKEncryptionScheme for DualRegev {
     type Cipher = MatZq;
     type PublicKey = MatZq;
     type SecretKey = MatZ;
@@ -339,7 +339,7 @@ impl PKEncryption for DualRegev {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, DualRegev};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, DualRegev};
     /// let dual_regev = DualRegev::default();
     ///
     /// let (pk, sk) = dual_regev.gen();
@@ -376,7 +376,7 @@ impl PKEncryption for DualRegev {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, DualRegev};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, DualRegev};
     /// let dual_regev = DualRegev::default();
     /// let (pk, sk) = dual_regev.gen();
     ///
@@ -424,7 +424,7 @@ impl PKEncryption for DualRegev {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, DualRegev};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, DualRegev};
     /// use qfall_math::integer::Z;
     /// let dual_regev = DualRegev::default();
     /// let (pk, sk) = dual_regev.gen();
@@ -537,7 +537,7 @@ mod test_pp_generation {
 #[cfg(test)]
 mod test_dual_regev {
     use super::DualRegev;
-    use crate::construction::pk_encryption::PKEncryption;
+    use crate::construction::pk_encryption::PKEncryptionScheme;
     use qfall_math::integer::Z;
 
     /// Checks whether the full-cycle of gen, enc, dec works properly
@@ -612,7 +612,7 @@ mod test_dual_regev {
 
 #[cfg(test)]
 mod test_multi_bits {
-    use super::{DualRegev, GenericMultiBitEncryption, PKEncryption};
+    use super::{DualRegev, GenericMultiBitEncryption, PKEncryptionScheme};
     use qfall_math::integer::Z;
 
     /// Checks whether the multi-bit encryption cycle works properly
