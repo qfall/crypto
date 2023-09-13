@@ -49,8 +49,8 @@ impl CCSfromIBE<DualRegevIBE, PFDH<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, Has
         n: impl Into<Z>, // security parameter
         modulus: impl Into<Modulus>,
         randomness_length: impl Into<Z>, // added to the message before signing
-        r: impl Into<Q>,                 // gaussian parameter for PSF
-        alpha: impl Into<Q>,             // gaussian parameter for Dual Regev Encryption
+        r: impl Into<Q>,                 // Gaussian parameter for PSF
+        alpha: impl Into<Q>,             // Gaussian parameter for Dual Regev Encryption
     ) -> Self {
         let n = n.into();
         let modulus = modulus.into();

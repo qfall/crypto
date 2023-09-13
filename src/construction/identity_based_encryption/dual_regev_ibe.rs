@@ -33,7 +33,7 @@ use std::collections::HashMap;
 /// public key encryption instance based on [\[1\]](<index.html#:~:text=[1]>).
 ///
 /// Attributes:
-/// - `r`: specifies the gaussian parameter used by the [`PSF`]
+/// - `r`: specifies the Gaussian parameter used by the [`PSF`]
 /// - `dual_regev`: a [`DualRegev`] instance with fitting parameters `n`, `m`, `q`, `alpha`
 /// - `psf`: specifies the PSF used for extracting secret keys
 /// - `storage`: is a [`HashMap`] which stores all previously computed secret keys
@@ -82,8 +82,8 @@ impl DualRegevIBE {
     pub fn new(
         n: impl Into<Z>,       // security parameter
         q: impl Into<Modulus>, // modulus
-        r: impl Into<Q>,       // gaussian parameter for sampleD
-        alpha: impl Into<Q>,   // gaussian parameter for sampleZ
+        r: impl Into<Q>,       // Gaussian parameter for sampleD
+        alpha: impl Into<Q>,   // Gaussian parameter for sampleZ
     ) -> Self {
         let n = n.into();
         let q = q.into();

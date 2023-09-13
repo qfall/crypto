@@ -28,7 +28,7 @@ use serde::{Deserialize, Serialize};
 /// Attributes:
 /// - `n`: specifies the security parameter, which is not equal to the bit-security level
 /// - `q`: specifies the modulus over which the encryption is computed
-/// - `alpha`: specifies the gaussian parameter used for independent
+/// - `alpha`: specifies the Gaussian parameter used for independent
 /// sampling from the discrete Gaussian distribution
 ///
 /// # Examples
@@ -52,7 +52,7 @@ use serde::{Deserialize, Serialize};
 pub struct RingLPR {
     n: Z,                       // security parameter
     q: ModulusPolynomialRingZq, // modulus
-    alpha: Q,                   // gaussian parameter for sampleZ
+    alpha: Q,                   // Gaussian parameter for sampleZ
 }
 
 impl RingLPR {
@@ -70,7 +70,7 @@ impl RingLPR {
     /// - `n`: specifies the security parameter and number of rows
     ///   of the uniform at random instantiated matrix `A`
     /// - `q`: specifies the modulus
-    /// - `alpha`: specifies the gaussian parameter used for independent
+    /// - `alpha`: specifies the Gaussian parameter used for independent
     /// sampling from the discrete Gaussian distribution
     ///
     /// Returns a correct and secure [`RingLPR`] PK encryption instance or

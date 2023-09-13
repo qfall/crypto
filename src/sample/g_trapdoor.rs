@@ -24,7 +24,7 @@
 //! in Computer Science(), vol 8282. Springer, Berlin, Heidelberg.
 //! <https://doi.org/10.1007/978-3-662-43414-7_3>
 //! - \[3\] Gür, K.D., Polyakov, Y., Rohloff, K., Ryan, G.W. and Savas, E., 2018,
-//! January. Implementation and evaluation of improved gaussian sampling for lattice
+//! January. Implementation and evaluation of improved Gaussian sampling for lattice
 //!  trapdoors. In Proceedings of the 6th Workshop on Encrypted Computing & Applied
 //! Homomorphic Cryptography (pp. 61-71). <https://dl.acm.org/doi/pdf/10.1145/3267973.3267975>
 //! - \[4\] Cash, D., Hofheinz, D., Kiltz, E., & Peikert, C. (2012).

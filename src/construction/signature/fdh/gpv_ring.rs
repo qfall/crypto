@@ -32,7 +32,7 @@ impl
     >
 {
     /// Initializes an FDH signature scheme from a [`PSFGPVRing`].
-    /// The trapdoor is sampled with a gaussian parameter of 1.005
+    /// The trapdoor is sampled with a Gaussian parameter of 1.005
     /// as done in [\[3\]](<index.html#:~:text=[3]>) who derived it from
     /// [\[5\]](<index.html#:~:text=[5]>).
     ///
@@ -43,7 +43,7 @@ impl
     /// Parameters:
     /// - `n`: The security parameter
     /// - `modulus`: The modulus used for the G-Trapdoors
-    /// - `s`: The gaussian parameter with which is sampled
+    /// - `s`: The Gaussian parameter with which is sampled
     ///
     /// Returns an explicit implementation of an FDH-signature scheme.
     ///

@@ -27,9 +27,9 @@ use serde::{Deserialize, Serialize};
 /// - `n`: specifies the security parameter, which is not equal to the bit-security level
 /// - `m`: defines the dimension of the underlying lattice
 /// - `q`: specifies the modulus over which the encryption is computed
-/// - `r`: specifies the gaussian parameter used for SampleD,
+/// - `r`: specifies the Gaussian parameter used for SampleD,
 ///   i.e. used for encryption
-/// - `alpha`: specifies the gaussian parameter used for independent
+/// - `alpha`: specifies the Gaussian parameter used for independent
 /// sampling from the discrete Gaussian distribution
 ///
 /// # Examples
@@ -54,8 +54,8 @@ pub struct DualRegevWithDiscreteGaussianRegularity {
     n: Z,       // security parameter
     m: Z,       // number of rows of matrix A
     q: Modulus, // modulus
-    r: Q,       // gaussian parameter for sampleD
-    alpha: Q,   // gaussian parameter for sampleZ
+    r: Q,       // Gaussian parameter for sampleD
+    alpha: Q,   // Gaussian parameter for sampleZ
 }
 
 impl DualRegevWithDiscreteGaussianRegularity {
@@ -74,9 +74,9 @@ impl DualRegevWithDiscreteGaussianRegularity {
     ///   of the uniform at random instantiated matrix `A`
     /// - `m`: specifies the number of columns of matrix `A`
     /// - `q`: specifies the modulus
-    /// - `r`: specifies the gaussian parameter used for SampleD,
+    /// - `r`: specifies the Gaussian parameter used for SampleD,
     ///   i.e. used for encryption
-    /// - `alpha`: specifies the gaussian parameter used for independent
+    /// - `alpha`: specifies the Gaussian parameter used for independent
     /// sampling from the discrete Gaussian distribution
     ///
     /// Returns a [`DualRegevWithDiscreteGaussianRegularity`] PK encryption instance.
@@ -353,7 +353,7 @@ impl PKEncryptionScheme for DualRegevWithDiscreteGaussianRegularity {
 
     /// Generates a (pk, sk) pair for the Dual Regev public key encryption scheme
     /// by following these steps:
-    /// - e <- SampleD over lattice Z^m, center 0 with gaussian parameter r
+    /// - e <- SampleD over lattice Z^m, center 0 with Gaussian parameter r
     /// - A <- Z_q^{n x m}
     /// - p = A * e
     ///
@@ -367,7 +367,7 @@ impl PKEncryptionScheme for DualRegevWithDiscreteGaussianRegularity {
     /// let (pk, sk) = dual_regev.gen();
     /// ```
     fn gen(&self) -> (Self::PublicKey, Self::SecretKey) {
-        // e <- SampleD over lattice Z^m, center 0 with gaussian parameter r
+        // e <- SampleD over lattice Z^m, center 0 with Gaussian parameter r
         let vec_e = MatZq::sample_d_common(&self.m, &self.q, &self.n, &self.r).unwrap();
         // A <- Z_q^{n x m}
         let mat_a = MatZq::sample_uniform(&self.n, &self.m, &self.q);

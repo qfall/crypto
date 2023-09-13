@@ -35,7 +35,7 @@ pub trait TrapdoorDistribution {
 /// Parameters:
 /// - `n`: the length of the polynomials
 /// - `nr_cols`: the number of polynomials that are sampled
-/// - `s`: the gaussian parameter with which is sampled
+/// - `s`: the Gaussian parameter with which is sampled
 ///
 /// Returns a matrix which is sampled according to the defined distribution
 #[typetag::serde]
@@ -89,7 +89,7 @@ impl TrapdoorDistributionRing for SampleZ {
     /// Parameters:
     /// - `n`: length of the polynomial
     /// - `nr_cols`: number of columns of the matrix
-    /// - `s`: the gaussian parameter used for SampleZ
+    /// - `s`: the Gaussian parameter used for SampleZ
     ///
     /// # Examples
     /// ```

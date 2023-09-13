@@ -26,7 +26,7 @@ use serde::{Deserialize, Serialize};
 /// - `n`: specifies the security parameter, which is not equal to the bit-security level
 /// - `m`: defines the dimension of the underlying lattice
 /// - `q`: specifies the modulus over which the encryption is computed
-/// - `alpha`:  specifies the gaussian parameter used for independent
+/// - `alpha`:  specifies the Gaussian parameter used for independent
 /// sampling from the discrete Gaussian distribution
 ///
 /// # Examples
@@ -51,7 +51,7 @@ pub struct Regev {
     n: Z,       // security parameter
     m: Z,       // number of rows of matrix A
     q: Modulus, // modulus
-    alpha: Q,   // gaussian parameter for sampleZ
+    alpha: Q,   // Gaussian parameter for sampleZ
 }
 
 impl Regev {
@@ -70,7 +70,7 @@ impl Regev {
     ///   of the uniform at random instantiated matrix `A`
     /// - `m`: specifies the number of columns of matrix `A`
     /// - `q`: specifies the modulus
-    /// - `alpha`:  specifies the gaussian parameter used for independent
+    /// - `alpha`:  specifies the Gaussian parameter used for independent
     /// sampling from the discrete Gaussian distribution
     ///
     /// Returns a [`Regev`] PK encryption instance.
