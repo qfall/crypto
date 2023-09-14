@@ -9,7 +9,7 @@
 //! This module contains an implementation of the IND-CPA secure
 //! public key Regev encryption scheme.
 
-use super::{GenericMultiBitEncryption, PKEncryption};
+use super::{GenericMultiBitEncryption, PKEncryptionScheme};
 use qfall_math::{
     error::MathError,
     integer::{MatZ, Z},
@@ -26,12 +26,12 @@ use serde::{Deserialize, Serialize};
 /// - `n`: specifies the security parameter, which is not equal to the bit-security level
 /// - `m`: defines the dimension of the underlying lattice
 /// - `q`: specifies the modulus over which the encryption is computed
-/// - `alpha`:  specifies the gaussian parameter used for independent
+/// - `alpha`:  specifies the Gaussian parameter used for independent
 /// sampling from the discrete Gaussian distribution
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::construction::pk_encryption::{Regev, PKEncryption};
+/// use qfall_crypto::construction::pk_encryption::{Regev, PKEncryptionScheme};
 /// use qfall_math::integer::Z;
 /// // setup public parameters and key pair
 /// let regev = Regev::default();
@@ -51,7 +51,7 @@ pub struct Regev {
     n: Z,       // security parameter
     m: Z,       // number of rows of matrix A
     q: Modulus, // modulus
-    alpha: Q,   // gaussian parameter for sampleZ
+    alpha: Q,   // Gaussian parameter for sampleZ
 }
 
 impl Regev {
@@ -70,7 +70,7 @@ impl Regev {
     ///   of the uniform at random instantiated matrix `A`
     /// - `m`: specifies the number of columns of matrix `A`
     /// - `q`: specifies the modulus
-    /// - `alpha`:  specifies the gaussian parameter used for independent
+    /// - `alpha`:  specifies the Gaussian parameter used for independent
     /// sampling from the discrete Gaussian distribution
     ///
     /// Returns a [`Regev`] PK encryption instance.
@@ -324,7 +324,7 @@ impl Default for Regev {
     }
 }
 
-impl PKEncryption for Regev {
+impl PKEncryptionScheme for Regev {
     type Cipher = MatZq;
     type PublicKey = MatZq;
     type SecretKey = MatZq;
@@ -342,7 +342,7 @@ impl PKEncryption for Regev {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, Regev};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, Regev};
     /// let regev = Regev::default();
     ///
     /// let (pk, sk) = regev.gen();
@@ -387,7 +387,7 @@ impl PKEncryption for Regev {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, Regev};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, Regev};
     /// let regev = Regev::default();
     /// let (pk, sk) = regev.gen();
     ///
@@ -425,7 +425,7 @@ impl PKEncryption for Regev {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, Regev};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, Regev};
     /// use qfall_math::integer::Z;
     /// let regev = Regev::default();
     /// let (pk, sk) = regev.gen();
@@ -539,7 +539,7 @@ mod test_pp_generation {
 #[cfg(test)]
 mod test_regev {
     use super::Regev;
-    use crate::construction::pk_encryption::PKEncryption;
+    use crate::construction::pk_encryption::PKEncryptionScheme;
     use qfall_math::integer::Z;
 
     /// Checks whether the full-cycle of gen, enc, dec works properly
@@ -614,7 +614,7 @@ mod test_regev {
 
 #[cfg(test)]
 mod test_multi_bits {
-    use super::{GenericMultiBitEncryption, PKEncryption, Regev};
+    use super::{GenericMultiBitEncryption, PKEncryptionScheme, Regev};
     use qfall_math::integer::Z;
 
     /// Checks whether the multi-bit encryption cycle works properly

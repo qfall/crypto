@@ -30,7 +30,7 @@ use serde::{Deserialize, Serialize};
 /// - `n`: the security parameter
 /// - `k`: the size of the gadget vector: mostly taken as `log_base(q)`
 /// - `m_bar`: has to be chose appropriately for regularity and for
-/// the distribution to be subgaussian
+/// the distribution to be sub-Gaussian
 /// - `base`: the base with which the gadget-vector and matrix are generated
 /// - `q`: the modulus
 /// - `distribution`: the distribution from which the matrix `A_bar` is sampled
@@ -59,7 +59,7 @@ pub struct GadgetParameters {
 /// - `n`: the security parameter
 /// - `k`: the size of the gadget vector: mostly taken as `log_base(q)`
 /// - `m_bar`: has to be chose appropriately for regularity and for
-/// the distribution to be subgaussian
+/// the distribution to be sub-Gaussian
 /// - `base`: the base with which the gadget-vector and matrix are generated
 /// - `q`: the modulus
 /// - `modulus`: the polynomial that is used for reduction

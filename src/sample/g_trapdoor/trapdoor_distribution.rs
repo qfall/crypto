@@ -18,28 +18,32 @@ use serde::{Deserialize, Serialize};
 
 /// This trait should be implemented by all distributions which should be
 /// used to generate a trapdoor.
-///
-/// Parameters:
-/// - `m_bar`: number of rows of the matrix that is sampled
-/// - `w`: number of columns of the matrix that is sampled
-///
-/// Returns a matrix which is sampled according to the defined distribution
 #[typetag::serde]
 pub trait TrapdoorDistribution {
+    /// Sample from a matrix according to a predefined distribution.
+    ///
+    /// Parameters:
+    /// - `m_bar`: number of rows of the matrix that is sampled
+    /// - `w`: number of columns of the matrix that is sampled
+    ///
+    /// Returns a matrix which is sampled according to the defined distribution.
     fn sample(&self, m_bar: &Z, w: &Z) -> MatZ;
 }
 
 /// This trait should be implemented by all distributions which should be
-/// used to generate a ring-based trapdoor.
-///
-/// Parameters:
-/// - `n`: the length of the polynomials
-/// - `nr_cols`: the number of polynomials that are sampled
-/// - `s`: the gaussian parameter with which is sampled
-///
-/// Returns a matrix which is sampled according to the defined distribution
+/// used to generate a trapdoor over a ring.
 #[typetag::serde]
 pub trait TrapdoorDistributionRing {
+    /// Sample a matrix of polynomials of length `n` with entries sampled
+    /// using a predefined distribution.
+    ///
+    /// Parameters:
+    /// - `n`: length of the polynomial
+    /// - `nr_cols`: number of columns of the matrix
+    /// - `s`: the Gaussian parameter used for SampleZ
+    ///
+    /// Returns a matrix where each entry is a polynomials of length `n`, sampled
+    /// using the defined distribution.
     fn sample(&self, n: &Z, nr_cols: &Z, s: &Q) -> MatPolyOverZ;
 }
 
@@ -72,6 +76,7 @@ impl TrapdoorDistribution for PlusMinusOneZero {
     ///
     /// let mat = PlusMinusOneZero.sample(&42.into(), &24.into());
     /// ```
+    ///
     /// # Panics...
     /// - if `m_bar` or `w` does not fit into in `i64` or is smaller than `1`.
     fn sample(&self, m_bar: &Z, w: &Z) -> MatZ {
@@ -84,12 +89,15 @@ impl TrapdoorDistribution for PlusMinusOneZero {
 #[typetag::serde]
 impl TrapdoorDistributionRing for SampleZ {
     /// Sample a matrix of polynomials of length `n` with entries sampled
-    /// using [`Z::sample_discrete_gauss`]
+    /// using [`Z::sample_discrete_gauss`].
     ///
     /// Parameters:
     /// - `n`: length of the polynomial
     /// - `nr_cols`: number of columns of the matrix
-    /// - `s`: the gaussian parameter used for SampleZ
+    /// - `s`: the Gaussian parameter used for SampleZ
+    ///
+    /// Returns a matrix where each entry is a polynomials of length `n`, sampled
+    /// using [`Z::sample_discrete_gauss`].
     ///
     /// # Examples
     /// ```
@@ -97,6 +105,7 @@ impl TrapdoorDistributionRing for SampleZ {
     ///
     /// let mat = SampleZ.sample(&42.into(), &24.into(), &3.into());
     /// ```
+    ///
     /// # Panics...
     /// - if `n`, `nr_rows` or `nr_cols` does not fit into in `i64`
     /// or is smaller than `1`.

@@ -9,7 +9,7 @@
 //! This module contains an implementation of the IND-CPA secure
 //! public key Ring-LPR encryption scheme.
 
-use super::PKEncryption;
+use super::PKEncryptionScheme;
 use crate::utils::common_moduli::new_anticyclic;
 use qfall_math::{
     error::MathError,
@@ -28,12 +28,12 @@ use serde::{Deserialize, Serialize};
 /// Attributes:
 /// - `n`: specifies the security parameter, which is not equal to the bit-security level
 /// - `q`: specifies the modulus over which the encryption is computed
-/// - `alpha`: specifies the gaussian parameter used for independent
+/// - `alpha`: specifies the Gaussian parameter used for independent
 /// sampling from the discrete Gaussian distribution
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::construction::pk_encryption::{RingLPR, PKEncryption};
+/// use qfall_crypto::construction::pk_encryption::{RingLPR, PKEncryptionScheme};
 /// use qfall_math::integer::Z;
 /// // setup public parameters and key pair
 /// let lpr = RingLPR::default();
@@ -52,7 +52,7 @@ use serde::{Deserialize, Serialize};
 pub struct RingLPR {
     n: Z,                       // security parameter
     q: ModulusPolynomialRingZq, // modulus
-    alpha: Q,                   // gaussian parameter for sampleZ
+    alpha: Q,                   // Gaussian parameter for sampleZ
 }
 
 impl RingLPR {
@@ -70,7 +70,7 @@ impl RingLPR {
     /// - `n`: specifies the security parameter and number of rows
     ///   of the uniform at random instantiated matrix `A`
     /// - `q`: specifies the modulus
-    /// - `alpha`: specifies the gaussian parameter used for independent
+    /// - `alpha`: specifies the Gaussian parameter used for independent
     /// sampling from the discrete Gaussian distribution
     ///
     /// Returns a correct and secure [`RingLPR`] PK encryption instance or
@@ -345,7 +345,7 @@ impl Default for RingLPR {
     }
 }
 
-impl PKEncryption for RingLPR {
+impl PKEncryptionScheme for RingLPR {
     type Cipher = (PolynomialRingZq, PolynomialRingZq);
     type PublicKey = (PolynomialRingZq, PolynomialRingZq);
     type SecretKey = PolynomialRingZq;
@@ -362,7 +362,7 @@ impl PKEncryption for RingLPR {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, RingLPR};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, RingLPR};
     /// let lpr = RingLPR::default();
     ///
     /// let (pk, sk) = lpr.gen();
@@ -413,7 +413,7 @@ impl PKEncryption for RingLPR {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, RingLPR};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, RingLPR};
     /// let lpr = RingLPR::default();
     /// let (pk, sk) = lpr.gen();
     ///
@@ -476,7 +476,7 @@ impl PKEncryption for RingLPR {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, RingLPR};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, RingLPR};
     /// use qfall_math::integer::Z;
     /// let lpr = RingLPR::default();
     /// let (pk, sk) = lpr.gen();
@@ -600,7 +600,7 @@ mod test_pp_generation {
 #[cfg(test)]
 mod test_ring_lpr {
     use super::RingLPR;
-    use crate::construction::pk_encryption::PKEncryption;
+    use crate::construction::pk_encryption::PKEncryptionScheme;
     use qfall_math::integer::Z;
 
     /// Checks whether the full-cycle of gen, enc, dec works properly

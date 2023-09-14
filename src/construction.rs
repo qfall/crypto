@@ -12,7 +12,7 @@
 //! A construction is build the same way:
 //!
 //! 1. A trait that combines the common feature, e.g.
-//! [`public key encryption`](pk_encryption::PKEncryption).
+//! [`public key encryption`](pk_encryption::PKEncryptionScheme).
 //! 2. Explicit implementations of the trait, e.g.
 //! [`RingLPR`](pk_encryption::RingLPR).
 

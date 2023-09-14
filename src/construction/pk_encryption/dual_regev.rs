@@ -9,7 +9,7 @@
 //! This module contains an implementation of the IND-CPA secure
 //! public key Dual Regev encryption scheme.
 
-use super::{GenericMultiBitEncryption, PKEncryption};
+use super::{GenericMultiBitEncryption, PKEncryptionScheme};
 use qfall_math::{
     error::MathError,
     integer::{MatZ, Z},
@@ -26,12 +26,12 @@ use serde::{Deserialize, Serialize};
 /// - `n`: specifies the security parameter, which is not equal to the bit-security level
 /// - `m`: defines the dimension of the underlying lattice
 /// - `q`: specifies the modulus over which the encryption is computed
-/// - `alpha`:  specifies the gaussian parameter used for independent
+/// - `alpha`:  specifies the Gaussian parameter used for independent
 /// sampling from the discrete Gaussian distribution
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::construction::pk_encryption::{DualRegev, PKEncryption};
+/// use qfall_crypto::construction::pk_encryption::{DualRegev, PKEncryptionScheme};
 /// use qfall_math::integer::Z;
 /// // setup public parameters and key pair
 /// let dual_regev = DualRegev::default();
@@ -51,7 +51,7 @@ pub struct DualRegev {
     pub(crate) n: Z,       // security parameter
     pub(crate) m: Z,       // number of rows of matrix A
     pub(crate) q: Modulus, // modulus
-    pub(crate) alpha: Q,   // gaussian parameter for sampleZ
+    pub(crate) alpha: Q,   // Gaussian parameter for sampleZ
 }
 
 impl DualRegev {
@@ -70,7 +70,7 @@ impl DualRegev {
     ///   of the uniform at random instantiated matrix `A`
     /// - `m`: specifies the number of columns of matrix `A`
     /// - `q`: specifies the modulus
-    /// - `alpha`:  specifies the gaussian parameter used for independent
+    /// - `alpha`:  specifies the Gaussian parameter used for independent
     /// sampling from the discrete Gaussian distribution
     ///
     /// Returns [`DualRegev`] PK encryption instance.
@@ -323,7 +323,7 @@ impl Default for DualRegev {
     }
 }
 
-impl PKEncryption for DualRegev {
+impl PKEncryptionScheme for DualRegev {
     type Cipher = MatZq;
     type PublicKey = MatZq;
     type SecretKey = MatZ;
@@ -339,7 +339,7 @@ impl PKEncryption for DualRegev {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, DualRegev};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, DualRegev};
     /// let dual_regev = DualRegev::default();
     ///
     /// let (pk, sk) = dual_regev.gen();
@@ -376,7 +376,7 @@ impl PKEncryption for DualRegev {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, DualRegev};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, DualRegev};
     /// let dual_regev = DualRegev::default();
     /// let (pk, sk) = dual_regev.gen();
     ///
@@ -424,7 +424,7 @@ impl PKEncryption for DualRegev {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, DualRegev};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, DualRegev};
     /// use qfall_math::integer::Z;
     /// let dual_regev = DualRegev::default();
     /// let (pk, sk) = dual_regev.gen();
@@ -537,7 +537,7 @@ mod test_pp_generation {
 #[cfg(test)]
 mod test_dual_regev {
     use super::DualRegev;
-    use crate::construction::pk_encryption::PKEncryption;
+    use crate::construction::pk_encryption::PKEncryptionScheme;
     use qfall_math::integer::Z;
 
     /// Checks whether the full-cycle of gen, enc, dec works properly
@@ -612,7 +612,7 @@ mod test_dual_regev {
 
 #[cfg(test)]
 mod test_multi_bits {
-    use super::{DualRegev, GenericMultiBitEncryption, PKEncryption};
+    use super::{DualRegev, GenericMultiBitEncryption, PKEncryptionScheme};
     use qfall_math::integer::Z;
 
     /// Checks whether the multi-bit encryption cycle works properly

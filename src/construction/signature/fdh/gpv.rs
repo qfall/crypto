@@ -31,7 +31,7 @@ impl FDH<MatZq, (MatZ, MatQ), MatZ, MatZq, PSFGPV, HashMatZq> {
     /// Parameters:
     /// - `n`: The security parameter
     /// - `modulus`: The modulus used for the G-Trapdoors
-    /// - `s`: The gaussian parameter with which is sampled
+    /// - `s`: The Gaussian parameter with which is sampled
     ///
     /// Returns an explicit implementation of a FDH-signature scheme.
     ///

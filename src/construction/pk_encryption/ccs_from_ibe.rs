@@ -8,12 +8,10 @@
 
 //! This module contains a general implementation of an IND-CCA secure
 //! public key encryption scheme constructed
-//! via an [`IdentityBasedEncryption`] scheme and a [`SignatureScheme`].
+//! via an [`IBEScheme`] scheme and a [`SignatureScheme`].
 
-use super::PKEncryptionMut;
-use crate::construction::{
-    identity_based_encryption::IdentityBasedEncryption, signature::SignatureScheme,
-};
+use super::PKEncryptionSchemeMut;
+use crate::construction::{identity_based_encryption::IBEScheme, signature::SignatureScheme};
 use qfall_math::integer::Z;
 use serde::{Deserialize, Serialize};
 
@@ -28,7 +26,7 @@ pub mod dual_regev_ibe_pfdh;
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::construction::pk_encryption::{CCSfromIBE, PKEncryptionMut};
+/// use qfall_crypto::construction::pk_encryption::{CCSfromIBE, PKEncryptionSchemeMut};
 /// use qfall_math::integer::Z;
 /// let mut scheme = CCSfromIBE::init_dr_pfdh_from_n(4);
 ///
@@ -39,7 +37,7 @@ pub mod dual_regev_ibe_pfdh;
 /// assert_eq!(Z::ZERO, m);
 /// ```
 #[derive(Serialize, Deserialize, Clone)]
-pub struct CCSfromIBE<IBE: IdentityBasedEncryption, Signature: SignatureScheme>
+pub struct CCSfromIBE<IBE: IBEScheme, Signature: SignatureScheme>
 where
     IBE::Cipher: ToString,
 {
@@ -47,9 +45,9 @@ where
     pub signature: Signature,
 }
 
-impl<IBE, Signature> PKEncryptionMut for CCSfromIBE<IBE, Signature>
+impl<IBE, Signature> PKEncryptionSchemeMut for CCSfromIBE<IBE, Signature>
 where
-    IBE: IdentityBasedEncryption,
+    IBE: IBEScheme,
     Signature: SignatureScheme,
     IBE::Cipher: ToString,
     IBE::MasterPublicKey: Clone,
@@ -67,7 +65,7 @@ where
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{CCSfromIBE, PKEncryptionMut};
+    /// use qfall_crypto::construction::pk_encryption::{CCSfromIBE, PKEncryptionSchemeMut};
     /// let mut scheme = CCSfromIBE::init_dr_pfdh_from_n(4);
     ///
     /// let (pk, sk) = scheme.gen();
@@ -92,7 +90,7 @@ where
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{CCSfromIBE, PKEncryptionMut};
+    /// use qfall_crypto::construction::pk_encryption::{CCSfromIBE, PKEncryptionSchemeMut};
     /// let mut scheme = CCSfromIBE::init_dr_pfdh_from_n(4);
     ///
     /// let (pk, sk) = scheme.gen();
@@ -121,7 +119,7 @@ where
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{CCSfromIBE, PKEncryptionMut};
+    /// use qfall_crypto::construction::pk_encryption::{CCSfromIBE, PKEncryptionSchemeMut};
     /// use qfall_math::integer::Z;
     /// let mut scheme = CCSfromIBE::init_dr_pfdh_from_n(4);
     ///

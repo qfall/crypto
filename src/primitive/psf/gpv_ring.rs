@@ -33,8 +33,8 @@ use serde::{Deserialize, Serialize};
 ///
 /// Attributes
 /// - `gp`: Describes the gadget parameters with which the G-Trapdoor is generated
-/// - `s`: The gaussian parameter with which elements from the domain are sampled
-/// - `s:td`: The gaussian parameter with which the trapdoor is sampled
+/// - `s`: The Gaussian parameter with which elements from the domain are sampled
+/// - `s:td`: The Gaussian parameter with which the trapdoor is sampled
 ///
 /// # Examples
 /// ```
@@ -117,7 +117,7 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
 
     /// Samples an `e` in the domain using SampleD with a short basis that is generated
     /// from the G-Trapdoor from the conditioned conditioned
-    /// discrete gaussian with `f_a(a,e) = u` for a provided syndrome `u`.
+    /// discrete Gaussian with `f_a(a,e) = u` for a provided syndrome `u`.
     ///
     /// *Note*: the provided parameters `a, r, e, u` must fit together,
     /// otherwise unexpected behavior such as panics may occur.
@@ -129,7 +129,7 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
     /// - `u`: The syndrome from the range
     ///
     /// Returns a sample `e` from the domain on the conditioned discrete
-    /// gaussian distribution `f_a(a,e) = u`.
+    /// Gaussian distribution `f_a(a,e) = u`.
     ///
     /// # Examples
     /// ```

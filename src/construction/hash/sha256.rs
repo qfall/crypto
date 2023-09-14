@@ -132,91 +132,6 @@ pub fn hash_to_mat_zq_sha256(
     matrix
 }
 
-#[cfg(test)]
-mod tests_sha {
-    use super::{hash_to_mat_zq_sha256, hash_to_zq_sha256, sha256, Z};
-    use qfall_math::{
-        integer_mod_q::{MatZq, Zq},
-        traits::{Distance, Pow},
-    };
-    use std::str::FromStr;
-
-    /// Ensure sha256 works.
-    #[test]
-    fn test_sha256() {
-        let str1 = "Hello World!";
-        let str2 = "qfall";
-
-        let hash1 = sha256(str1);
-        let hash2 = sha256(str2);
-
-        assert_eq!(
-            "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069",
-            hash1
-        );
-        assert_eq!(
-            "eb6ed1369a670050bd04b24036e8c29144b0f6b10166dc9c8b4987a6026c715f",
-            hash2
-        );
-    }
-
-    /// Ensure hashing into [`Zq`] works as intended.
-    #[test]
-    fn test_hash_to_zq_sha256() {
-        let str1 = "Hello World!";
-        let str2 = "qfall";
-
-        let hash1 = hash_to_zq_sha256(str1, 256);
-        let hash2 = hash_to_zq_sha256(str2, 16);
-
-        assert_eq!(Zq::from((150, 256)), hash1);
-        assert_eq!(Zq::from((12, 16)), hash2);
-    }
-
-    /// Ensure hashing into [`Zq`] hits the whole domain not just the first 256 bit.
-    #[test]
-    fn test_hash_to_zq_sha256_large() {
-        let str1 = "Hello World!";
-
-        let mut large = false;
-        for i in 0..5 {
-            if hash_to_zq_sha256(&(i.to_string() + str1), Z::from(271).pow(100).unwrap())
-                .distance(Z::ZERO)
-                > Z::from(u64::MAX)
-            {
-                large = true;
-            }
-        }
-
-        assert!(large);
-    }
-
-    /// Ensure hashing into [`MatZq`] works as intended.
-    #[test]
-    fn test_hash_to_mat_zq_sha256() {
-        let str1 = "Hello World!";
-        let str2 = "qfall";
-
-        let hash1 = hash_to_mat_zq_sha256(str1, 2, 2, 256);
-        let hash2 = hash_to_mat_zq_sha256(str2, 2, 2, 16);
-
-        assert_eq!(
-            MatZq::from_str("[[159, 26],[249, 141]] mod 256").unwrap(),
-            hash1
-        );
-        assert_eq!(MatZq::from_str("[[3, 12],[9, 12]] mod 16").unwrap(), hash2);
-    }
-
-    /// Ensure hashing into [`MatZq`] works as intended.
-    #[test]
-    #[should_panic]
-    fn test_hash_to_mat_zq_sha256_negative_dimensions() {
-        let str1 = "Hello World!";
-
-        let _ = hash_to_mat_zq_sha256(str1, 0, 0, 16);
-    }
-}
-
 /// Hash object to hash a String into a [`MatZq`].
 /// The object fixes the modulus and the corresponding dimensions.
 ///
@@ -338,6 +253,91 @@ impl HashInto<MatPolynomialRingZq> for HashMatPolynomialRingZq {
                 .into();
         let poly_mat = MatPolyOverZ::from_coefficient_embedding_to_matrix(&embedding, highest_deg);
         MatPolynomialRingZq::from((&poly_mat, &self.modulus))
+    }
+}
+
+#[cfg(test)]
+mod tests_sha {
+    use super::{hash_to_mat_zq_sha256, hash_to_zq_sha256, sha256, Z};
+    use qfall_math::{
+        integer_mod_q::{MatZq, Zq},
+        traits::{Distance, Pow},
+    };
+    use std::str::FromStr;
+
+    /// Ensure sha256 works.
+    #[test]
+    fn test_sha256() {
+        let str1 = "Hello World!";
+        let str2 = "qfall";
+
+        let hash1 = sha256(str1);
+        let hash2 = sha256(str2);
+
+        assert_eq!(
+            "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069",
+            hash1
+        );
+        assert_eq!(
+            "eb6ed1369a670050bd04b24036e8c29144b0f6b10166dc9c8b4987a6026c715f",
+            hash2
+        );
+    }
+
+    /// Ensure hashing into [`Zq`] works as intended.
+    #[test]
+    fn test_hash_to_zq_sha256() {
+        let str1 = "Hello World!";
+        let str2 = "qfall";
+
+        let hash1 = hash_to_zq_sha256(str1, 256);
+        let hash2 = hash_to_zq_sha256(str2, 16);
+
+        assert_eq!(Zq::from((150, 256)), hash1);
+        assert_eq!(Zq::from((12, 16)), hash2);
+    }
+
+    /// Ensure hashing into [`Zq`] hits the whole domain not just the first 256 bit.
+    #[test]
+    fn test_hash_to_zq_sha256_large() {
+        let str1 = "Hello World!";
+
+        let mut large = false;
+        for i in 0..5 {
+            if hash_to_zq_sha256(&(i.to_string() + str1), Z::from(271).pow(100).unwrap())
+                .distance(Z::ZERO)
+                > Z::from(u64::MAX)
+            {
+                large = true;
+            }
+        }
+
+        assert!(large);
+    }
+
+    /// Ensure hashing into [`MatZq`] works as intended.
+    #[test]
+    fn test_hash_to_mat_zq_sha256() {
+        let str1 = "Hello World!";
+        let str2 = "qfall";
+
+        let hash1 = hash_to_mat_zq_sha256(str1, 2, 2, 256);
+        let hash2 = hash_to_mat_zq_sha256(str2, 2, 2, 16);
+
+        assert_eq!(
+            MatZq::from_str("[[159, 26],[249, 141]] mod 256").unwrap(),
+            hash1
+        );
+        assert_eq!(MatZq::from_str("[[3, 12],[9, 12]] mod 16").unwrap(), hash2);
+    }
+
+    /// Ensure hashing into [`MatZq`] works as intended.
+    #[test]
+    #[should_panic]
+    fn test_hash_to_mat_zq_sha256_negative_dimensions() {
+        let str1 = "Hello World!";
+
+        let _ = hash_to_mat_zq_sha256(str1, 0, 0, 16);
     }
 }
 

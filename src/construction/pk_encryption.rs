@@ -8,9 +8,10 @@
 
 //! This module provides the trait a struct should implement if it is an
 //! instance of a public key encryption scheme. Furthermore, it contains
-//! cryptographic schemes implementing the `PKEncryption` trait.
+//! cryptographic schemes implementing the [`PKEncryptionScheme`] trait.
 //!
-//! The main references are listed in the following:
+//! The main references are listed in the following
+//! and will be further referenced in submodules by these numbers:
 //! - \[1\] Peikert, Chris (2016).
 //! A decade of lattice cryptography.
 //! In: Theoretical Computer Science 10.4.
@@ -39,19 +40,19 @@ mod lpr;
 mod regev;
 mod regev_discrete_gauss;
 mod ring_lpr;
+
 pub use ccs_from_ibe::CCSfromIBE;
 pub use dual_regev::DualRegev;
 pub use dual_regev_discrete_gauss::DualRegevWithDiscreteGaussianRegularity;
 pub use lpr::LPR;
+use qfall_math::integer::Z;
 pub use regev::Regev;
 pub use regev_discrete_gauss::RegevWithDiscreteGaussianRegularity;
 pub use ring_lpr::RingLPR;
 
-use qfall_math::integer::Z;
-
 /// This trait should be implemented by every public key encryption scheme.
 /// It offers a simple interface to use and implement PKEs.
-pub trait PKEncryption {
+pub trait PKEncryptionScheme {
     type PublicKey;
     type SecretKey;
     type Cipher;
@@ -81,8 +82,8 @@ pub trait PKEncryption {
 }
 
 /// This trait just exists s.t. we can pass `self` in as mutable for more advanced constructions, which use a storage.
-/// Otherwise, it does exactly the same as [`PKEncryption`].
-pub trait PKEncryptionMut {
+/// Otherwise, it does exactly the same as [`PKEncryptionScheme`].
+pub trait PKEncryptionSchemeMut {
     type PublicKey;
     type SecretKey;
     type Cipher;
@@ -112,11 +113,11 @@ pub trait PKEncryptionMut {
 }
 
 /// This trait generically implements multi-bit encryption
-/// for any scheme implementing the [`PKEncryption`] trait.
+/// for any scheme implementing the [`PKEncryptionScheme`] trait.
 ///
 /// It splits the given ciphertext up into its bits and
 /// stores the individual encrypted bits as a vector of ciphertexts.
-pub trait GenericMultiBitEncryption: PKEncryption {
+pub trait GenericMultiBitEncryption: PKEncryptionScheme {
     /// Encrypts multiple bits by appending several encryptions of single bits.
     /// The order of single ciphers is `[c0, c1, ..., cn]`, where `c0` is the least significant bit.
     /// Negative values are not allowed. Hence, the absolute value is being encrypted.
@@ -125,7 +126,7 @@ pub trait GenericMultiBitEncryption: PKEncryption {
     /// - `pk`: specifies the public key
     /// - `message`: specifies the message that should be encryted
     ///
-    /// Returns a cipher of type [`Vec`] containing [`PKEncryption::Cipher`].
+    /// Returns a cipher of type [`Vec`] containing [`PKEncryptionScheme::Cipher`].
     fn enc_multiple_bits(&self, pk: &Self::PublicKey, message: impl Into<Z>) -> Vec<Self::Cipher> {
         let message: Z = message.into().abs();
 
@@ -146,7 +147,7 @@ pub trait GenericMultiBitEncryption: PKEncryption {
     ///
     /// Parameters:
     /// - `sk`: specifies the secret key used for decryption
-    /// - `cipher`: specifies a slice of ciphers containing several [`PKEncryption::Cipher`] instances
+    /// - `cipher`: specifies a slice of ciphers containing several [`PKEncryptionScheme::Cipher`] instances
     /// to be decrypted
     ///
     /// Returns the decryption of `cipher` as a [`Z`] instance.

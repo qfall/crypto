@@ -9,7 +9,7 @@
 //! This module contains an implementation of the IND-CPA secure
 //! public key LPR encryption scheme.
 
-use super::{GenericMultiBitEncryption, PKEncryption};
+use super::{GenericMultiBitEncryption, PKEncryptionScheme};
 use qfall_math::{
     error::MathError,
     integer::Z,
@@ -25,12 +25,12 @@ use serde::{Deserialize, Serialize};
 /// Attributes:
 /// - `n`: specifies the security parameter, which is not equal to the bit-security level
 /// - `q`: specifies the modulus over which the encryption is computed
-/// - `alpha`: specifies the gaussian parameter used for independent
+/// - `alpha`: specifies the Gaussian parameter used for independent
 /// sampling from the discrete Gaussian distribution
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::construction::pk_encryption::{LPR, PKEncryption};
+/// use qfall_crypto::construction::pk_encryption::{LPR, PKEncryptionScheme};
 /// use qfall_math::integer::Z;
 /// // setup public parameters and key pair
 /// let lpr = LPR::default();
@@ -49,7 +49,7 @@ use serde::{Deserialize, Serialize};
 pub struct LPR {
     n: Z,       // security parameter
     q: Modulus, // modulus
-    alpha: Q,   // gaussian parameter for sampleZ
+    alpha: Q,   // Gaussian parameter for sampleZ
 }
 
 impl LPR {
@@ -67,7 +67,7 @@ impl LPR {
     /// - `n`: specifies the security parameter and number of rows
     ///   of the uniform at random instantiated matrix `A`
     /// - `q`: specifies the modulus
-    /// - `alpha`: specifies the gaussian parameter used for independent
+    /// - `alpha`: specifies the Gaussian parameter used for independent
     /// sampling from the discrete Gaussian distribution
     ///
     /// Returns a correct and secure [`LPR`] PK encryption instance or
@@ -312,7 +312,7 @@ impl Default for LPR {
     }
 }
 
-impl PKEncryption for LPR {
+impl PKEncryptionScheme for LPR {
     type Cipher = MatZq;
     type PublicKey = MatZq;
     type SecretKey = MatZq;
@@ -330,7 +330,7 @@ impl PKEncryption for LPR {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, LPR};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, LPR};
     /// let lpr = LPR::default();
     ///
     /// let (pk, sk) = lpr.gen();
@@ -385,7 +385,7 @@ impl PKEncryption for LPR {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, LPR};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, LPR};
     /// let lpr = LPR::default();
     /// let (pk, sk) = lpr.gen();
     ///
@@ -441,7 +441,7 @@ impl PKEncryption for LPR {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, LPR};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, LPR};
     /// use qfall_math::integer::Z;
     /// let lpr = LPR::default();
     /// let (pk, sk) = lpr.gen();
@@ -556,7 +556,7 @@ mod test_pp_generation {
 #[cfg(test)]
 mod test_lpr {
     use super::LPR;
-    use crate::construction::pk_encryption::PKEncryption;
+    use crate::construction::pk_encryption::PKEncryptionScheme;
     use qfall_math::integer::Z;
 
     /// Checks whether the full-cycle of gen, enc, dec works properly
@@ -635,7 +635,7 @@ mod test_lpr {
 
 #[cfg(test)]
 mod test_multi_bits {
-    use super::{GenericMultiBitEncryption, PKEncryption, LPR};
+    use super::{GenericMultiBitEncryption, PKEncryptionScheme, LPR};
     use qfall_math::integer::Z;
 
     /// Checks whether the multi-bit encryption cycle works properly

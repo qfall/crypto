@@ -10,7 +10,7 @@
 //! public key Regev encryption scheme with an instantiation of the regularity lemma
 //! via a discrete Gaussian distribution.
 
-use super::{GenericMultiBitEncryption, PKEncryption};
+use super::{GenericMultiBitEncryption, PKEncryptionScheme};
 use qfall_math::{
     error::MathError,
     integer::Z,
@@ -27,14 +27,14 @@ use serde::{Deserialize, Serialize};
 /// - `n`: specifies the security parameter, which is not equal to the bit-security level
 /// - `m`: defines the dimension of the underlying lattice
 /// - `q`: specifies the modulus over which the encryption is computed
-/// - `r`: specifies the gaussian parameter used for SampleD,
+/// - `r`: specifies the Gaussian parameter used for SampleD,
 ///   i.e. used for encryption
-/// - `alpha`: specifies the gaussian parameter used for independent
+/// - `alpha`: specifies the Gaussian parameter used for independent
 /// sampling from the discrete Gaussian distribution
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::construction::pk_encryption::{RegevWithDiscreteGaussianRegularity, PKEncryption};
+/// use qfall_crypto::construction::pk_encryption::{RegevWithDiscreteGaussianRegularity, PKEncryptionScheme};
 /// use qfall_math::integer::Z;
 /// // setup public parameters and key pair
 /// let regev = RegevWithDiscreteGaussianRegularity::default();
@@ -54,8 +54,8 @@ pub struct RegevWithDiscreteGaussianRegularity {
     n: Z,       // security parameter
     m: Z,       // number of rows of matrix A
     q: Modulus, // modulus
-    r: Q,       // gaussian parameter for sampleD
-    alpha: Q,   // gaussian parameter for sampleZ
+    r: Q,       // Gaussian parameter for sampleD
+    alpha: Q,   // Gaussian parameter for sampleZ
 }
 
 impl RegevWithDiscreteGaussianRegularity {
@@ -74,9 +74,9 @@ impl RegevWithDiscreteGaussianRegularity {
     ///   of the uniform at random instantiated matrix `A`
     /// - `m`: specifies the number of columns of matrix `A`
     /// - `q`: specifies the modulus
-    /// - `r`: specifies the gaussian parameter used for SampleD,
+    /// - `r`: specifies the Gaussian parameter used for SampleD,
     ///   i.e. used for encryption
-    /// - `alpha`: specifies the gaussian parameter used for independent
+    /// - `alpha`: specifies the Gaussian parameter used for independent
     /// sampling from the discrete Gaussian distribution
     ///
     /// Returns a [`RegevWithDiscreteGaussianRegularity`] PK encryption instance.
@@ -344,7 +344,7 @@ impl Default for RegevWithDiscreteGaussianRegularity {
     }
 }
 
-impl PKEncryption for RegevWithDiscreteGaussianRegularity {
+impl PKEncryptionScheme for RegevWithDiscreteGaussianRegularity {
     type Cipher = (MatZq, Zq);
     type PublicKey = (MatZq, MatZq);
     type SecretKey = MatZq;
@@ -361,7 +361,7 @@ impl PKEncryption for RegevWithDiscreteGaussianRegularity {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, RegevWithDiscreteGaussianRegularity};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, RegevWithDiscreteGaussianRegularity};
     /// let regev = RegevWithDiscreteGaussianRegularity::default();
     ///
     /// let (pk, sk) = regev.gen();
@@ -390,7 +390,7 @@ impl PKEncryption for RegevWithDiscreteGaussianRegularity {
     }
 
     /// Generates an encryption of `message mod 2` for the provided public key by following these steps:
-    /// e <- SampleD over lattice Z^m, center 0 with gaussian parameter r
+    /// e <- SampleD over lattice Z^m, center 0 with Gaussian parameter r
     /// - u = A * e
     /// - c = p^t * e + message *  ⌊q/2⌋
     ///
@@ -404,7 +404,7 @@ impl PKEncryption for RegevWithDiscreteGaussianRegularity {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, RegevWithDiscreteGaussianRegularity};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, RegevWithDiscreteGaussianRegularity};
     /// let regev = RegevWithDiscreteGaussianRegularity::default();
     /// let (pk, sk) = regev.gen();
     ///
@@ -414,7 +414,7 @@ impl PKEncryption for RegevWithDiscreteGaussianRegularity {
         // generate message = message mod 2
         let message: Z = message.into().modulo(2);
 
-        // e <- SampleD over lattice Z^m, center 0 with gaussian parameter r
+        // e <- SampleD over lattice Z^m, center 0 with Gaussian parameter r
         let vec_e = MatZq::sample_d_common(&self.m, &self.q, &self.n, &self.r).unwrap();
 
         // u = A * e
@@ -438,7 +438,7 @@ impl PKEncryption for RegevWithDiscreteGaussianRegularity {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, RegevWithDiscreteGaussianRegularity};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, RegevWithDiscreteGaussianRegularity};
     /// use qfall_math::integer::Z;
     /// let regev = RegevWithDiscreteGaussianRegularity::default();
     /// let (pk, sk) = regev.gen();
@@ -553,7 +553,7 @@ mod test_pp_generation {
 #[cfg(test)]
 mod test_regev {
     use super::RegevWithDiscreteGaussianRegularity;
-    use crate::construction::pk_encryption::PKEncryption;
+    use crate::construction::pk_encryption::PKEncryptionScheme;
     use qfall_math::integer::Z;
 
     /// Checks whether the full-cycle of gen, enc, dec works properly
@@ -632,7 +632,9 @@ mod test_regev {
 
 #[cfg(test)]
 mod test_multi_bits {
-    use super::{GenericMultiBitEncryption, PKEncryption, RegevWithDiscreteGaussianRegularity};
+    use super::{
+        GenericMultiBitEncryption, PKEncryptionScheme, RegevWithDiscreteGaussianRegularity,
+    };
     use qfall_math::integer::Z;
 
     /// Checks whether the multi-bit encryption cycle works properly

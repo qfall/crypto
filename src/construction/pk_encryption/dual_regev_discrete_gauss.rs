@@ -10,7 +10,7 @@
 //! public key Dual Regev encryption scheme with an instantiation of the regularity lemma
 //! via a discrete Gaussian distribution.
 
-use super::{GenericMultiBitEncryption, PKEncryption};
+use super::{GenericMultiBitEncryption, PKEncryptionScheme};
 use qfall_math::{
     error::MathError,
     integer::Z,
@@ -27,14 +27,14 @@ use serde::{Deserialize, Serialize};
 /// - `n`: specifies the security parameter, which is not equal to the bit-security level
 /// - `m`: defines the dimension of the underlying lattice
 /// - `q`: specifies the modulus over which the encryption is computed
-/// - `r`: specifies the gaussian parameter used for SampleD,
+/// - `r`: specifies the Gaussian parameter used for SampleD,
 ///   i.e. used for encryption
-/// - `alpha`: specifies the gaussian parameter used for independent
+/// - `alpha`: specifies the Gaussian parameter used for independent
 /// sampling from the discrete Gaussian distribution
 ///
 /// # Examples
 /// ```
-/// use qfall_crypto::construction::pk_encryption::{DualRegevWithDiscreteGaussianRegularity, PKEncryption};
+/// use qfall_crypto::construction::pk_encryption::{DualRegevWithDiscreteGaussianRegularity, PKEncryptionScheme};
 /// use qfall_math::integer::Z;
 /// // setup public parameters and key pair
 /// let dual_regev = DualRegevWithDiscreteGaussianRegularity::default();
@@ -54,8 +54,8 @@ pub struct DualRegevWithDiscreteGaussianRegularity {
     n: Z,       // security parameter
     m: Z,       // number of rows of matrix A
     q: Modulus, // modulus
-    r: Q,       // gaussian parameter for sampleD
-    alpha: Q,   // gaussian parameter for sampleZ
+    r: Q,       // Gaussian parameter for sampleD
+    alpha: Q,   // Gaussian parameter for sampleZ
 }
 
 impl DualRegevWithDiscreteGaussianRegularity {
@@ -74,9 +74,9 @@ impl DualRegevWithDiscreteGaussianRegularity {
     ///   of the uniform at random instantiated matrix `A`
     /// - `m`: specifies the number of columns of matrix `A`
     /// - `q`: specifies the modulus
-    /// - `r`: specifies the gaussian parameter used for SampleD,
+    /// - `r`: specifies the Gaussian parameter used for SampleD,
     ///   i.e. used for encryption
-    /// - `alpha`: specifies the gaussian parameter used for independent
+    /// - `alpha`: specifies the Gaussian parameter used for independent
     /// sampling from the discrete Gaussian distribution
     ///
     /// Returns a [`DualRegevWithDiscreteGaussianRegularity`] PK encryption instance.
@@ -346,14 +346,14 @@ impl Default for DualRegevWithDiscreteGaussianRegularity {
     }
 }
 
-impl PKEncryption for DualRegevWithDiscreteGaussianRegularity {
+impl PKEncryptionScheme for DualRegevWithDiscreteGaussianRegularity {
     type Cipher = (MatZq, Zq);
     type PublicKey = (MatZq, MatZq);
     type SecretKey = MatZq;
 
     /// Generates a (pk, sk) pair for the Dual Regev public key encryption scheme
     /// by following these steps:
-    /// - e <- SampleD over lattice Z^m, center 0 with gaussian parameter r
+    /// - e <- SampleD over lattice Z^m, center 0 with Gaussian parameter r
     /// - A <- Z_q^{n x m}
     /// - p = A * e
     ///
@@ -361,13 +361,13 @@ impl PKEncryption for DualRegevWithDiscreteGaussianRegularity {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, DualRegevWithDiscreteGaussianRegularity};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, DualRegevWithDiscreteGaussianRegularity};
     /// let dual_regev = DualRegevWithDiscreteGaussianRegularity::default();
     ///
     /// let (pk, sk) = dual_regev.gen();
     /// ```
     fn gen(&self) -> (Self::PublicKey, Self::SecretKey) {
-        // e <- SampleD over lattice Z^m, center 0 with gaussian parameter r
+        // e <- SampleD over lattice Z^m, center 0 with Gaussian parameter r
         let vec_e = MatZq::sample_d_common(&self.m, &self.q, &self.n, &self.r).unwrap();
         // A <- Z_q^{n x m}
         let mat_a = MatZq::sample_uniform(&self.n, &self.m, &self.q);
@@ -395,7 +395,7 @@ impl PKEncryption for DualRegevWithDiscreteGaussianRegularity {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, DualRegevWithDiscreteGaussianRegularity};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, DualRegevWithDiscreteGaussianRegularity};
     /// let dual_regev = DualRegevWithDiscreteGaussianRegularity::default();
     /// let (pk, sk) = dual_regev.gen();
     ///
@@ -442,7 +442,7 @@ impl PKEncryption for DualRegevWithDiscreteGaussianRegularity {
     ///
     /// # Examples
     /// ```
-    /// use qfall_crypto::construction::pk_encryption::{PKEncryption, DualRegevWithDiscreteGaussianRegularity};
+    /// use qfall_crypto::construction::pk_encryption::{PKEncryptionScheme, DualRegevWithDiscreteGaussianRegularity};
     /// use qfall_math::integer::Z;
     /// let dual_regev = DualRegevWithDiscreteGaussianRegularity::default();
     /// let (pk, sk) = dual_regev.gen();
@@ -558,7 +558,7 @@ mod test_pp_generation {
 #[cfg(test)]
 mod test_dual_regev {
     use super::DualRegevWithDiscreteGaussianRegularity;
-    use crate::construction::pk_encryption::PKEncryption;
+    use crate::construction::pk_encryption::PKEncryptionScheme;
     use qfall_math::integer::Z;
 
     /// Checks whether the full-cycle of gen, enc, dec works properly
@@ -637,7 +637,9 @@ mod test_dual_regev {
 
 #[cfg(test)]
 mod test_multi_bits {
-    use super::{DualRegevWithDiscreteGaussianRegularity, GenericMultiBitEncryption, PKEncryption};
+    use super::{
+        DualRegevWithDiscreteGaussianRegularity, GenericMultiBitEncryption, PKEncryptionScheme,
+    };
     use qfall_math::integer::Z;
 
     /// Checks whether the multi-bit encryption cycle works properly

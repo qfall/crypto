@@ -9,6 +9,7 @@
 //! This module provides the trait a struct should implement if it is an
 //! instance of a identity based public key encryption scheme. Furthermore,
 //! it contains cryptographic schemes implementing the `IBE` trait.
+//!
 //! The main references are listed in the following
 //! and will be further referenced in submodules by these numbers:
 //! - \[1\] Gentry, Craig and Peikert, Chris and Vaikuntanathan, Vinod (2008).
@@ -21,14 +22,14 @@
 //! <https://dl.acm.org/doi/pdf/10.1145/1568318.1568324>
 
 mod dual_regev_ibe;
-pub use dual_regev_ibe::DualRegevIBE;
 
+pub use dual_regev_ibe::DualRegevIBE;
 use qfall_math::integer::Z;
 
 /// This trait should be implemented by every identity-based encryption scheme.
 /// It offers a simple interface to use and implements the main functions supported by
 /// IBEs.
-pub trait IdentityBasedEncryption {
+pub trait IBEScheme {
     type MasterPublicKey;
     type MasterSecretKey;
     type SecretKey;
