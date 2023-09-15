@@ -8,7 +8,7 @@
 
 //! This module provides the trait a struct should implement if it is an
 //! instance of a identity based public key encryption scheme. Furthermore,
-//! it contains cryptographic schemes implementing the `IBE` trait.
+//! it contains cryptographic schemes implementing the [`IBEScheme`] trait.
 //!
 //! The main references are listed in the following
 //! and will be further referenced in submodules by these numbers:

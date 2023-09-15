@@ -19,7 +19,6 @@ use qfall_math::{
 use std::fmt::Display;
 
 /// Generates a trapdoor according to Algorithm 1 in [\[1\]](<../index.html#:~:text=[1]>).
-/// Namely:
 /// - Generates the gadget matrix: `G`
 /// - Samples the trapdoor `R` from the specified distribution in `params`
 /// - Outputs `([a_bar | tag * g - a_bar * r], r)` as a tuple of `(A,R)`,

@@ -8,7 +8,8 @@
 
 //! This module provides the trait a struct should implement if it is an
 //! instance of a signature scheme. Furthermore, it contains cryptographic signatures
-//! implementing the `Signature` trait.
+//! implementing the [`SignatureScheme`] trait.
+//!
 //! - \[1\] Gentry, Craig, Chris Peikert, and Vinod Vaikuntanathan.
 //! "Trapdoors for hard lattices and new cryptographic constructions."
 //! Proceedings of the fortieth annual ACM symposium on Theory of computing. 2008.
