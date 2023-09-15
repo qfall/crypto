@@ -47,8 +47,7 @@ pub trait PSF<A, Trapdoor, Domain, Range> {
     ///
     /// Parameters:
     /// - `a`: The parity-check matrix
-    /// - `r`: Together with `e` builds a G-Trapdoor for `a`
-    /// - `e`: Together with `r` builds a G-Trapdoor for `a`
+    /// - `r`: The G-Trapdoor for `a`
     /// - `u`: The syndrome from the range
     ///
     /// Returns a sample `e` from the domain on the conditioned discrete

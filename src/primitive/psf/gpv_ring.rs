@@ -116,8 +116,8 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
     }
 
     /// Samples an `e` in the domain using SampleD with a short basis that is generated
-    /// from the G-Trapdoor from the conditioned conditioned
-    /// discrete Gaussian with `f_a(a,e) = u` for a provided syndrome `u`.
+    /// from the G-Trapdoor from the conditioned discrete Gaussian with
+    /// `f_a(a,e) = u` for a provided syndrome `u`.
     ///
     /// *Note*: the provided parameters `a, r, e, u` must fit together,
     /// otherwise unexpected behavior such as panics may occur.
@@ -154,13 +154,13 @@ impl PSF<MatPolynomialRingZq, (MatPolyOverZ, MatPolyOverZ), MatPolyOverZ, MatPol
     fn samp_p(
         &self,
         a: &MatPolynomialRingZq,
-        r: &(MatPolyOverZ, MatPolyOverZ),
+        (r, e): &(MatPolyOverZ, MatPolyOverZ),
         u: &MatPolynomialRingZq,
     ) -> MatPolyOverZ {
         // compute solution to `a*x = u`
         // the same as `Rot^-(ι(a)) ι(x) = ι(u)`
 
-        let short_basis = gen_short_basis_for_trapdoor_ring(&self.gp, a, &r.0, &r.1);
+        let short_basis = gen_short_basis_for_trapdoor_ring(&self.gp, a, r, e);
 
         // solve `rot^-(ι(a)) ι(x) = ι(u)` to get solution
         let u_embedded = u
