@@ -90,7 +90,7 @@ pub fn gen_trapdoor_default(n: impl Into<Z>, modulus: impl Into<Modulus>) -> (Ma
     gen_trapdoor(&params, &a_bar, &tag).unwrap()
 }
 
-/// Computes a trapdoor with default values.
+/// Computes a trapdoor with default values in a ring setting.
 ///
 /// - `params` is computed using [`GadgetParametersRing::init_default`].
 ///
