@@ -9,7 +9,15 @@
 
 use criterion::criterion_main;
 
-pub mod pfdh;
-pub mod regev;
+/// This `enum` is used to decide whether a small or large
+/// security parameter `n` is used for the benchmark.
+#[derive(PartialEq)]
+pub(crate) enum SizeN {
+    Small,
+    Large,
+}
 
-criterion_main! {regev::benches, pfdh::benches}
+mod pfdh;
+mod pk_encryption;
+
+criterion_main! {pk_encryption::regev::benches, pk_encryption::ring_lpr::benches, pfdh::benches}
