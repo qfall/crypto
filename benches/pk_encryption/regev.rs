@@ -41,9 +41,23 @@ pub(super) mod load_precomputed_values {
     /// - [`SizeN::Large`]: [`Regev::new()`]
     pub(super) fn load_precomputed_pk(size_n: &SizeN) -> MatZq {
         let pk: MatZq = if size_n == &SizeN::Large {
-            serde_json::from_str(std::fs::read_to_string("benches/pk_encryption/large_precomputed_values/regev_large_pk.txt").unwrap().as_str()).unwrap()
+            serde_json::from_str(
+                std::fs::read_to_string(
+                    "benches/pk_encryption/large_precomputed_values/regev_large_pk.txt",
+                )
+                .unwrap()
+                .as_str(),
+            )
+            .unwrap()
         } else {
-            serde_json::from_str(std::fs::read_to_string("benches/pk_encryption/large_precomputed_values/regev_small_pk.txt").unwrap().as_str()).unwrap()
+            serde_json::from_str(
+                std::fs::read_to_string(
+                    "benches/pk_encryption/large_precomputed_values/regev_small_pk.txt",
+                )
+                .unwrap()
+                .as_str(),
+            )
+            .unwrap()
         };
 
         pk

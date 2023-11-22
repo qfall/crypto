@@ -7,3 +7,4 @@
 // Mozilla Foundation. See <https://mozilla.org/en-US/MPL/2.0/>.
 
 pub(crate) mod regev;
+pub(crate) mod ring_lpr;
